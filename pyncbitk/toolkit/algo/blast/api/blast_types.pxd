@@ -50,17 +50,17 @@ cdef extern from "algo/blast/api/sseqloc.hpp" namespace "ncbi::blast" nogil:
         string GetMessage() const
         string GetMessage(bool withSeverity) const
 
-    # cppclass TQueryMessages(vector[CRef[CSearchMessage]]):
-    #     void SetQueryId(const string& id)
-    #     string GetQueryId() const
-    #     void Combine(const TQueryMessages& other)
+    cppclass TQueryMessages(vector[CRef[CSearchMessage]]):
+        void SetQueryId(const string& id)
+        string GetQueryId() const
+        void Combine(const TQueryMessages& other)
 
-    # cppclass TSearchMessages(vector[CRef[CQueryMessages]]):
-    #     void AddMessageAllQueries(EBlastSeverity severity, int error_id, const string& message)
-    #     bool HasMessages() const
-    #     string ToString() const
-    #     void Combine(const TSearchMessages& other_msgs)
-    #     void RemoveDuplicates()
+    cppclass TSearchMessages(vector[CRef[TQueryMessages]]):
+        # void AddMessageAllQueries(EBlastSeverity severity, int error_id, const string& message)
+        bool HasMessages() const
+        string ToString() const
+        void Combine(const TSearchMessages& other_msgs)
+        void RemoveDuplicates()
 
     enum EResultType:
         eDatabaseSearch
