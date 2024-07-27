@@ -129,7 +129,7 @@ set(PYNCBITK_NCBI_LIBS
     # gbseq
     # gencoll_client
     gene_info
-    gene_info_writer
+    ##gene_info_writer
     # genesbyloc
     genome_collection
     # homologene
@@ -155,7 +155,7 @@ set(PYNCBITK_NCBI_LIBS
     seqedit
     seqset
     seqsplit
-    seqtest
+    ##seqtest
     sequtil
     submit
     # tinyseq
@@ -163,11 +163,11 @@ set(PYNCBITK_NCBI_LIBS
     writedb
     xblast
     xcgi
-    xcompress
+    ##xcompress
     xconnect
     xconnext
     # xconnserv
-    xcser
+    ##xcser
     xlogging
     xncbi
     xobjmgr
@@ -210,13 +210,15 @@ add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/vendor/ncbi-cxx-toolkit-public/src)
 link_directories(${CMAKE_BINARY_DIR}/../lib)
 
 # Install required libraries
-foreach(_lib IN LISTS PYNCBITK_NCBI_LIBS)
-    if(TARGET ${_lib})
-        install(TARGETS ${_lib} DESTINATION ${SKBUILD_PLATLIB_DIR}/${CMAKE_PROJECT_NAME}.libs)
-    else()
-        message(SEND_ERROR "Unknown requested library: ${_lib}")
-    endif()
-endforeach()
+if(PYNCBITK_INSTALL_LIBS)
+    foreach(_lib IN LISTS PYNCBITK_NCBI_LIBS)
+        if(TARGET ${_lib})
+            install(TARGETS ${_lib} DESTINATION ${SKBUILD_PLATLIB_DIR}/${CMAKE_PROJECT_NAME}.libs)
+        else()
+            message(SEND_ERROR "Unknown requested library: ${_lib}")
+        endif()
+    endforeach()
+endif()
 
 # --- PyNCBItk -----------------------------------------------------------------
 

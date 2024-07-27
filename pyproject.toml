@@ -5,7 +5,18 @@ build-backend = "scikit_build_core.build"
 [project]
 name = "pyncbitk"
 version = "0.0.1"
+requires-python = ">=3.7"
+
+[tool.cibuildwheel]
+build-verbosity = 1
 
 [tool.scikit-build]
 build-dir = "build/{build_type}/{wheel_tag}"
-cmake.build-type = "Release"
+cmake.build-type = "Debug"
+
+[tool.scikit-build.cmake.define]
+PYNCBITK_INSTALL_LIBS = true
+
+[[tool.scikit-build.overrides]]
+if.env.CIBUILDWHEEL = "ON"
+cmake.define.PYNCBITK_INSTALL_LIBS = false
