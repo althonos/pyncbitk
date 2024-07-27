@@ -8,6 +8,7 @@ from libcpp.utility cimport move
 from .toolkit.algo.blast.api.bl2seq cimport CBl2Seq
 from .toolkit.algo.blast.api.blast_types cimport EProgram, ProgramNameToEnum, TSeqAlignVector
 from .toolkit.algo.blast.api.sseqloc cimport SSeqLoc, TSeqLocVector
+from .toolkit.algo.blast.api.local_blast cimport CLocalBlast
 from .toolkit.corelib.ncbiobj cimport CConstRef, CRef
 from .toolkit.corelib.ncbistr cimport kEmptyStr
 from .toolkit.corelib.ncbitype cimport Uint4
@@ -41,198 +42,14 @@ from .toolkit.serial.serialdef cimport ESerialRecursionMode
 from .toolkit.objects.blastdb.blast_def_line cimport CBlast_def_line
 from .toolkit.objects.blastdb.blast_def_line_set cimport CBlast_def_line_set
 
-import os
-
-# --- ObjectManager ------------------------------------------------------------
-
-cdef class ObjectManager:
-    cdef CRef[CObjectManager] _mgr
-
-    def __init__(self):
-        self._mgr = CObjectManager.GetInstance()
-
-    cpdef Scope scope(self):
-        return Scope(self)
-
-
-cdef class Scope:
-    cdef CRef[CScope] _scope
-
-    def __init__(self, ObjectManager manager):
-        self._scope.Reset(new CScope(manager._mgr.GetObject()))
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exc_ty, exc_val, traceback):
-        self.close()
-        return False
-
-    def close(self):
-        self._scope.ReleaseOrNull()
-
-    cpdef void add_bioseq(self, BioSeq seq) except *:
-        if self._scope.Empty():
-            raise RuntimeError("attempted to use a closed scope")
-
-        self._scope.GetPointer().AddBioseq(seq._ref.GetObject())
-
-
-
-cdef CBlast_def_line_set* _x = new CBlast_def_line_set()
-    
-
-
-# --- BLAST --------------------------------------------------------------------
-
-cdef class BlastSeqLoc:
-    cdef SSeqLoc _seqloc
-
-    def __init__(self, SeqLoc loc, Scope scope, SeqLoc mask = None):
-        self._seqloc = SSeqLoc(loc._loc.GetObject(), scope._scope.GetObject())
-
-
-cdef class Blast:
-    cdef CRef[CBl2Seq] _blast
-
-    def __init__(
-        self, 
-        BlastSeqLoc query, 
-        object subject, 
-        str program
-    ): 
-
-        cdef EProgram      p
-        cdef BlastSeqLoc   s
-        cdef TSeqLocVector subjects = TSeqLocVector()
-        cdef bytes         _program = program.encode()
-
-        try:
-            p = ProgramNameToEnum(_program)
-        except Exception as e:
-            raise ValueError(f"Invalid BLAST program: {program!r}")
-
-        if isinstance(subject, BlastSeqLoc):
-            subject = (subject, )
-
-        for s in subject:
-            subjects.push_back(s._seqloc)
-
-        
-
-
-        self._blast.Reset(
-            new CBl2Seq(query._seqloc, subjects, p)
-        )
-
-    def run(self):
-        cdef TSeqAlignVector _raw_alignments 
-        cdef SeqAlignSet     ali
-        cdef list            alignments      
-        
-        with nogil:
-            _raw_alignments = self._blast.GetObject().Run()
-
-        alignments = []
-        for ref in _raw_alignments:
-            alignments.append(SeqAlignSet._wrap(ref))
-
-        return alignments
-
-
-cdef class SeqAlignScore:
-    # TODO: inherit
-    cdef CRef[CScore] _ref
-
-    @staticmethod
-    cdef SeqAlignScore _wrap(CRef[CScore] ref):
-        cdef SeqAlignScore score = SeqAlignScore.__new__(SeqAlignScore)
-        score._ref = ref
-        return score
-
-    def __iter__(self):
-        yield self.id
-        yield self.value
-
-    def __repr__(self):
-        cdef str ty = type(self).__name__
-        return f"{ty}(id={self.id!r}, value={self.value!r})"
-
-    @property
-    def id(self):
-        if not self._ref.GetObject().IsSetId():
-            return None
-        id_ = &self._ref.GetObject().GetIdRw()
-        cref = CRef[CObject_id](id_)
-        return ObjectId._wrap(cref)
-
-    @property
-    def value(self):
-        value = &self._ref.GetObject().GetValueRw()
-        kind = value.Which()
-        if kind == CScore_value_choice.e_Int:
-            return value.GetInt()
-        elif kind == CScore_value_choice.e_Real:
-            return value.GetReal()
-        raise TypeError(f"Unknown value type: {kind!r}")
-
-
-cdef class SeqAlign:
-    cdef CRef[CSeq_align] _ref
-
-    @staticmethod
-    cdef SeqAlign _wrap(CRef[CSeq_align] ref):
-        cdef SeqAlign obj = SeqAlign.__new__(SeqAlign)
-        obj._ref = ref
-        return obj
-
-    def dumps(self):
-        cdef string s = string()
-        s << <CSerialObject&> self._ref.GetNonNullPointer()[0]
-        return s.decode()
-
-    @property
-    def scores(self):
-        cdef CRef[CScore]  ref
-        cdef SeqAlignScore score 
-        cdef list          scores = []
-
-        if not self._ref.GetObject().IsSetScore():
-            return None
-
-        for ref in self._ref.GetObject().GetScoreRw():
-            scores.append(SeqAlignScore._wrap(ref))
-
-        return scores
-
-
-
-cdef class SeqAlignSet:
-    cdef CRef[CSeq_align_set] _ref
-
-    @staticmethod
-    cdef SeqAlignSet _wrap(CRef[CSeq_align_set] ref):
-        cdef SeqAlignSet obj = SeqAlignSet.__new__(SeqAlignSet)
-        obj._ref = ref
-        return obj
-
-    def __iter__(self):
-        cdef CRef[CSeq_align] ref
-        for ref in self._ref.GetObject().GetRw():
-            yield SeqAlign._wrap(ref)
-
-    def __len__(self):
-        return self._ref.GetObject().Get().size()
-
 # --- ObjectId -----------------------------------------------------------------
 
 cdef class ObjectId:
     """A basic identifier for any NCBI Toolkit object.
     """
-    cdef CRef[CObject_id] _ref
 
     @staticmethod
-    cdef ObjectId _wrap(ref: CRef[CObject_id]):
+    cdef ObjectId _wrap(CRef[CObject_id] ref):
         cdef ObjectId obj
         cdef CObject_id_choice kind = ref.GetPointer().Which()
 
@@ -293,10 +110,9 @@ cdef class IntId(ObjectId):
 # --- TextSeqId ----------------------------------------------------------------
 
 cdef class TextSeqId:
-    cdef CRef[CTextseq_id] _ref
 
     @staticmethod
-    cdef TextSeqId _wrap(ref: CRef[CTextseq_id]):
+    cdef TextSeqId _wrap(CRef[CTextseq_id] ref):
         cdef TextSeqId obj = TextSeqId.__new__(TextSeqId)
         obj._ref = ref
         return obj
@@ -368,10 +184,9 @@ cdef class TextSeqId:
 # --- SeqId --------------------------------------------------------------------
 
 cdef class SeqId:
-    cdef CRef[CSeq_id] _ref
 
     @staticmethod
-    cdef SeqId _wrap(ref: CRef[CSeq_id]):
+    cdef SeqId _wrap(CRef[CSeq_id] ref):
         cdef SeqId obj
         cdef CSeq_id_choice kind = ref.GetPointer().Which()
 
@@ -435,10 +250,9 @@ cdef class GeneralId(SeqId):
 # --- BioSeq -------------------------------------------------------------------
 
 cdef class BioSeq:
-    cdef CRef[CBioseq] _ref
 
     @staticmethod
-    cdef BioSeq _wrap(ref: CRef[CBioseq]):
+    cdef BioSeq _wrap(CRef[CBioseq] ref):
         cdef BioSeq obj = BioSeq.__new__(BioSeq)
         obj._ref = ref
         return obj
@@ -478,17 +292,31 @@ cdef class BioSeq:
     # FIXME: debug
     def dumps(self):
         cdef string s = string()
-        s << <CSerialObject&> self._ref.GetNonNullPointer()[0]
+        s << <CSerialObject&> self._ref.GetObject()
         return s.decode()
         
+cdef class BioSeqSet:
+    
+    def __init__(self):
+        pass
+
+    def __len__(self):
+        assert self._ref.GetObject().IsSetSeq_set()
+        return self._ref.GetObject().GetSeq_set().size()
+
+    def __iter__(self):
+        cdef CRef[CSeq_entry]          item
+        cdef cpplist[CRef[CSeq_entry]] items = self._ref.GetObject().GetSeq_setRw()
+        for item in items:
+            yield Entry._wrap(item)
+
 
 # --- SeqInst ------------------------------------------------------------------
 
 cdef class SeqInst:
-    cdef CRef[CSeq_inst] _ref
 
     @staticmethod
-    cdef SeqInst _wrap(ref: CRef[CSeq_inst]):
+    cdef SeqInst _wrap(CRef[CSeq_inst] ref):
         cdef SeqInst obj
         cdef CSeq_inst_repr kind = ref.GetPointer().GetRepr()
 
@@ -607,10 +435,9 @@ cdef class DeltaInst(SeqInst):
 # --- SeqData ------------------------------------------------------------------
 
 cdef class SeqData:
-    cdef CRef[CSeq_data] _ref
 
     @staticmethod
-    cdef SeqData _wrap(ref: CRef[CSeq_data]):
+    cdef SeqData _wrap(CRef[CSeq_data] ref):
         cdef SeqData obj
         cdef CSeq_data_choice kind = ref.GetPointer().Which()
 
@@ -694,10 +521,9 @@ cdef class GapData(SeqData):
 # --- Entry --------------------------------------------------------------------
 
 cdef class Entry:
-    cdef CRef[CSeq_entry] _ref
 
     @staticmethod
-    cdef Entry _wrap(ref: CRef[CSeq_entry]):
+    cdef Entry _wrap(CRef[CSeq_entry] ref):
         
         cdef Entry entry
         cdef CSeq_entry_choice kind = ref.GetNonNullPointer().Which()
@@ -726,7 +552,6 @@ cdef class SetEntry(Entry):
 # --- SeqLoc -------------------------------------------------------------------
 
 cdef class SeqLoc:
-    cdef CRef[CSeq_loc] _loc
 
     # FIXME: debug
     def dumps(self):
@@ -774,24 +599,3 @@ cdef class BondLoc(SeqLoc):
 cdef class FeatureLoc(SeqLoc):
     pass
 
-
-# --- FastaReader --------------------------------------------------------------
-
-cdef class FastaReader:
-    cdef CFastaReader* _reader
-
-    def __cinit__(self):
-        self._reader = NULL
-
-    def __dealloc__(self):
-        del self._reader
-
-    def __init__(self, path):
-        cdef bytes _path = os.fsencode(path)
-        self._reader = new CFastaReader(_path)
-
-    def read(self):
-        assert self._reader != NULL
-        _entry = self._reader.ReadOneSeq()
-        return Entry._wrap(_entry)
-        
