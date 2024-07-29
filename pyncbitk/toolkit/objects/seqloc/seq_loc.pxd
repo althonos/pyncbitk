@@ -58,7 +58,7 @@ cdef extern from "objects/seqloc/Seq_loc_.hpp" namespace "ncbi::objects" nogil:
 
         bool IsWhole() const
         const TWhole& GetWhole() const
-        TWhole& GetWholeRw "SetWhole" ()
+        TWhole& GetWholeMut "SetWhole" ()
         void SetWhole(TWhole& value)
 
         # bool IsInt() const

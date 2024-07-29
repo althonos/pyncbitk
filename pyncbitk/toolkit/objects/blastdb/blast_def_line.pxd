@@ -21,11 +21,11 @@ cdef extern from "objects/blastdb/Blast_def_line_.hpp" namespace "ncbi::objects"
 
         bool IsSetTitle() const
         bool CanGetTitle() const
-        void ResetTitle();
-        const TTitle& GetTitle() const;
-        void SetTitle(const TTitle& value);
-        void SetTitle(TTitle&& value);
-        TTitle& GetTitleRw "SetTitle" ();
+        void ResetTitle()
+        const TTitle& GetTitle() const
+        void SetTitle(const TTitle& value)
+        void SetTitle(TTitle&& value)
+        TTitle& GetTitleMut "SetTitle" ()
 
 
 

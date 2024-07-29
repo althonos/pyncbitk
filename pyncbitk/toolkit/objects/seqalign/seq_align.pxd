@@ -60,20 +60,20 @@ cdef extern from "objects/seqalign/Seq_align_.hpp" namespace "ncbi::objects" nog
         void ResetType()
         TType GetType() const
         void SetType(TType value)
-        TType& GetTypeRw "SetType" ()
+        TType& GetTypeMut "SetType" ()
 
         bool IsSetDim() const
         bool CanGetDim() const
         void ResetDim()
         TDim GetDim() const
         void SetDim(TDim value)
-        TDim& GetDimRw "SetDim" ()
+        TDim& GetDimMut "SetDim" ()
 
         bool IsSetScore() const
         bool CanGetScore() const
         void ResetScore()
         const TScore& GetScore() const
-        TScore& GetScoreRw "SetScore" ()
+        TScore& GetScoreMut "SetScore" ()
 
 
 cdef extern from "objects/seqalign/Seq_align.hpp" namespace "ncbi::objects::CSeq_align" nogil:

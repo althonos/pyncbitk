@@ -54,7 +54,7 @@ cdef extern from "objects/seqset/Bioseq_set_.hpp" namespace "ncbi::objects" nogi
         bool CanGetSeq_set() const
         void ResetSeq_set()
         const TSeq_set& GetSeq_set() const
-        TSeq_set& GetSeq_setRw "SetSeq_set"()
+        TSeq_set& GetSeq_setMut "SetSeq_set"()
 
 
 cdef extern from "objects/seqset/Seq_entry.hpp" namespace "ncbi::objects" nogil:

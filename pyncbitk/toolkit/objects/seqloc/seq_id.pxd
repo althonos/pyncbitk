@@ -69,7 +69,7 @@ cdef extern from "objects/seqloc/Seq_id_.hpp" namespace "ncbi::objects" nogil:
 
         bool IsLocal() const
         const TLocal& GetLocal() const
-        TLocal& GetLocalRw "SetLocal"()
+        TLocal& GetLocalMut "SetLocal"()
         void SetLocal(TLocal& value)
 
         # bool IsGibbsq(void) const;
@@ -89,7 +89,7 @@ cdef extern from "objects/seqloc/Seq_id_.hpp" namespace "ncbi::objects" nogil:
 
         bool IsGenbank() const
         const TGenbank& GetGenbank() const
-        TGenbank& GetGenbankRw "SetGenbank" ()
+        TGenbank& GetGenbankMut "SetGenbank" ()
         void SetGenbank(TGenbank& value)
 
         # bool IsEmbl(void) const;

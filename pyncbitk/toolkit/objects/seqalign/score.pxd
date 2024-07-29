@@ -48,13 +48,13 @@ cdef extern from "objects/seqalign/Score_.hpp" namespace "ncbi::objects" nogil:
         void ResetId()
         const TId& GetId() const
         void SetId(TId& value)
-        TId& GetIdRw "SetId" ()
+        TId& GetIdMut "SetId" ()
 
         bool IsSetValue() const
         bool CanGetValue() const
         void ResetValue()
         const TValue& GetValue() const
-        TValue& GetValueRw "SetValue"()
+        TValue& GetValueMut "SetValue"()
 
         void Reset()
         void DoNotDeleteThisObject()

@@ -41,7 +41,7 @@ cdef extern from "objects/seq/Bioseq_.hpp" namespace "ncbi::objects" nogil:
         void ResetInst()
         const TInst& GetInst() const
         void SetInst(TInst& value)
-        TInst& GetInstRw "SetInst" ()
+        TInst& GetInstMut "SetInst" ()
 
         # optional
         # bool IsSetAnnot() const

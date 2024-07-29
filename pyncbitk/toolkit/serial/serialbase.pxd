@@ -22,7 +22,7 @@ cdef extern from "serial/serialbase.hpp" namespace "ncbi" nogil:
         CAliasBase(const TPrim& value)
         
         const TPrim& Get() const
-        TPrim& GetRw "Set" ()
+        TPrim& GetMut "Set" ()
         void Set(const TPrim& value)
 
     cppclass CStringAliasBase[TString](CAliasBase[TString]):

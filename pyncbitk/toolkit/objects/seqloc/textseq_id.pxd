@@ -25,7 +25,7 @@ cdef extern from "objects/seqloc/Textseq_id_.hpp" namespace "ncbi::objects" nogi
         const TName& GetName() const
         void SetName(const TName& value)
         void SetName(TName&& value)
-        TName& GetNameRw "SetName"()
+        TName& GetNameMut "SetName"()
 
         # optional
         bool IsSetAccession() const
@@ -34,7 +34,7 @@ cdef extern from "objects/seqloc/Textseq_id_.hpp" namespace "ncbi::objects" nogi
         const TAccession& GetAccession() const
         void SetAccession(const TAccession& value)
         void SetAccession(TAccession&& value)
-        TAccession& GetAccessionRw "SetAccession"()
+        TAccession& GetAccessionMut "SetAccession"()
 
         # optional
         bool IsSetRelease() const
@@ -43,7 +43,7 @@ cdef extern from "objects/seqloc/Textseq_id_.hpp" namespace "ncbi::objects" nogi
         const TRelease& GetRelease() const
         void SetRelease(const TRelease& value)
         void SetRelease(TRelease&& value)
-        TRelease& GetReleaseRw "SetRelease" ()
+        TRelease& GetReleaseMut "SetRelease" ()
 
         # optional
         bool IsSetVersion() const
@@ -51,7 +51,7 @@ cdef extern from "objects/seqloc/Textseq_id_.hpp" namespace "ncbi::objects" nogi
         void ResetVersion()
         TVersion GetVersion() const
         void SetVersion(TVersion value)
-        TVersion& GetVersionRw "SetVersion" ()
+        TVersion& GetVersionMut "SetVersion" ()
 
 
         void Reset()

@@ -55,7 +55,7 @@ cdef extern from "objects/seq/Seq_data_.hpp" namespace "ncbi::objects" nogil:
         
         bool IsIupacna() const
         const TIupacna& GetIupacna() const
-        TIupacna& GetIupacnaRw "SetIupacna" ()
+        TIupacna& GetIupacnaMut "SetIupacna" ()
         void SetIupacna(const TIupacna& value)
 
 

@@ -75,7 +75,7 @@ cdef extern from "objects/seq/Seq_inst_.hpp" namespace "ncbi::objects" nogil:
         void ResetRepr()
         TRepr GetRepr() const
         void SetRepr(TRepr value)
-        TRepr& SetRepr()
+        TRepr& GetReprMut "SetRepr"()
 
         # mandatory
         bool IsSetMol() const
@@ -108,7 +108,7 @@ cdef extern from "objects/seq/Seq_inst_.hpp" namespace "ncbi::objects" nogil:
         void SetDefaultTopology()
         TTopology GetTopology() const
         void SetTopology(TTopology value)
-        TTopology& GetTopologyRw "SetTopology"()
+        TTopology& GetTopologyMut "SetTopology"()
 
         # optional
         bool IsSetStrand() const
@@ -116,7 +116,7 @@ cdef extern from "objects/seq/Seq_inst_.hpp" namespace "ncbi::objects" nogil:
         void ResetStrand()
         TStrand GetStrand() const
         void SetStrand(TStrand value)
-        TStrand& GetStrandRw "SetStrand" ()
+        TStrand& GetStrandMut "SetStrand" ()
 
         # optional
         bool IsSetSeq_data() const
@@ -124,7 +124,7 @@ cdef extern from "objects/seq/Seq_inst_.hpp" namespace "ncbi::objects" nogil:
         void ResetSeq_data()
         const TSeq_data& GetSeq_data() const
         void SetSeq_data(TSeq_data& value)
-        TSeq_data& GetSeq_dataRw "SetSeq_data" ()
+        TSeq_data& GetSeq_dataMut "SetSeq_data" ()
 
         # # optional
         # bool IsSetExt() const

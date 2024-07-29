@@ -21,7 +21,7 @@ cdef extern from "objects/seqalign/Seq_align_set_.hpp" namespace "ncbi::objects"
         bool CanGet() const
         void Reset()
         const Tdata& Get() const
-        Tdata& GetRw "Set" ()
+        Tdata& GetMut "Set" ()
 
 
 cdef extern from "objects/seqalign/Seq_align_set.hpp" namespace "ncbi::objects::CSeq_align_set" nogil:
