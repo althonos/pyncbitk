@@ -259,17 +259,19 @@ cdef class BioSeq:
     
     def __init__(
         self,
-        object ids,
-        SeqInst instance,
+        object ids not None,
+        SeqInst instance not None,
     ):
-        cdef SeqId    _id
-        cdef CBioseq* _bioseq = new CBioseq()
+        cdef SeqId    id_
+        cdef CBioseq* obj = new CBioseq()
 
-        _bioseq.SetInst(instance._ref.GetObject())
-        for _id in ids:
-            _bioseq.SetId().push_back(_id._ref)
+        obj.SetInst(instance._ref.GetObject())
+        for id_ in ids:
+            obj.SetId().push_back(id_._ref)
+        if obj.GetId().size() == 0:
+            raise ValueError("BioSeq must have at least one identifier")
 
-        self._ref.Reset(new CBioseq())
+        self._ref.Reset(obj)
 
     def __repr__(self):
         cdef str ty = self.__class__.__name__
@@ -277,6 +279,8 @@ cdef class BioSeq:
 
     @property
     def ids(self):
+        """`list` of `SeqId`: The identifiers of the sequence.
+        """
         assert self._ref.GetNonNullPointer().IsSetId()  # mandatory
 
         cdef SeqId                  seqid
