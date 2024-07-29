@@ -83,7 +83,7 @@ cdef extern from "objects/seq/Seq_inst_.hpp" namespace "ncbi::objects" nogil:
         void ResetMol()
         TMol GetMol() const
         void SetMol(TMol value)
-        TMol& SetMol()
+        TMol& GetMolMut "SetMol"()
 
         # optional
         bool IsSetLength() const

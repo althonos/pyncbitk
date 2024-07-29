@@ -227,7 +227,7 @@ cdef class LocalId(SeqId):
     
     @property
     def id(self):
-        cdef CObject_id* id = &self._ref.GetNonNullPointer().GetLocalRw()
+        cdef CObject_id* id = &self._ref.GetNonNullPointer().GetLocalMut()
         return ObjectId._wrap(CRef[CObject_id](id))
         
 cdef class RefSeqId(SeqId):
@@ -237,7 +237,7 @@ cdef class GenBankId(SeqId):
     
     @property
     def id(self):
-        cdef CTextseq_id* id = &self._ref.GetObject().GetGenbankRw()
+        cdef CTextseq_id* id = &self._ref.GetObject().GetGenbankMut()
         return TextSeqId._wrap(CRef[CTextseq_id](id))
 
 
@@ -271,6 +271,10 @@ cdef class BioSeq:
 
         self._ref.Reset(new CBioseq())
 
+    def __repr__(self):
+        cdef str ty = self.__class__.__name__
+        return f"{ty}({self.ids!r}, {self.instance!r})"
+
     @property
     def ids(self):
         assert self._ref.GetNonNullPointer().IsSetId()  # mandatory
@@ -287,7 +291,7 @@ cdef class BioSeq:
     @property
     def instance(self):
         assert self._ref.GetNonNullPointer().IsSetInst()  # mandatory
-        return SeqInst._wrap(CRef[CSeq_inst](&self._ref.GetObject().GetInstRw()))
+        return SeqInst._wrap(CRef[CSeq_inst](&self._ref.GetObject().GetInstMut()))
 
     # FIXME: debug
     def dumps(self):
@@ -306,12 +310,48 @@ cdef class BioSeqSet:
 
     def __iter__(self):
         cdef CRef[CSeq_entry]          item
-        cdef cpplist[CRef[CSeq_entry]] items = self._ref.GetObject().GetSeq_setRw()
+        cdef cpplist[CRef[CSeq_entry]] items = self._ref.GetObject().GetSeq_setMut()
         for item in items:
             yield Entry._wrap(item)
 
 
 # --- SeqInst ------------------------------------------------------------------
+
+cdef dict _SEQINST_MOLECULE_STR = {
+    CSeq_inst_mol.eMol_not_set: None,
+    CSeq_inst_mol.eMol_dna: "dna",
+    CSeq_inst_mol.eMol_rna: "rna",
+    CSeq_inst_mol.eMol_aa: "aa",
+    CSeq_inst_mol.eMol_other: "other",
+}
+
+cdef dict _SEQINST_MOLECULE_ENUM = {
+    v:k for k,v in _SEQINST_MOLECULE_STR.items()
+}
+
+cdef dict _SEQINST_TOPOLOGY_STR = {
+    ETopology.eTopology_not_set: None,
+    ETopology.eTopology_linear: "linear",
+    ETopology.eTopology_circular: "circular",
+    ETopology.eTopology_tandem: "tandem",
+    ETopology.eTopology_other: "other",
+}
+
+cdef dict _SEQINST_TOPOLOGY_ENUM = {
+    v:k for k,v in _SEQINST_TOPOLOGY_STR.items()
+}
+
+cdef dict _SEQINST_STRAND_STR = {
+    EStrand.eStrand_not_set: None,
+    EStrand.eStrand_ss: "single",
+    EStrand.eStrand_ds: "double",
+    EStrand.eStrand_mixed: "mixed",
+    EStrand.eStrand_other: "other",
+}
+
+cdef dict _SEQINST_STRAND_ENUM = {
+    v:k for k,v in _SEQINST_STRAND_STR.items()
+}
 
 cdef class SeqInst:
 
@@ -344,6 +384,50 @@ cdef class SeqInst:
         obj._ref = ref
         return obj
 
+    def __init__(
+        self,
+        str topology="linear",
+        str strand=None, 
+        str molecule=None,
+    ):
+        # try to detect molecule if possible
+        if molecule not in _SEQINST_MOLECULE_ENUM:
+            raise ValueError(f"invalid molecule: {molecule!r}")
+
+        # try to detect strand if possible
+        if strand is None:
+            if molecule == "dna":
+                strand = "double"
+            elif molecule == "rna" or molecule == "aa":
+                strand = "single"
+        elif strand not in _SEQINST_STRAND_ENUM:
+            raise ValueError(f"invalid strand: {strand!r}")
+
+        # check topology
+        if topology not in _SEQINST_TOPOLOGY_ENUM:
+            raise ValueError(f"invalid topology: {topology!r}")
+
+        # set data
+        cdef CSeq_inst* obj = new CSeq_inst()
+        obj.SetMol(_SEQINST_MOLECULE_ENUM[molecule])
+        obj.SetStrand(_SEQINST_STRAND_ENUM[strand])
+        obj.SetTopology(_SEQINST_TOPOLOGY_ENUM[topology])
+        self._ref.Reset(obj)
+
+    def __repr__(self):
+        cdef str ty    = self.__class__.__name__
+        cdef list args = []
+
+        if self.topology != "linear":
+            args.append(f"topology={self.topology!r}")
+        if self.strand is not None:
+            args.append(f"strand={self.strand!r}")
+        if self.molecule is not None:
+            args.append(f"molecule={self.molecule!r}")
+
+        return f"{ty}({', '.join(args)})"
+
+
     @property
     def length(self):
         if not self._ref.GetObject().IsSetLength():
@@ -353,49 +437,25 @@ cdef class SeqInst:
     @property
     def molecule(self):
         cdef CSeq_inst_mol kind = self._ref.GetPointer().GetMol()
-        return CSeq_inst.GetMoleculeClass(kind).decode()
+        return _SEQINST_MOLECULE_STR[kind]
 
     @property
     def topology(self):
         if not self._ref.GetObject().IsSetTopology():
             return None
-
-        cdef ETopology topology = self._ref.GetObject().GetTopology()
-        if topology == ETopology.eTopology_not_set:
-            return None
-        elif topology == ETopology.eTopology_linear:
-            return "linear"
-        elif topology == ETopology.eTopology_linear:
-            return "circular"
-        elif topology == ETopology.eTopology_tandem:
-            return "tandem"
-        elif topology == ETopology.eTopology_other:
-            return "other"
-        raise ValueError("unexepected topology")
+        return _SEQINST_TOPOLOGY_STR[self._ref.GetObject().GetTopology()]
 
     @property
     def strand(self):
         if not self._ref.GetObject().IsSetStrand():
             return None
-
-        cdef EStrand strand = self._ref.GetObject().GetStrand()
-        if strand == EStrand.eStrand_not_set:
-            return None
-        elif strand == EStrand.eStrand_ss:
-            return "single"
-        elif strand == EStrand.eStrand_ds:
-            return "double"
-        elif strand == EStrand.eStrand_mixed:
-            return "mixed"
-        elif strand == EStrand.eStrand_other:
-            return "other"
-        raise ValueError("unexepected strand")
+        return _SEQINST_STRAND_STR[self._ref.GetObject().GetStrand()]
 
     @property
     def data(self):
         if not self._ref.GetObject().IsSetSeq_data():
             return None
-        return SeqData._wrap(CRef[CSeq_data](&self._ref.GetObject().GetSeq_dataRw()))
+        return SeqData._wrap(CRef[CSeq_data](&self._ref.GetObject().GetSeq_dataMut()))
 
 
 cdef class EmptyInst(SeqInst):
@@ -405,7 +465,30 @@ cdef class VirtualInst(SeqInst):
     pass
 
 cdef class ContinuousInst(SeqInst):
-    pass
+    
+    def __init__(
+        self, 
+        SeqData data, 
+        topology="linear", 
+        strand=None, 
+        molecule=None
+    ):
+        super().__init__(topology=topology, strand=strand, molecule=molecule)
+        self._ref.GetObject().SetRepr(CSeq_inst_repr.eRepr_raw)
+        self._ref.GetObject().SetSeq_data(data._ref.GetObject())
+
+    def __repr__(self):
+        cdef str ty    = self.__class__.__name__
+        cdef list args = [repr(self.data)]
+
+        if self.topology != "linear":
+            args.append(f"topology={self.topology!r}")
+        if self.strand is not None:
+            args.append(f"strand={self.strand!r}")
+        if self.molecule is not None:
+            args.append(f"molecule={self.molecule!r}")
+
+        return f"{ty}({', '.join(args)})"
 
 cdef class SegmentedInst(SeqInst):
     pass
@@ -469,49 +552,67 @@ cdef class SeqData:
         obj._ref = ref
         return obj
 
-cdef class IupacNaData(SeqData):
+    def __init__(self):
+        self._ref.Reset(new CSeq_data())
+
+
+cdef class SeqAaData(SeqData):
+    pass
+
+cdef class SeqNaData(SeqData):
+    pass
+
+cdef class IupacNaData(SeqNaData):
 
     def __init__(self, object data):
         cdef bytes      _data
-        cdef CSeq_data* _raw  = new CSeq_data()
 
         if isinstance(data, str):
             _data = data.encode()
         else:
             _data = data
 
-        _raw.Select(CSeq_data_choice.e_Iupacna)
-        _raw.SetIupacna(CIUPACna(<string> _data))
+        super().__init__()
+        self._ref.GetObject().Select(CSeq_data_choice.e_Iupacna)
+        self._ref.GetObject().SetIupacna(CIUPACna(<string> _data))
+
+    def __repr__(self):
+        cdef str ty = self.__class__.__name__
+        return f"{ty}({self.data!r})"
+
+    @property
+    def data(self):
+        return self.decode()
     
     cpdef str decode(self):
-        return self._data.GetNonNullPointer().GetIupacna().Get().decode()
+        return self._ref.GetObject().GetIupacna().Get().decode()
 
 
-cdef class IupacAaData(SeqData):
+cdef class IupacAaData(SeqAaData):
     pass
 
-cdef class Ncbi2NaData(SeqData):
+cdef class Ncbi2NaData(SeqNaData):
     pass
 
-cdef class Ncbi4NaData(SeqData):
+cdef class Ncbi4NaData(SeqNaData):
     pass
 
-cdef class Ncbi8NaData(SeqData):
+cdef class Ncbi8NaData(SeqNaData):
     pass
 
-cdef class NcbiPNaData(SeqData):
+cdef class NcbiPNaData(SeqNaData):
     pass
 
-cdef class Ncbi8AaData(SeqData):
+cdef class Ncbi8AaData(SeqAaData):
     pass
 
-cdef class NcbiEAaData(SeqData):
+cdef class NcbiEAaData(SeqAaData):
     pass
 
-cdef class NcbiPAaData(SeqData):
+cdef class NcbiPAaData(SeqAaData):
     pass
 
-cdef class NcbiStdAa(SeqData):
+cdef class NcbiStdAa(SeqAaData):
     pass
 
 cdef class GapData(SeqData):
@@ -575,7 +676,7 @@ cdef class WholeSeqLoc(SeqLoc):
 
     @property
     def id(self):
-        id_ = CRef[CSeq_id](&self._loc.GetNonNullPointer().GetWholeRw())
+        id_ = CRef[CSeq_id](&self._loc.GetNonNullPointer().GetWholeMut())
         return SeqId._wrap(id_)
 
 cdef class SeqIntervalLoc(SeqLoc):

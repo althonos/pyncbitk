@@ -129,7 +129,7 @@ set(PYNCBITK_NCBI_LIBS
     # gbseq
     # gencoll_client
     gene_info
-    ##gene_info_writer
+    gene_info_writer
     # genesbyloc
     genome_collection
     # homologene
@@ -163,11 +163,11 @@ set(PYNCBITK_NCBI_LIBS
     writedb
     xblast
     xcgi
-    ##xcompress
+    xcompress
     xconnect
     xconnext
     # xconnserv
-    ##xcser
+    xcser
     xlogging
     xncbi
     xobjmgr
@@ -225,4 +225,4 @@ endif()
 find_package(Python COMPONENTS Interpreter Development.Module REQUIRED)
 
 # Build Python extension
-add_subdirectory(pyncbitk)
+add_subdirectory(src)

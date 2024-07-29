@@ -147,36 +147,41 @@ cdef class SeqData:
     @staticmethod
     cdef SeqData _wrap(CRef[CSeq_data] ref)
 
+cdef class SeqAaData(SeqData):
+    pass
 
-cdef class IupacNaData(SeqData):
+cdef class SeqNaData(SeqData):
+    pass
+
+cdef class IupacNaData(SeqNaData):
     cpdef str decode(self)
 
 
-cdef class IupacAaData(SeqData):
+cdef class IupacAaData(SeqAaData):
     pass
 
-cdef class Ncbi2NaData(SeqData):
+cdef class Ncbi2NaData(SeqNaData):
     pass
 
-cdef class Ncbi4NaData(SeqData):
+cdef class Ncbi4NaData(SeqNaData):
     pass
 
-cdef class Ncbi8NaData(SeqData):
+cdef class Ncbi8NaData(SeqNaData):
     pass
 
-cdef class NcbiPNaData(SeqData):
+cdef class NcbiPNaData(SeqNaData):
     pass
 
-cdef class Ncbi8AaData(SeqData):
+cdef class Ncbi8AaData(SeqAaData):
     pass
 
-cdef class NcbiEAaData(SeqData):
+cdef class NcbiEAaData(SeqAaData):
     pass
 
-cdef class NcbiPAaData(SeqData):
+cdef class NcbiPAaData(SeqAaData):
     pass
 
-cdef class NcbiStdAa(SeqData):
+cdef class NcbiStdAa(SeqAaData):
     pass
 
 cdef class GapData(SeqData):

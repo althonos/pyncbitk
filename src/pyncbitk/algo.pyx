@@ -126,13 +126,13 @@ cdef class SeqAlignScore:
     def id(self):
         if not self._ref.GetObject().IsSetId():
             return None
-        id_ = &self._ref.GetObject().GetIdRw()
+        id_ = &self._ref.GetObject().GetIdMut()
         cref = CRef[CObject_id](id_)
         return ObjectId._wrap(cref)
 
     @property
     def value(self):
-        value = &self._ref.GetObject().GetValueRw()
+        value = &self._ref.GetObject().GetValueMut()
         kind = value.Which()
         if kind == CScore_value_choice.e_Int:
             return value.GetInt()
@@ -164,7 +164,7 @@ cdef class SeqAlign:
         if not self._ref.GetObject().IsSetScore():
             return None
 
-        for ref in self._ref.GetObject().GetScoreRw():
+        for ref in self._ref.GetObject().GetScoreMut():
             scores.append(SeqAlignScore._wrap(ref))
 
         return scores
@@ -180,7 +180,7 @@ cdef class SeqAlignSet:
 
     def __iter__(self):
         cdef CRef[CSeq_align] ref
-        for ref in self._ref.GetObject().GetRw():
+        for ref in self._ref.GetObject().GetMut():
             yield SeqAlign._wrap(ref)
 
     def __len__(self):
