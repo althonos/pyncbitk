@@ -9,6 +9,11 @@ from .toolkit.algo.blast.api.bl2seq cimport CBl2Seq
 from .toolkit.algo.blast.api.blast_types cimport EProgram, ProgramNameToEnum, TSeqAlignVector
 from .toolkit.algo.blast.api.sseqloc cimport SSeqLoc, TSeqLocVector
 from .toolkit.algo.blast.api.local_blast cimport CLocalBlast
+from .toolkit.algo.blast.api.blast_options_handle cimport CBlastOptionsHandle, CBlastOptionsFactory
+from .toolkit.algo.blast.api.query_data cimport IQueryFactory
+from .toolkit.algo.blast.api.objmgr_query_data cimport CObjMgr_QueryFactory
+from .toolkit.algo.blast.api.local_db_adapter cimport CLocalDbAdapter
+from .toolkit.algo.blast.api.blast_results cimport CSearchResultSet, CSearchResults, size_type as CSearchResults_size_type
 from .toolkit.corelib.ncbiobj cimport CConstRef, CRef
 from .toolkit.corelib.ncbistr cimport kEmptyStr
 from .toolkit.corelib.ncbitype cimport Uint4
@@ -42,10 +47,23 @@ from .toolkit.serial.serialdef cimport ESerialRecursionMode
 from .toolkit.objects.blastdb.blast_def_line cimport CBlast_def_line
 from .toolkit.objects.blastdb.blast_def_line_set cimport CBlast_def_line_set
 
+from .objects cimport ObjectId, SeqLoc, SeqAlignSet, SeqAlign
+from .objmgr cimport Scope
+
 import os
 
-from .objects cimport ObjectId, SeqLoc
-from .objmgr cimport Scope
+
+cdef extern from * nogil:
+    """
+    template <typename T>
+    std::string dump(ncbi::CSerialObject& source) {
+        std::string s;
+        s << source;
+        return s;
+    }
+    """
+    cdef string dump[T](T source)
+
 
 # --- BLAST input --------------------------------------------------------------
 
@@ -55,133 +73,99 @@ cdef class BlastSeqLoc:
     def __init__(self, SeqLoc loc, Scope scope, SeqLoc mask = None):
         self._seqloc = SSeqLoc(loc._loc.GetObject(), scope._scope.GetObject())
 
+# --- BLAST results ------------------------------------------------------------
+
+cdef class SearchResultsSet:
+    cdef CRef[CSearchResultSet] _ref
+
+    @staticmethod
+    cdef SearchResultsSet _wrap(CRef[CSearchResultSet] ref):
+        cdef SearchResultsSet obj = SearchResultsSet.__new__(SearchResultsSet)
+        obj._ref = ref
+        return obj
+
+    def __len__(self):
+        return self._ref.GetObject().size()
+
+    def __getitem__(self, ssize_t index):
+        cdef ssize_t _index  = index
+        cdef ssize_t _length = self._ref.GetObject().size()
+
+        if _index < 0:
+            _index += _length
+        if _index < 0 or _index >= _length:
+            raise IndexError(index) 
+
+        cdef CSearchResultSet* obj  = &self._ref.GetObject()
+        cdef CSearchResults*   item = &obj[0][<CSearchResults_size_type> _index] 
+        return SearchResults._wrap(CRef[CSearchResults](item))
+        
+
+cdef class SearchResults:
+    cdef CRef[CSearchResults] _ref
+
+    @staticmethod
+    cdef SearchResults _wrap(CRef[CSearchResults] ref):
+        cdef SearchResults obj = SearchResults.__new__(SearchResults)
+        obj._ref = ref
+        return obj
+
+    @property
+    def alignments(self):
+        return SeqAlignSet._wrap(self._ref.GetObject().GetSeqAlignMut())
+
+
+# --- BLAST --------------------------------------------------------------------
 
 cdef class Blast:
-    cdef CRef[CBl2Seq] _blast
+    cdef CRef[CBlastOptionsHandle] _opt
 
-    def __init__(
-        self, 
-        BlastSeqLoc query, 
-        object subject, 
-        str program
-    ): 
-
-        cdef EProgram      p
-        cdef BlastSeqLoc   s
-        cdef TSeqLocVector subjects = TSeqLocVector()
-        cdef bytes         _program = program.encode()
+    def __init__(self, str program):
+        cdef EProgram p
+        cdef CBlastOptionsHandle* opt 
+        cdef bytes    _program = program.encode()
 
         try:
             p = ProgramNameToEnum(_program)
         except Exception as e:
-            raise ValueError(f"Invalid BLAST program: {program!r}")
+            raise ValueError(f"Invalid BLAST program: {program!r}") from e
 
-        if isinstance(subject, BlastSeqLoc):
-            subject = (subject, )
+        opt = CBlastOptionsFactory.Create(p)
+        self._opt.Reset(opt)
 
-        for s in subject:
-            subjects.push_back(s._seqloc)
-
+    def run(self, queries, subjects, bool scan_mode = False):
         
+        cdef TSeqLocVector         _queries  
+        cdef TSeqLocVector         _subjects
+        cdef BlastSeqLoc           seqloc
+        cdef CRef[IQueryFactory]   query_factory      
+        cdef CRef[IQueryFactory]   subject_factory    
+        cdef CRef[CLocalDbAdapter] db             
+        cdef CRef[CLocalBlast]     blast
+
+        if isinstance(queries, BlastSeqLoc):
+            queries = (queries, )
+        if isinstance(subjects, BlastSeqLoc):
+            subjects = (subjects, )
+
+        for seqloc in queries:
+            _queries.push_back(seqloc._seqloc)
+        for seqloc in subjects:
+            _subjects.push_back(seqloc._seqloc)
+
+        query_factory.Reset(<IQueryFactory*> new CObjMgr_QueryFactory(_queries))
+        subject_factory.Reset(<IQueryFactory*> new CObjMgr_QueryFactory(_subjects))
+        db.Reset(new CLocalDbAdapter(subject_factory, self._opt, scan_mode))
+        blast.Reset(new CLocalBlast(query_factory, self._opt, db))
+        # if (m_InterruptFnx != NULL) {
+        #     m_Blast->SetInterruptCallback(m_InterruptFnx, m_InterruptUserData);
+        # }
+        # // Set the hitlist size to the total number of subject sequences, to 
+        # // make sure that no hits are discarded (ported from CBl2Seq::SetupSearch
+        # m_OptsHandle.SetHitlistSize((int) m_tSubjects.size()); 
+
+        results = blast.GetObject().Run()
+        return SearchResultsSet._wrap(results)
+        # messages = blast.GetSearchMessages() # TODO
 
 
-        self._blast.Reset(
-            new CBl2Seq(query._seqloc, subjects, p)
-        )
-
-    def run(self):
-        cdef TSeqAlignVector _raw_alignments 
-        cdef SeqAlignSet     ali
-        cdef list            alignments      
-        
-        with nogil:
-            _raw_alignments = self._blast.GetObject().Run()
-
-        alignments = []
-        for ref in _raw_alignments:
-            alignments.append(SeqAlignSet._wrap(ref))
-
-        return alignments
-
-
-cdef class SeqAlignScore:
-    # TODO: inherit
-    cdef CRef[CScore] _ref
-
-    @staticmethod
-    cdef SeqAlignScore _wrap(CRef[CScore] ref):
-        cdef SeqAlignScore score = SeqAlignScore.__new__(SeqAlignScore)
-        score._ref = ref
-        return score
-
-    def __iter__(self):
-        yield self.id
-        yield self.value
-
-    def __repr__(self):
-        cdef str ty = type(self).__name__
-        return f"{ty}(id={self.id!r}, value={self.value!r})"
-
-    @property
-    def id(self):
-        if not self._ref.GetObject().IsSetId():
-            return None
-        id_ = &self._ref.GetObject().GetIdMut()
-        cref = CRef[CObject_id](id_)
-        return ObjectId._wrap(cref)
-
-    @property
-    def value(self):
-        value = &self._ref.GetObject().GetValueMut()
-        kind = value.Which()
-        if kind == CScore_value_choice.e_Int:
-            return value.GetInt()
-        elif kind == CScore_value_choice.e_Real:
-            return value.GetReal()
-        raise TypeError(f"Unknown value type: {kind!r}")
-
-
-cdef class SeqAlign:
-    cdef CRef[CSeq_align] _ref
-
-    @staticmethod
-    cdef SeqAlign _wrap(CRef[CSeq_align] ref):
-        cdef SeqAlign obj = SeqAlign.__new__(SeqAlign)
-        obj._ref = ref
-        return obj
-
-    def dumps(self):
-        cdef string s = string()
-        s << <CSerialObject&> self._ref.GetNonNullPointer()[0]
-        return s.decode()
-
-    @property
-    def scores(self):
-        cdef CRef[CScore]  ref
-        cdef SeqAlignScore score 
-        cdef list          scores = []
-
-        if not self._ref.GetObject().IsSetScore():
-            return None
-
-        for ref in self._ref.GetObject().GetScoreMut():
-            scores.append(SeqAlignScore._wrap(ref))
-
-        return scores
-
-cdef class SeqAlignSet:
-    cdef CRef[CSeq_align_set] _ref
-
-    @staticmethod
-    cdef SeqAlignSet _wrap(CRef[CSeq_align_set] ref):
-        cdef SeqAlignSet obj = SeqAlignSet.__new__(SeqAlignSet)
-        obj._ref = ref
-        return obj
-
-    def __iter__(self):
-        cdef CRef[CSeq_align] ref
-        for ref in self._ref.GetObject().GetMut():
-            yield SeqAlign._wrap(ref)
-
-    def __len__(self):
-        return self._ref.GetObject().Get().size()

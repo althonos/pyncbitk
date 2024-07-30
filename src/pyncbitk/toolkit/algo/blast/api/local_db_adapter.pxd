@@ -13,6 +13,8 @@ cdef extern from "algo/blast/api/local_db_adapter.hpp" namespace "ncbi::blast" n
 
     cppclass CLocalDbAdapter(CObject):
         CLocalDbAdapter(const CSearchDatabase& dbinfo)
+        CLocalDbAdapter(CRef[IQueryFactory] subject_sequences, CRef[CBlastOptionsHandle] opts_handle)
+        CLocalDbAdapter(CRef[IQueryFactory] subject_sequences, CRef[CBlastOptionsHandle] opts_handle, bool dbscan_mode)
         CLocalDbAdapter(CRef[IQueryFactory] subject_sequences, CConstRef[CBlastOptionsHandle] opts_handle)
         CLocalDbAdapter(CRef[IQueryFactory] subject_sequences, CConstRef[CBlastOptionsHandle] opts_handle, bool dbscan_mode)
         # CLocalDbAdapter(BlastSeqSrc* seqSrc, CRef[IBlastSeqInfoSrc] seqInfoSrc)

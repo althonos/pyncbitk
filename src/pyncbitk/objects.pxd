@@ -238,3 +238,22 @@ cdef class BondLoc(SeqLoc):
 cdef class FeatureLoc(SeqLoc):
     pass
 
+# --- SeqAlign -----------------------------------------------------------------
+
+cdef class SeqAlignScore:
+    cdef CRef[CScore] _ref
+
+    @staticmethod
+    cdef SeqAlignScore _wrap(CRef[CScore] ref)
+
+cdef class SeqAlign:
+    cdef CRef[CSeq_align] _ref
+
+    @staticmethod
+    cdef SeqAlign _wrap(CRef[CSeq_align] ref)
+
+cdef class SeqAlignSet:
+    cdef CRef[CSeq_align_set] _ref
+
+    @staticmethod
+    cdef SeqAlignSet _wrap(CRef[CSeq_align_set] ref)

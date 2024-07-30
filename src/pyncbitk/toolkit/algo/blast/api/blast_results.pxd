@@ -46,7 +46,7 @@ cdef extern from "algo/blast/api/blast_results.hpp" namespace "ncbi::blast" nogi
         void SetRID(const string& rid) noexcept
 
         CConstRef[CSeq_align_set] GetSeqAlign() const
-        CRef[CSeq_align_set] GetSeqAlignRw "SetSeqAlign" () const
+        CRef[CSeq_align_set] GetSeqAlignMut "SetSeqAlign" () const
 
         bool HasAlignments() const
 
@@ -91,13 +91,13 @@ cdef extern from "algo/blast/api/blast_results.hpp" namespace "ncbi::blast" nogi
         CSearchResultSet(TSeqAlignVector aligns, TSearchMessages msg_vec, EResultType res_type)
 
         CSearchResults& operator[](size_type i)
-        const CSearchResults& operator[](size_type i) const
+        # const CSearchResults& operator[](size_type i) const
 
         CSearchResults& GetResults(size_type qi, size_type si)
-        const CSearchResults& GetResults(size_type qi, size_type si) const
+        # const CSearchResults& GetResults(size_type qi, size_type si) const
 
         CRef[CSearchResults] operator[](const CSeq_id & ident)
-        CConstRef[CSearchResults] operator[](const CSeq_id & ident) const
+        # CConstRef[CSearchResults] operator[](const CSeq_id & ident) const
 
         size_type GetNumResults() const
         size_type GetNumQueries() const

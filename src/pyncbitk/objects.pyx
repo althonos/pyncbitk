@@ -127,8 +127,8 @@ cdef class TextSeqId:
         bool allow_dot_version = True
     ):
         cdef bytes _accession = accession.encode()
-        cdef bytes _name = None if name is None else name.encode()
-        cdef bytes _release = None if release is None else release.encode()
+        cdef bytes _name      = None if name is None else name.encode()
+        cdef bytes _release   = None if release is None else release.encode()
 
         # TODO
         self._ref.Reset(new CTextseq_id())
@@ -704,3 +704,88 @@ cdef class BondLoc(SeqLoc):
 cdef class FeatureLoc(SeqLoc):
     pass
 
+# --- SeqAlign -----------------------------------------------------------------
+
+cdef class SeqAlignScore:
+    # TODO: inherit
+
+    @staticmethod
+    cdef SeqAlignScore _wrap(CRef[CScore] ref):
+        cdef SeqAlignScore score = SeqAlignScore.__new__(SeqAlignScore)
+        score._ref = ref
+        return score
+
+    def __iter__(self):
+        yield self.id
+        yield self.value
+
+    def __repr__(self):
+        cdef str ty = type(self).__name__
+        return f"{ty}(id={self.id!r}, value={self.value!r})"
+
+    @property
+    def id(self):
+        if not self._ref.GetObject().IsSetId():
+            return None
+        id_ = &self._ref.GetObject().GetIdMut()
+        cref = CRef[CObject_id](id_)
+        return ObjectId._wrap(cref)
+
+    @property
+    def value(self):
+        value = &self._ref.GetObject().GetValueMut()
+        kind = value.Which()
+        if kind == CScore_value_choice.e_Int:
+            return value.GetInt()
+        elif kind == CScore_value_choice.e_Real:
+            return value.GetReal()
+        raise TypeError(f"Unknown value type: {kind!r}")
+
+
+cdef class SeqAlign:
+
+    @staticmethod
+    cdef SeqAlign _wrap(CRef[CSeq_align] ref):
+        cdef SeqAlign obj = SeqAlign.__new__(SeqAlign)
+        obj._ref = ref
+        return obj
+
+    def dumps(self):
+        cdef string s = string()
+        s << <CSerialObject&> self._ref.GetNonNullPointer()[0]
+        return s.decode()
+
+    @property
+    def scores(self):
+        cdef CRef[CScore]  ref
+        cdef SeqAlignScore score 
+        cdef list          scores = []
+
+        if not self._ref.GetObject().IsSetScore():
+            return None
+
+        for ref in self._ref.GetObject().GetScoreMut():
+            scores.append(SeqAlignScore._wrap(ref))
+
+        return scores
+
+cdef class SeqAlignSet:
+
+    @staticmethod
+    cdef SeqAlignSet _wrap(CRef[CSeq_align_set] ref):
+        cdef SeqAlignSet obj = SeqAlignSet.__new__(SeqAlignSet)
+        obj._ref = ref
+        return obj
+
+    def __iter__(self):
+        cdef CRef[CSeq_align] ref
+        for ref in self._ref.GetObject().GetMut():
+            yield SeqAlign._wrap(ref)
+
+    def __len__(self):
+        return self._ref.GetObject().Get().size()
+
+    def dumps(self):
+        cdef string s = string()
+        s << <CSerialObject&> self._ref.GetNonNullPointer()[0]
+        return s.decode()
