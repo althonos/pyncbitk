@@ -126,26 +126,14 @@ cdef class Blast:
     def tasks():
         return [ x.decode() for x in CBlastOptionsFactory.GetTasks() ]
 
-    def __init__(self):
-        raise TypeError("Cannot instantiate abstract class Blast")
-
-    # def __init__(
-    #     self,
-    #     str program,
-    #     *,
-    #     int window_size = 40,
-    # ):
-    #     cdef EProgram p
-    #     cdef CBlastOptionsHandle* opt
-    #     cdef bytes    _program = program.encode()
-
-    #     try:
-    #         p = ProgramNameToEnum(_program)
-    #     except Exception as e:
-    #         raise ValueError(f"Invalid BLAST program: {program!r}") from e
-
-    #     opt = CBlastOptionsFactory.Create(p)
-    #     self._opt.Reset(opt)
+    def __init__(
+        self,
+        *,
+        int window_size = 40,
+    ):
+        if self._opt.Empty():
+            raise TypeError("Cannot instantiate abstract class Blast")
+        self.window_size = window_size
 
     def __repr__(self):
         cdef str ty = self.__class__.__name__
@@ -283,19 +271,18 @@ cdef class Blast:
 
 
 cdef class BlastN(Blast):
-    cdef CRef[CBlastNucleotideOptionsHandle] _blastn_opt
 
-    def __init__(self):
-
+    def __init__(
+        self,
+        *,
+        int window_size = 40,
+    ):
         cdef CBlastNucleotideOptionsHandle* handle = new CBlastNucleotideOptionsHandle()
         handle.SetTraditionalBlastnDefaults()
-
-        cdef CBlastOptionsHandle* base = &(handle[0])
-
-        self._blastn_opt.Reset(handle)
         self._opt.Reset(<CBlastOptionsHandle*> handle)
-
-
+        super().__init__(
+            window_size=window_size,
+        )
 
 cdef class ProteinBlast(Blast):
     pass

@@ -91,7 +91,7 @@ cdef extern from "objects/seq/Seq_inst_.hpp" namespace "ncbi::objects" nogil:
         void ResetLength()
         TLength GetLength() const
         void SetLength(TLength value)
-        TLength& SetLength()
+        TLength& GetLengthMut "SetLength"()
 
         # # optional
         # bool IsSetFuzz() const

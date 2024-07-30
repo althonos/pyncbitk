@@ -390,9 +390,11 @@ cdef class SeqInst:
 
     def __init__(
         self,
+        *,
         str topology="linear",
         str strand=None, 
         str molecule=None,
+        object length=None,
     ):
         # try to detect molecule if possible
         if molecule not in _SEQINST_MOLECULE_ENUM:
@@ -416,6 +418,8 @@ cdef class SeqInst:
         obj.SetMol(_SEQINST_MOLECULE_ENUM[molecule])
         obj.SetStrand(_SEQINST_STRAND_ENUM[strand])
         obj.SetTopology(_SEQINST_TOPOLOGY_ENUM[topology])
+        if length is not None:
+            obj.SetLength(length)
         self._ref.Reset(obj)
 
     def __repr__(self):
@@ -473,13 +477,31 @@ cdef class ContinuousInst(SeqInst):
     def __init__(
         self, 
         SeqData data, 
+        *,
         topology="linear", 
         strand=None, 
-        molecule=None
+        molecule=None,
+        length=None,
     ):
-        super().__init__(topology=topology, strand=strand, molecule=molecule)
-        self._ref.GetObject().SetRepr(CSeq_inst_repr.eRepr_raw)
-        self._ref.GetObject().SetSeq_data(data._ref.GetObject())
+        if length is None and hasattr(data, "length"):
+            length = data.length
+        
+        if molecule is None:
+            if isinstance(data, SeqNaData):
+                molecule = "dna"
+            elif isinstance(data, SeqAaData):
+                molecule = "aa"
+
+        super().__init__(
+            topology=topology, 
+            strand=strand, 
+            molecule=molecule, 
+            length=length
+        )
+        
+        cdef CSeq_inst* obj = &self._ref.GetObject()
+        obj.SetRepr(CSeq_inst_repr.eRepr_raw)
+        obj.SetSeq_data(data._ref.GetObject())
 
     def __repr__(self):
         cdef str ty    = self.__class__.__name__
@@ -585,8 +607,8 @@ cdef class IupacNaData(SeqNaData):
         return f"{ty}({self.data!r})"
 
     @property
-    def data(self):
-        return self.decode()
+    def length(self):
+        return self._ref.GetObject().GetIupacna().Get().size()
     
     cpdef str decode(self):
         return self._ref.GetObject().GetIupacna().Get().decode()

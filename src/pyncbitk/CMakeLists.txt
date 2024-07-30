@@ -32,12 +32,14 @@ macro(cython_extension _name)
     OUTPUT ${_name}.cpp
     COMMENT
       "Making ${CMAKE_CURRENT_BINARY_DIR}/${_name}.cpp from ${CMAKE_CURRENT_SOURCE_DIR}/${_name}.pyx"
-    COMMAND Python::Interpreter -m cython
+    COMMAND 
+      Python::Interpreter -m cython
             "${CMAKE_CURRENT_SOURCE_DIR}/${_name}.pyx" 
             --output-file ${_name}.cpp
             --cplus
             ${CYTHON_DIRECTIVES}
-    DEPENDS ${_name}.pyx
+    MAIN_DEPENDENCY 
+      ${_name}.pyx
     VERBATIM)
   python_add_library(${_name} MODULE WITH_SOABI ${_name}.pyx ${_name}.cpp)
   foreach(_lib IN LISTS PYNCBITK_NCBI_LIBS)
