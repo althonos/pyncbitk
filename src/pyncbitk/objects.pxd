@@ -43,9 +43,17 @@ from .toolkit.serial.serialdef cimport ESerialRecursionMode
 from .toolkit.objects.blastdb.blast_def_line cimport CBlast_def_line
 from .toolkit.objects.blastdb.blast_def_line_set cimport CBlast_def_line_set
 
+# --- Base serial object -------------------------------------------------------
+
+cdef class Serial:
+    
+    cdef CSerialObject* _serial(self)
+
+    cpdef str dumps(self, str format=*)
+
 # --- ObjectId -----------------------------------------------------------------
 
-cdef class ObjectId:
+cdef class ObjectId(Serial):
     cdef CRef[CObject_id] _ref
 
     @staticmethod
@@ -59,7 +67,7 @@ cdef class IntId(ObjectId):
 
 # --- TextSeqId ----------------------------------------------------------------
 
-cdef class TextSeqId:
+cdef class TextSeqId(Serial):
     cdef CRef[CTextseq_id] _ref
 
     @staticmethod
@@ -67,7 +75,7 @@ cdef class TextSeqId:
 
 # --- SeqId --------------------------------------------------------------------
 
-cdef class SeqId:
+cdef class SeqId(Serial):
     cdef CRef[CSeq_id] _ref
 
     @staticmethod
@@ -91,20 +99,19 @@ cdef class GeneralId(SeqId):
 
 # --- BioSeq -------------------------------------------------------------------
 
-cdef class BioSeq:
+cdef class BioSeq(Serial):
     cdef CRef[CBioseq] _ref
 
     @staticmethod
     cdef BioSeq _wrap(CRef[CBioseq] ref)
-        
-
+    
 cdef class BioSeqSet:
     cdef CRef[CBioseq_set] _ref
 
 
 # --- SeqInst ------------------------------------------------------------------
 
-cdef class SeqInst:
+cdef class SeqInst(Serial):
     cdef CRef[CSeq_inst] _ref
 
     @staticmethod
@@ -141,7 +148,7 @@ cdef class DeltaInst(SeqInst):
 
 # --- SeqData ------------------------------------------------------------------
 
-cdef class SeqData:
+cdef class SeqData(Serial):
     cdef CRef[CSeq_data] _ref
 
     @staticmethod
@@ -190,7 +197,7 @@ cdef class GapData(SeqData):
 
 # --- Entry --------------------------------------------------------------------
 
-cdef class Entry:
+cdef class Entry(Serial):
     cdef CRef[CSeq_entry] _ref
 
     @staticmethod
@@ -205,7 +212,7 @@ cdef class SetEntry(Entry):
 
 # --- SeqLoc -------------------------------------------------------------------
 
-cdef class SeqLoc:
+cdef class SeqLoc(Serial):
     cdef CRef[CSeq_loc] _loc
 
 cdef class NullLoc(SeqLoc):
@@ -246,13 +253,13 @@ cdef class SeqAlignScore:
     @staticmethod
     cdef SeqAlignScore _wrap(CRef[CScore] ref)
 
-cdef class SeqAlign:
+cdef class SeqAlign(Serial):
     cdef CRef[CSeq_align] _ref
 
     @staticmethod
     cdef SeqAlign _wrap(CRef[CSeq_align] ref)
 
-cdef class SeqAlignSet:
+cdef class SeqAlignSet(Serial):
     cdef CRef[CSeq_align_set] _ref
 
     @staticmethod

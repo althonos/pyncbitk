@@ -42,9 +42,33 @@ from .toolkit.serial.serialdef cimport ESerialRecursionMode
 from .toolkit.objects.blastdb.blast_def_line cimport CBlast_def_line
 from .toolkit.objects.blastdb.blast_def_line_set cimport CBlast_def_line_set
 
+
+# --- Serial -------------------------------------------------------------------
+
+cdef class Serial:
+    """Abstract base class for objects that can be serialized.
+    """
+
+    cdef CSerialObject* _serial(self):
+        return NULL
+
+    cpdef str dumps(self, str format="asntext"):
+        cdef string         s
+        cdef CSerialObject* serial = self._serial()
+
+        if format != "asntext":
+            raise NotImplementedError(f"unsupported serialization: {format!r}")
+
+        if serial is NULL:
+            raise TypeError("invalid Serial declaration")
+
+        s << serial[0]
+        return s.decode()
+
+
 # --- ObjectId -----------------------------------------------------------------
 
-cdef class ObjectId:
+cdef class ObjectId(Serial):
     """A basic identifier for any NCBI Toolkit object.
     """
 
@@ -59,9 +83,12 @@ cdef class ObjectId:
             obj = StrId.__new__(StrId)
         else:
             raise NotImplementedError
-        
+
         obj._ref = ref
         return obj
+
+    cdef CSerialObject* _serial(self):
+        return <CSerialObject*> self._ref.GetNonNullPointer()
 
     def __init__(self):
         raise TypeError("Can't instantiate abstract class ObjectId")
@@ -109,13 +136,16 @@ cdef class IntId(ObjectId):
 
 # --- TextSeqId ----------------------------------------------------------------
 
-cdef class TextSeqId:
+cdef class TextSeqId(Serial):
 
     @staticmethod
     cdef TextSeqId _wrap(CRef[CTextseq_id] ref):
         cdef TextSeqId obj = TextSeqId.__new__(TextSeqId)
         obj._ref = ref
         return obj
+
+    cdef CSerialObject* _serial(self):
+        return <CSerialObject*> self._ref.GetNonNullPointer()
 
     def __init__(
         self,
@@ -139,7 +169,7 @@ cdef class TextSeqId:
     def __repr__(self):
         cdef str ty    = type(self).__name__
         cdef list args = [repr(self.accession)]
-        
+
         name = self.name
         if name is not None:
             args.append(f"name={name!r}")
@@ -183,7 +213,7 @@ cdef class TextSeqId:
 
 # --- SeqId --------------------------------------------------------------------
 
-cdef class SeqId:
+cdef class SeqId(Serial):
 
     @staticmethod
     cdef SeqId _wrap(CRef[CSeq_id] ref):
@@ -196,22 +226,18 @@ cdef class SeqId:
             obj = GenBankId.__new__(GenBankId)
         else:
             raise NotImplementedError
-        
+
         obj._ref = ref
         return obj
+
+    cdef CSerialObject* _serial(self):
+        return <CSerialObject*> self._ref.GetNonNullPointer()
 
     @staticmethod
     def parse(str text):
         cdef bytes _text = text.encode()
         cdef CSeq_id* _id = new CSeq_id(CTempString(_text))
         return SeqId._wrap(CRef[CSeq_id](_id))
-
-    # FIXME: debug
-    def dumps(self):
-        cdef string s = string()
-        s << <CSerialObject&> self._ref.GetNonNullPointer()[0]
-        return s.decode()
-
 
 cdef class LocalId(SeqId):
 
@@ -224,17 +250,17 @@ cdef class LocalId(SeqId):
     def __repr__(self):
         cdef str ty = type(self).__name__
         return f"{ty}({self.id!r})"
-    
+
     @property
     def id(self):
         cdef CObject_id* id = &self._ref.GetNonNullPointer().GetLocalMut()
         return ObjectId._wrap(CRef[CObject_id](id))
-        
+
 cdef class RefSeqId(SeqId):
     pass
 
 cdef class GenBankId(SeqId):
-    
+
     @property
     def id(self):
         cdef CTextseq_id* id = &self._ref.GetObject().GetGenbankMut()
@@ -249,14 +275,17 @@ cdef class GeneralId(SeqId):
 
 # --- BioSeq -------------------------------------------------------------------
 
-cdef class BioSeq:
+cdef class BioSeq(Serial):
 
     @staticmethod
     cdef BioSeq _wrap(CRef[CBioseq] ref):
         cdef BioSeq obj = BioSeq.__new__(BioSeq)
         obj._ref = ref
         return obj
-    
+
+    cdef CSerialObject* _serial(self):
+        return <CSerialObject*> self._ref.GetNonNullPointer()
+
     def __init__(
         self,
         object ids not None,
@@ -294,17 +323,13 @@ cdef class BioSeq:
 
     @property
     def instance(self):
+        """`SeqInst`: The actual sequence instance.
+        """
         assert self._ref.GetNonNullPointer().IsSetInst()  # mandatory
         return SeqInst._wrap(CRef[CSeq_inst](&self._ref.GetObject().GetInstMut()))
 
-    # FIXME: debug
-    def dumps(self):
-        cdef string s = string()
-        s << <CSerialObject&> self._ref.GetObject()
-        return s.decode()
-        
 cdef class BioSeqSet:
-    
+
     def __init__(self):
         pass
 
@@ -357,7 +382,7 @@ cdef dict _SEQINST_STRAND_ENUM = {
     v:k for k,v in _SEQINST_STRAND_STR.items()
 }
 
-cdef class SeqInst:
+cdef class SeqInst(Serial):
 
     @staticmethod
     cdef SeqInst _wrap(CRef[CSeq_inst] ref):
@@ -384,15 +409,18 @@ cdef class SeqInst:
             obj = DeltaInst.__new__(DeltaInst)
         else:
             raise NotImplementedError
-        
+
         obj._ref = ref
         return obj
+
+    cdef CSerialObject* _serial(self):
+        return <CSerialObject*> self._ref.GetNonNullPointer()
 
     def __init__(
         self,
         *,
         str topology="linear",
-        str strand=None, 
+        str strand=None,
         str molecule=None,
         object length=None,
     ):
@@ -435,7 +463,6 @@ cdef class SeqInst:
 
         return f"{ty}({', '.join(args)})"
 
-
     @property
     def length(self):
         if not self._ref.GetObject().IsSetLength():
@@ -473,19 +500,19 @@ cdef class VirtualInst(SeqInst):
     pass
 
 cdef class ContinuousInst(SeqInst):
-    
+
     def __init__(
-        self, 
-        SeqData data, 
+        self,
+        SeqData data,
         *,
-        topology="linear", 
-        strand=None, 
+        topology="linear",
+        strand=None,
         molecule=None,
         length=None,
     ):
         if length is None and hasattr(data, "length"):
             length = data.length
-        
+
         if molecule is None:
             if isinstance(data, SeqNaData):
                 molecule = "dna"
@@ -493,12 +520,12 @@ cdef class ContinuousInst(SeqInst):
                 molecule = "aa"
 
         super().__init__(
-            topology=topology, 
-            strand=strand, 
-            molecule=molecule, 
+            topology=topology,
+            strand=strand,
+            molecule=molecule,
             length=length
         )
-        
+
         cdef CSeq_inst* obj = &self._ref.GetObject()
         obj.SetRepr(CSeq_inst_repr.eRepr_raw)
         obj.SetSeq_data(data._ref.GetObject())
@@ -532,7 +559,7 @@ cdef class MapInst(SeqInst):
     pass
 
 cdef class DeltaInst(SeqInst):
-    
+
     cpdef ContinuousInst to_continuous(self):
         cdef CSeq_inst* copy = new CSeq_inst()
         copy.Assign(self._ref.GetNonNullPointer()[0], ESerialRecursionMode.eRecursive)
@@ -543,7 +570,7 @@ cdef class DeltaInst(SeqInst):
 
 # --- SeqData ------------------------------------------------------------------
 
-cdef class SeqData:
+cdef class SeqData(Serial):
 
     @staticmethod
     cdef SeqData _wrap(CRef[CSeq_data] ref):
@@ -578,6 +605,9 @@ cdef class SeqData:
         obj._ref = ref
         return obj
 
+    cdef CSerialObject* _serial(self):
+        return <CSerialObject*> self._ref.GetNonNullPointer()
+
     def __init__(self):
         self._ref.Reset(new CSeq_data())
 
@@ -609,7 +639,7 @@ cdef class IupacNaData(SeqNaData):
     @property
     def length(self):
         return self._ref.GetObject().GetIupacna().Get().size()
-    
+
     cpdef str decode(self):
         return self._ref.GetObject().GetIupacna().Get().decode()
 
@@ -647,11 +677,11 @@ cdef class GapData(SeqData):
 
 # --- Entry --------------------------------------------------------------------
 
-cdef class Entry:
+cdef class Entry(Serial):
 
     @staticmethod
     cdef Entry _wrap(CRef[CSeq_entry] ref):
-        
+
         cdef Entry entry
         cdef CSeq_entry_choice kind = ref.GetNonNullPointer().Which()
 
@@ -663,6 +693,9 @@ cdef class Entry:
             raise RuntimeError("seq entry kind not defined")
         entry._ref = ref
         return entry
+
+    cdef CSerialObject* _serial(self):
+        return <CSerialObject*> self._ref.GetNonNullPointer()
 
 cdef class SeqEntry(Entry):
 
@@ -678,13 +711,10 @@ cdef class SetEntry(Entry):
 
 # --- SeqLoc -------------------------------------------------------------------
 
-cdef class SeqLoc:
+cdef class SeqLoc(Serial):
 
-    # FIXME: debug
-    def dumps(self):
-        cdef string s = string()
-        s << <CSerialObject&> self._loc.GetNonNullPointer()[0]
-        return s.decode()
+    cdef CSerialObject* _serial(self):
+        return <CSerialObject*> self._loc.GetNonNullPointer()
 
 cdef class NullLoc(SeqLoc):
     pass
@@ -693,7 +723,7 @@ cdef class EmptySeqLoc(SeqLoc):
     pass
 
 cdef class WholeSeqLoc(SeqLoc):
-    
+
     def __init__(self, SeqId id):
         cdef CSeq_loc* loc = new CSeq_loc()
         loc.Select(CSeq_loc_choice.e_Whole)
@@ -764,7 +794,7 @@ cdef class SeqAlignScore:
         raise TypeError(f"Unknown value type: {kind!r}")
 
 
-cdef class SeqAlign:
+cdef class SeqAlign(Serial):
 
     @staticmethod
     cdef SeqAlign _wrap(CRef[CSeq_align] ref):
@@ -772,15 +802,13 @@ cdef class SeqAlign:
         obj._ref = ref
         return obj
 
-    def dumps(self):
-        cdef string s = string()
-        s << <CSerialObject&> self._ref.GetNonNullPointer()[0]
-        return s.decode()
+    cdef CSerialObject* _serial(self):
+        return <CSerialObject*> self._ref.GetNonNullPointer()
 
     @property
     def scores(self):
         cdef CRef[CScore]  ref
-        cdef SeqAlignScore score 
+        cdef SeqAlignScore score
         cdef list          scores = []
 
         if not self._ref.GetObject().IsSetScore():
@@ -791,13 +819,16 @@ cdef class SeqAlign:
 
         return scores
 
-cdef class SeqAlignSet:
+cdef class SeqAlignSet(Serial):
 
     @staticmethod
     cdef SeqAlignSet _wrap(CRef[CSeq_align_set] ref):
         cdef SeqAlignSet obj = SeqAlignSet.__new__(SeqAlignSet)
         obj._ref = ref
         return obj
+
+    cdef CSerialObject* _serial(self):
+        return <CSerialObject*> self._ref.GetNonNullPointer()
 
     def __iter__(self):
         cdef CRef[CSeq_align] ref
@@ -806,8 +837,3 @@ cdef class SeqAlignSet:
 
     def __len__(self):
         return self._ref.GetObject().Get().size()
-
-    def dumps(self):
-        cdef string s = string()
-        s << <CSerialObject&> self._ref.GetNonNullPointer()[0]
-        return s.decode()
