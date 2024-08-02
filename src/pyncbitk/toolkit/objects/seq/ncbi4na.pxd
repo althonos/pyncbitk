@@ -1,8 +1,7 @@
 from libcpp cimport bool
 from libcpp.vector cimport vector
 
-from ...corelib.ncbimisc cimport TSeqPos
-from ...serial.serialbase cimport CSerialObject, CStringAliasBase
+from ...serial.serialbase cimport CStringAliasBase
 
 cdef extern from "objects/seq/NCBI4na_.hpp" namespace "ncbi::objects" nogil:
     

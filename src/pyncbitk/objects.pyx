@@ -46,6 +46,7 @@ from .toolkit.serial.serialbase cimport CSerialObject, MSerial_Format, MSerial_F
 from .toolkit.serial.serialdef cimport ESerialRecursionMode, ESerialDataFormat, ESerial_Xml_Flags
 from .toolkit.objects.blastdb.blast_def_line cimport CBlast_def_line
 from .toolkit.objects.blastdb.blast_def_line_set cimport CBlast_def_line_set
+from .toolkit.objects.seq.seqport_util cimport CSeqportUtil
 
 
 # --- Serial -------------------------------------------------------------------
@@ -624,8 +625,8 @@ cdef class SeqData(Serial):
 
     @staticmethod
     cdef SeqData _wrap(CRef[CSeq_data] ref):
-        cdef SeqData obj
-        cdef CSeq_data_choice kind = ref.GetPointer().Which()
+        cdef SeqData          obj
+        cdef CSeq_data_choice kind = ref.GetObject().Which()
 
         if kind == CSeq_data_choice.e_Iupacna:
             obj = IupacNaData.__new__(IupacNaData)
@@ -661,12 +662,46 @@ cdef class SeqData(Serial):
     def __init__(self):
         self._ref.Reset(new CSeq_data())
 
+    cpdef SeqData complement(self):
+        cdef CSeq_data* data = new CSeq_data()
+        CSeqportUtil.Complement(self._ref.GetObject(), data)
+        return SeqData._wrap(CRef[CSeq_data](data))
+
+    cpdef SeqData reverse_complement(self):
+        cdef CSeq_data* data = new CSeq_data()
+        CSeqportUtil.ReverseComplement(self._ref.GetObject(), data)
+        return SeqData._wrap(CRef[CSeq_data](data))
+
 
 cdef class SeqAaData(SeqData):
-    pass
+    
+    cpdef str decode(self):
+        cdef CSeq_data*       out  
+        cdef CSeq_data*       data = &self._ref.GetObject()
+        cdef CSeq_data_choice kind = data.Which()
+
+        try:
+            out = new CSeq_data()
+            with nogil:
+                CSeqportUtil.Convert(data[0], out, CSeq_data_choice.e_Ncbieaa)
+            return out.GetNcbieaa().Get().decode()
+        finally:
+            del out
 
 cdef class SeqNaData(SeqData):
-    pass
+    
+    cpdef str decode(self):
+        cdef CSeq_data*       out  
+        cdef CSeq_data*       data = &self._ref.GetObject()
+        cdef CSeq_data_choice kind = data.Which()
+
+        try:
+            out = new CSeq_data()
+            with nogil:
+                CSeqportUtil.Convert(data[0], out, CSeq_data_choice.e_Iupacna)
+            return out.GetIupacna().Get().decode()
+        finally:
+            del out
 
 cdef class IupacNaData(SeqNaData):
 
@@ -718,7 +753,9 @@ cdef class IupacNaData(SeqNaData):
 
 
 cdef class IupacAaData(SeqAaData):
-    pass
+    
+    cpdef str decode(self):
+        return self._ref.GetObject().GetIupacaa().Get().decode()
 
 cdef class Ncbi2NaData(SeqNaData):
     pass
@@ -760,7 +797,8 @@ cdef class Ncbi8AaData(SeqAaData):
     pass
 
 cdef class NcbiEAaData(SeqAaData):
-    pass
+    cpdef str decode(self):
+        return self._ref.GetObject().GetNcbieaa().Get().decode()
 
 cdef class NcbiPAaData(SeqAaData):
     pass

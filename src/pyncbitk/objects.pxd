@@ -154,15 +154,17 @@ cdef class SeqData(Serial):
     @staticmethod
     cdef SeqData _wrap(CRef[CSeq_data] ref)
 
+    cpdef SeqData complement(self)
+    cpdef SeqData reverse_complement(self)
+
 cdef class SeqAaData(SeqData):
-    pass
-
-cdef class SeqNaData(SeqData):
-    pass
-
-cdef class IupacNaData(SeqNaData):
     cpdef str decode(self)
 
+cdef class SeqNaData(SeqData):
+    cpdef str decode(self)
+
+cdef class IupacNaData(SeqNaData):
+    pass
 
 cdef class IupacAaData(SeqAaData):
     pass
