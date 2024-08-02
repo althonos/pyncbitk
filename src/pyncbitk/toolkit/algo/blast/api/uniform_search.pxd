@@ -1,7 +1,8 @@
 from libcpp cimport bool
 from libcpp.string cimport string
 
-from ....corelib.ncbiobj cimport CObject
+from ....corelib.ncbiobj cimport CObject, CRef
+from ....objtools.blast.seqdb_reader.seqdb cimport CSeqDB
 
 
 cdef extern from "algo/blast/api/uniform_search.hpp" namespace "ncbi::blast::CSearchDatabase" nogil:
@@ -43,5 +44,5 @@ cdef extern from "algo/blast/api/uniform_search.hpp" namespace "ncbi::blast" nog
         # string GetFilteringAlgorithmKey() const;
         # ESubjectMaskingType GetMaskType() const;
 
-        # void SetSeqDb(CRef<CSeqDB> seqdb);
-        # CRef<CSeqDB> GetSeqDb() const;
+        void SetSeqDb(CRef[CSeqDB] seqdb)
+        CRef[CSeqDB] GetSeqDb() const

@@ -19,7 +19,6 @@ import os
 # --- FastaReader --------------------------------------------------------------
 
 cdef class FastaReader:
-    cdef CFastaReader* _reader
 
     def __cinit__(self):
         self._reader = NULL
@@ -38,12 +37,9 @@ cdef class FastaReader:
 
 # --- BlastDatabase ------------------------------------------------------------
 
-cdef class BlastDatabaseIter:
-    cdef CRef[CSeqDB]         _ref
-    cdef BlastDatabase        db
-    cdef CSeqDBIter*          it
+cdef class DatabaseIter:
 
-    def __init__(self, BlastDatabase db):
+    def __init__(self, DatabaseReader db):
 
         if self.it is not NULL:
             del self.it
@@ -73,8 +69,7 @@ cdef class BlastDatabaseIter:
         return BioSeq._wrap(seq)
 
 
-cdef class BlastDatabase:
-    cdef CRef[CSeqDB] _ref
+cdef class DatabaseReader:
 
     @staticmethod
     def _search_path():
@@ -86,7 +81,7 @@ cdef class BlastDatabase:
         self._ref.Reset(_db)
 
     def __iter__(self):
-        return BlastDatabaseIter(self)
+        return DatabaseIter(self)
 
     def __len__(self):
         return self._ref.GetObject().GetNumSeqs()

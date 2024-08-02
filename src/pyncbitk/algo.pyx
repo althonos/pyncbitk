@@ -49,9 +49,11 @@ from .toolkit.serial.serialdef cimport ESerialRecursionMode
 from .toolkit.objects.blastdb.blast_def_line cimport CBlast_def_line
 from .toolkit.objects.blastdb.blast_def_line_set cimport CBlast_def_line_set
 from .toolkit.algo.blast.api.uniform_search cimport CSearchDatabase, EMoleculeType
+from .toolkit.objtools.blast.seqdb_reader.seqdb cimport CSeqDB, ESeqType
 
 from .objects cimport ObjectId, SeqLoc, SeqAlignSet, SeqAlign
 from .objmgr cimport Scope
+from .objtools cimport DatabaseReader
 
 import os
 
@@ -70,13 +72,13 @@ cdef extern from * nogil:
 
 # --- BLAST input --------------------------------------------------------------
 
-cdef class BlastDatabase:
-    cdef CRef[CSearchDatabase] _ref
+# cdef class BlastDbLoc:
+#     cdef CRef[CSearchDatabase] _ref
     
-    def __init__(self, str name not None, protein=False):
-        cdef bytes            _name = name.encode() # FIXME: os.fsencode?
-        cdef CSearchDatabase* _db   = new CSearchDatabase(_name, EMoleculeType.eBlastDbIsNucleotide)
-        self._ref.Reset(_db)
+#     def __init__(self, str name not None, protein=False):
+#         cdef bytes            _name = name.encode() # FIXME: os.fsencode?
+#         cdef CSearchDatabase* _db   = new CSearchDatabase(_name, EMoleculeType.eBlastDbIsNucleotide)
+#         self._ref.Reset(_db)
 
 
 cdef class BlastSeqLoc:
@@ -248,25 +250,41 @@ cdef class Blast:
     ):
         cdef TSeqLocVector         _queries
         cdef TSeqLocVector         _subjects
+        cdef DatabaseReader        _db
         cdef BlastSeqLoc           seqloc
         cdef CRef[IQueryFactory]   query_factory
         cdef CRef[IQueryFactory]   subject_factory
         cdef CRef[CLocalDbAdapter] db
         cdef CRef[CLocalBlast]     blast
 
+        # prepare queries: a list of `BlastSeqLoc` objects 
         if isinstance(queries, BlastSeqLoc):
             queries = (queries, )
-        if isinstance(subjects, BlastSeqLoc):
-            subjects = (subjects, )
-
         for seqloc in queries:
             _queries.push_back(seqloc._seqloc)
-        for seqloc in subjects:
-            _subjects.push_back(seqloc._seqloc)
-
         query_factory.Reset(<IQueryFactory*> new CObjMgr_QueryFactory(_queries))
-        subject_factory.Reset(<IQueryFactory*> new CObjMgr_QueryFactory(_subjects))
-        db.Reset(new CLocalDbAdapter(subject_factory, self._opt, scan_mode))
+
+        # prepare subjects: either a list of `BlastSeqLoc` objects, or a `DatabaseReader`
+        if isinstance(subjects, DatabaseReader):
+            _db = subjects
+            _ty = _db._ref.GetObject().GetSequenceType()
+            if _ty == ESeqType.eProtein:
+                search_database = new CSearchDatabase(string(), EMoleculeType.eBlastDbIsProtein)
+            elif _ty == ESeqType.eNucleotide:
+                search_database = new CSearchDatabase(string(), EMoleculeType.eBlastDbIsNucleotide)
+            else:
+                raise ValueError(f"invalid sequence type: {_ty!r}")
+            search_database.SetSeqDb((<DatabaseReader> subjects)._ref)
+            db.Reset(new CLocalDbAdapter(search_database[0]))
+        else:
+            if isinstance(subjects, BlastSeqLoc):
+                subjects = (subjects, )
+            for seqloc in subjects:
+                _subjects.push_back(seqloc._seqloc)
+            subject_factory.Reset(<IQueryFactory*> new CObjMgr_QueryFactory(_subjects))
+            db.Reset(new CLocalDbAdapter(subject_factory, self._opt, scan_mode))
+        
+        # prepare the BLAST program
         blast.Reset(new CLocalBlast(query_factory, self._opt, db))
         # if (m_InterruptFnx != NULL) {
         #     m_Blast->SetInterruptCallback(m_InterruptFnx, m_InterruptUserData);
@@ -275,12 +293,24 @@ cdef class Blast:
         # // make sure that no hits are discarded (ported from CBl2Seq::SetupSearch
         # m_OptsHandle.SetHitlistSize((int) m_tSubjects.size());
 
-        results = blast.GetObject().Run()
+        # run BLAST and get results
+        with nogil:
+            results = blast.GetObject().Run()
         return SearchResultsSet._wrap(results)
         # messages = blast.GetSearchMessages() # TODO
 
 
-cdef class BlastN(Blast):
+cdef class NucleotideBlast(Blast):
+    pass
+
+cdef class ProteinBlast(Blast):
+    pass
+
+cdef class MappingBlast(Blast):
+    pass
+
+
+cdef class BlastN(NucleotideBlast):
 
     def __init__(
         self,
@@ -293,11 +323,3 @@ cdef class BlastN(Blast):
         super().__init__(
             window_size=window_size,
         )
-
-cdef class ProteinBlast(Blast):
-    pass
-
-cdef class MappingBlast(Blast):
-    pass
-
-
