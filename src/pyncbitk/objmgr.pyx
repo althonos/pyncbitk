@@ -3,6 +3,7 @@
 from libcpp cimport bool
 from libcpp.list cimport list as cpplist
 from libcpp.string cimport string
+from libcpp.vector cimport vector
 from libcpp.utility cimport move
 
 from .toolkit.algo.blast.api.bl2seq cimport CBl2Seq
@@ -52,6 +53,15 @@ cdef class ObjectManager:
     cpdef Scope scope(self):
         return Scope(self)
 
+    def register_data_loader(self, str name not None):
+        cdef bytes _name = name.encode()
+        self._mgr.GetObject().RegisterDataLoader(NULL, <string> _name)
+
+    def get_registered_names(self):
+        cdef vector[string] names
+        self._mgr.GetObject().GetRegisteredNames(names)
+        return list(names)
+
 
 cdef class Scope:
     def __init__(self, ObjectManager manager):
@@ -71,4 +81,4 @@ cdef class Scope:
         if self._scope.Empty():
             raise RuntimeError("attempted to use a closed scope")
 
-        self._scope.GetPointer().AddBioseq(seq._ref.GetObject())
+        self._scope.GetObject().AddBioseq(seq._ref.GetObject())

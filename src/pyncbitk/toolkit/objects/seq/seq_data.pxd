@@ -5,6 +5,7 @@ from libcpp.vector cimport vector
 from ...corelib.ncbimisc cimport TSeqPos
 from ...serial.serialbase cimport CSerialObject
 from .iupacna cimport CIUPACna
+from .ncbi4na cimport CNCBI4na
 
 cdef extern from "objects/seq/Seq_data_.hpp" namespace "ncbi::objects::CSeq_data_Base" nogil:
     
@@ -25,7 +26,7 @@ cdef extern from "objects/seq/Seq_data_.hpp" namespace "ncbi::objects::CSeq_data
     ctypedef CIUPACna TIupacna
     # ctypedef CIUPACaa TIupacaa
     # ctypedef CNCBI2na TNcbi2na
-    # ctypedef CNCBI4na TNcbi4na
+    ctypedef CNCBI4na TNcbi4na
     # ctypedef CNCBI8na TNcbi8na
     # ctypedef CNCBIpna TNcbipna
     # ctypedef CNCBI8aa TNcbi8aa
@@ -57,6 +58,10 @@ cdef extern from "objects/seq/Seq_data_.hpp" namespace "ncbi::objects" nogil:
         const TIupacna& GetIupacna() const
         TIupacna& GetIupacnaMut "SetIupacna" ()
         void SetIupacna(const TIupacna& value)
+
+        bool IsNcbi4na() const
+        const TNcbi4na& GetNcbi4na() const
+        TNcbi4na& GetNcbi4naMut "SetNcbi4na"()
 
 
 cdef extern from "objects/seq/Seq_data.hpp" namespace "ncbi::objects" nogil:

@@ -3,7 +3,11 @@
 from libcpp cimport bool
 from libcpp.list cimport list as cpplist
 from libcpp.string cimport string
-from libcpp.utility cimport move
+from libcpp.vector cimport vector
+
+from cpython cimport Py_buffer
+from cpython.bytes cimport PyBytes_FromStringAndSize
+from cpython.buffer cimport PyBUF_FORMAT, PyBUF_READ
 
 from .toolkit.algo.blast.api.bl2seq cimport CBl2Seq
 from .toolkit.algo.blast.api.blast_types cimport EProgram, ProgramNameToEnum, TSeqAlignVector
@@ -74,7 +78,7 @@ cdef class Serial:
         return NULL
 
     cpdef string dumps(
-        self, 
+        self,
         str format="asntext",
         bool indent=True,
         bool eol=True,
@@ -82,7 +86,7 @@ cdef class Serial:
         cdef ESerialDataFormat    sdf
         cdef MSerial_Format*      fmt
         cdef string               out
-        cdef CNcbiOstream*        s      
+        cdef CNcbiOstream*        s
         cdef CSerialObject*       serial = self._serial()
         cdef stringbuf            buf    = stringbuf()
         cdef TSerial_Format_Flags flags  = 0
@@ -267,8 +271,10 @@ cdef class SeqId(Serial):
             obj = LocalId.__new__(LocalId)
         elif kind == CSeq_id_choice.e_Genbank:
             obj = GenBankId.__new__(GenBankId)
+        elif kind == CSeq_id_choice.e_General:
+            obj = GeneralId.__new__(GeneralId)
         else:
-            raise NotImplementedError
+            raise NotImplementedError(f"{kind!r}")
 
         obj._ref = ref
         return obj
@@ -393,7 +399,8 @@ cdef dict _SEQINST_MOLECULE_STR = {
     CSeq_inst_mol.eMol_not_set: None,
     CSeq_inst_mol.eMol_dna: "dna",
     CSeq_inst_mol.eMol_rna: "rna",
-    CSeq_inst_mol.eMol_aa: "aa",
+    CSeq_inst_mol.eMol_aa: "protein",
+    CSeq_inst_mol.eMol_na: "nucleotide",
     CSeq_inst_mol.eMol_other: "other",
 }
 
@@ -475,7 +482,7 @@ cdef class SeqInst(Serial):
         if strand is None:
             if molecule == "dna":
                 strand = "double"
-            elif molecule == "rna" or molecule == "aa":
+            elif molecule == "rna" or molecule == "protein":
                 strand = "single"
         elif strand not in _SEQINST_STRAND_ENUM:
             raise ValueError(f"invalid strand: {strand!r}")
@@ -679,9 +686,32 @@ cdef class IupacNaData(SeqNaData):
         cdef str ty = self.__class__.__name__
         return f"{ty}({self.data!r})"
 
+    def __getbuffer__(self, Py_buffer* buffer, int flags):
+        cdef const string* data = &self._ref.GetObject().GetIupacna().Get()
+
+        if flags & PyBUF_FORMAT:
+            buffer.format = b"B"
+        else:
+            buffer.format = NULL
+
+        buffer.buf = <void*> data.data()
+        buffer.internal = NULL
+        buffer.itemsize = sizeof(char)
+        buffer.len = data.size() * sizeof(char)
+        buffer.ndim = 1
+        buffer.obj = self
+        buffer.readonly = True
+        buffer.shape = NULL
+        buffer.suboffsets = NULL
+        buffer.strides = NULL
+
     @property
     def length(self):
         return self._ref.GetObject().GetIupacna().Get().size()
+
+    @property
+    def data(self):
+        return self.decode()
 
     cpdef str decode(self):
         return self._ref.GetObject().GetIupacna().Get().decode()
@@ -694,7 +724,31 @@ cdef class Ncbi2NaData(SeqNaData):
     pass
 
 cdef class Ncbi4NaData(SeqNaData):
-    pass
+
+    def __getbuffer__(self, Py_buffer* buffer, int flags):
+        cdef const vector[char]* data = &self._ref.GetObject().GetNcbi4na().Get()
+
+        if flags & PyBUF_FORMAT:
+            buffer.format = b"B"
+        else:
+            buffer.format = NULL
+
+        buffer.buf = <void*> data.data()
+        buffer.internal = NULL
+        buffer.itemsize = sizeof(char)
+        buffer.len = data.size() * sizeof(char)
+        buffer.ndim = 1
+        buffer.obj = self
+        buffer.readonly = True
+        buffer.shape = NULL
+        buffer.suboffsets = NULL
+        buffer.strides = NULL
+
+    @property
+    def data(self):
+        cdef const vector[char]* data = &self._ref.GetObject().GetNcbi4na().Get()
+        return PyBytes_FromStringAndSize(data.data(), data.size())
+
 
 cdef class Ncbi8NaData(SeqNaData):
     pass

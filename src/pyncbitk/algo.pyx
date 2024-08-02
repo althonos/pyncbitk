@@ -48,6 +48,7 @@ from .toolkit.serial.serialbase cimport CSerialObject, MSerial_Format_AsnText
 from .toolkit.serial.serialdef cimport ESerialRecursionMode
 from .toolkit.objects.blastdb.blast_def_line cimport CBlast_def_line
 from .toolkit.objects.blastdb.blast_def_line_set cimport CBlast_def_line_set
+from .toolkit.algo.blast.api.uniform_search cimport CSearchDatabase, EMoleculeType
 
 from .objects cimport ObjectId, SeqLoc, SeqAlignSet, SeqAlign
 from .objmgr cimport Scope
@@ -68,6 +69,15 @@ cdef extern from * nogil:
 
 
 # --- BLAST input --------------------------------------------------------------
+
+cdef class BlastDatabase:
+    cdef CRef[CSearchDatabase] _ref
+    
+    def __init__(self, str name not None, protein=False):
+        cdef bytes            _name = name.encode() # FIXME: os.fsencode?
+        cdef CSearchDatabase* _db   = new CSearchDatabase(_name, EMoleculeType.eBlastDbIsNucleotide)
+        self._ref.Reset(_db)
+
 
 cdef class BlastSeqLoc:
     cdef SSeqLoc _seqloc

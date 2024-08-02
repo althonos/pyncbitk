@@ -3,6 +3,8 @@ from libcpp.string cimport string
 from libcpp.vector cimport vector
 
 from ..corelib.ncbiobj cimport CObject, CRef
+from ..corelib.plugin_manager cimport TPluginManagerParamTree
+from .data_loader cimport CDataLoader
 
 cdef extern from "objmgr/object_manager.hpp" namespace "ncbi::objects::CObjectManager" nogil:
 
@@ -31,7 +33,10 @@ cdef extern from "objmgr/object_manager.hpp" namespace "ncbi::objects" nogil:
         @staticmethod
         CRef[CObjectManager] GetInstance()
 
-        # CDataLoader* RegisterDataLoader(TPluginManagerParamTree* params = 0, const string& driver_name = kEmptyStr);
+        CDataLoader* RegisterDataLoader()
+        CDataLoader* RegisterDataLoader(TPluginManagerParamTree* params)
+        CDataLoader* RegisterDataLoader(const string& driver_name)
+        CDataLoader* RegisterDataLoader(TPluginManagerParamTree* params, const string& driver_name)
         # CDataLoader* FindDataLoader(const string& loader_name) const
         void GetRegisteredNames(TRegisteredNames& names)
         # void SetLoaderOptions(const string& loader_name,
