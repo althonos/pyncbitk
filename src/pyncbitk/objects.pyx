@@ -662,14 +662,28 @@ cdef class SeqData(Serial):
     def __init__(self):
         self._ref.Reset(new CSeq_data())
 
-    cpdef SeqData complement(self):
+    cpdef SeqData complement(self, bool pack=False):
         cdef CSeq_data* data = new CSeq_data()
-        CSeqportUtil.Complement(self._ref.GetObject(), data)
+        with nogil:
+            CSeqportUtil.Complement(self._ref.GetObject(), data)
+            if pack:
+                CSeqportUtil.Pack(data)
         return SeqData._wrap(CRef[CSeq_data](data))
 
-    cpdef SeqData reverse_complement(self):
+    cpdef SeqData reverse_complement(self, bool pack=False):
         cdef CSeq_data* data = new CSeq_data()
-        CSeqportUtil.ReverseComplement(self._ref.GetObject(), data)
+        with nogil:
+            CSeqportUtil.ReverseComplement(self._ref.GetObject(), data)
+            if pack:
+                CSeqportUtil.Pack(data)
+        return SeqData._wrap(CRef[CSeq_data](data))
+
+    cpdef SeqData copy(self, bool pack=False):
+        cdef CSeq_data* data = new CSeq_data()
+        with nogil:
+            CSeqportUtil.GetCopy(self._ref.GetObject(), data)
+            if pack:
+                CSeqportUtil.Pack(data)
         return SeqData._wrap(CRef[CSeq_data](data))
 
 
