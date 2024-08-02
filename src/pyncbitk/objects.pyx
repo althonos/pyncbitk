@@ -12,6 +12,7 @@ from .toolkit.algo.blast.api.local_blast cimport CLocalBlast
 from .toolkit.corelib.ncbiobj cimport CConstRef, CRef
 from .toolkit.corelib.ncbistr cimport kEmptyStr
 from .toolkit.corelib.ncbitype cimport Uint4
+from .toolkit.corelib.ncbistre cimport ostream, stringbuf, CNcbiOstream
 from .toolkit.corelib.tempstr cimport CTempString
 from .toolkit.objects.blastdb.blast_def_line_set cimport CBlast_def_line_set
 from .toolkit.objects.general.object_id cimport CObject_id
@@ -37,33 +38,75 @@ from .toolkit.objects.seqalign.score cimport CScore, C_Value as CScore_value, E_
 from .toolkit.objmgr.object_manager cimport CObjectManager
 from .toolkit.objmgr.scope cimport CScope
 from .toolkit.objtools.readers.fasta cimport CFastaReader
-from .toolkit.serial.serialbase cimport CSerialObject, MSerial_Format_AsnText
-from .toolkit.serial.serialdef cimport ESerialRecursionMode
+from .toolkit.serial.serialbase cimport CSerialObject, MSerial_Format, MSerial_Flags, TSerial_Format_Flags
+from .toolkit.serial.serialdef cimport ESerialRecursionMode, ESerialDataFormat, ESerial_Xml_Flags
 from .toolkit.objects.blastdb.blast_def_line cimport CBlast_def_line
 from .toolkit.objects.blastdb.blast_def_line_set cimport CBlast_def_line_set
 
 
 # --- Serial -------------------------------------------------------------------
 
+cdef extern from * nogil:
+    """
+    void DumpObject(ncbi::CNcbiOstream& os, ncbi::CSerialObject& obj, ncbi::MSerial_Format& fmt) {
+        os << fmt << obj;
+    }
+    """
+    void DumpObject(CNcbiOstream& os, CSerialObject& obj, MSerial_Format& fmt) except +
+
+cdef dict _SERIAL_DATAFORMAT_STR = {
+    ESerialDataFormat.eSerial_None: None,
+    ESerialDataFormat.eSerial_AsnText: "asntext",
+    ESerialDataFormat.eSerial_AsnBinary: "asnbinary",
+    ESerialDataFormat.eSerial_Xml: "xml",
+    ESerialDataFormat.eSerial_Json: "json",
+}
+
+cdef dict _SERIAL_DATAFORMAT_ENUM = {
+    v:k for k,v in _SERIAL_DATAFORMAT_STR.items()
+}
+
 cdef class Serial:
-    """Abstract base class for objects that can be serialized.
+    """Abstract base class for objects part of the serialization framework.
     """
 
     cdef CSerialObject* _serial(self):
         return NULL
 
-    cpdef str dumps(self, str format="asntext"):
-        cdef string         s
-        cdef CSerialObject* serial = self._serial()
+    cpdef string dumps(
+        self, 
+        str format="asntext",
+        bool indent=True,
+        bool eol=True,
+    ):
+        cdef ESerialDataFormat    sdf
+        cdef MSerial_Format*      fmt
+        cdef string               out
+        cdef CNcbiOstream*        s      
+        cdef CSerialObject*       serial = self._serial()
+        cdef stringbuf            buf    = stringbuf()
+        cdef TSerial_Format_Flags flags  = 0
 
-        if format != "asntext":
-            raise NotImplementedError(f"unsupported serialization: {format!r}")
+        assert serial is not NULL
 
-        if serial is NULL:
-            raise TypeError("invalid Serial declaration")
+        if format not in _SERIAL_DATAFORMAT_ENUM:
+            raise ValueError(f"invalid format: {format!r}")
+        sdf = <ESerialDataFormat> _SERIAL_DATAFORMAT_ENUM[format]
 
-        s << serial[0]
-        return s.decode()
+        if not indent:
+            flags |= <TSerial_Format_Flags> ESerial_Xml_Flags.fSerial_Xml_NoIndentation
+        if not eol:
+            flags |= <TSerial_Format_Flags> ESerial_Xml_Flags.fSerial_Xml_NoEol
+
+        try:
+            s = new ostream(&buf)
+            fmt = new MSerial_Format(sdf, flags)
+            with nogil:
+                DumpObject(s[0], serial[0], fmt[0])
+            return buf.str()
+        finally:
+            del s
+            del fmt
 
 
 # --- ObjectId -----------------------------------------------------------------

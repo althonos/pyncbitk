@@ -49,7 +49,7 @@ cdef class Serial:
     
     cdef CSerialObject* _serial(self)
 
-    cpdef str dumps(self, str format=*)
+    cpdef string dumps(self, str format=*, bool indent=*, bool eol=*)
 
 # --- ObjectId -----------------------------------------------------------------
 

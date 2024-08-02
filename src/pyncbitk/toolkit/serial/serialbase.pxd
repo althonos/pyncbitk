@@ -2,7 +2,7 @@ from libcpp.string cimport string
 
 from ..corelib.ncbiobj cimport CObject, CRef
 from ..corelib.ncbistre cimport CNcbiIstream, CNcbiOstream
-from .serialdef cimport ESerialRecursionMode
+from .serialdef cimport ESerialRecursionMode, ESerialDataFormat, TSerial_AsnText_Flags, TSerial_Json_Flags, TSerial_Xml_Flags
 
 cdef extern from "serial/serialbase.hpp" namespace "ncbi" nogil:
 
@@ -16,7 +16,10 @@ cdef extern from "serial/serialbase.hpp" namespace "ncbi" nogil:
         # void Assign(const CSerialObject& source)
         void Assign(const CSerialObject& source, ESerialRecursionMode how)
 
-    
+        CNcbiOstream& operator<< (CNcbiOstream& str, const CSerialObject&    obj)
+        CNcbiIstream& operator>> (CNcbiIstream& str, CSerialObject&          obj)
+
+
     cppclass CAliasBase[TPrim]:
         CAliasBase()
         CAliasBase(const TPrim& value)
@@ -39,15 +42,24 @@ cdef extern from "serial/serialbase.hpp" namespace "ncbi" nogil:
 
     ctypedef unsigned int TSerial_Format_Flags
     cppclass MSerial_Format(MSerial_Flags):
-        pass
-        # MSerial_Format(ESerialDataFormat fmt)
-        # MSerial_Format(ESerialDataFormat fmt, TSerial_Format_Flags flags)
+        MSerial_Format(ESerialDataFormat fmt)
+        MSerial_Format(ESerialDataFormat fmt, TSerial_Format_Flags flags)
 
     cppclass MSerial_Format_AsnText(MSerial_Format):
         MSerial_Format_AsnText()
+        MSerial_Format& operator()(TSerial_AsnText_Flags flags)
 
     cppclass MSerial_Format_AsnBinary(MSerial_Format):
         MSerial_Format_AsnBinary()
+
+    cppclass MSerial_Format_Xml(MSerial_Format):
+        MSerial_Format_Xml()
+        MSerial_Format& operator()(TSerial_Xml_Flags flags)
+
+    cppclass MSerial_Format_Json(MSerial_Format):
+        MSerial_Format_Json()
+        MSerial_Format& operator()(TSerial_Json_Flags flags)
+
 
     const char* operator>>(const char* s, CSerialObject& obj) except +
     string operator>>(const string& s, CSerialObject& obj) except +
