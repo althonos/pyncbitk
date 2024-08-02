@@ -14,6 +14,7 @@ from .toolkit.algo.blast.api.blast_options_handle cimport CBlastOptionsHandle, C
 from .toolkit.algo.blast.api.blast_nucl_options cimport CBlastNucleotideOptionsHandle
 from .toolkit.algo.blast.api.query_data cimport IQueryFactory
 from .toolkit.algo.blast.api.objmgr_query_data cimport CObjMgr_QueryFactory
+from .toolkit.algo.blast.api.objmgrfree_query_data cimport CObjMgrFree_QueryFactory
 from .toolkit.algo.blast.api.local_db_adapter cimport CLocalDbAdapter
 from .toolkit.algo.blast.api.blast_results cimport CSearchResultSet, CSearchResults, size_type as CSearchResults_size_type
 from .toolkit.corelib.ncbiobj cimport CConstRef, CRef
@@ -51,23 +52,12 @@ from .toolkit.objects.blastdb.blast_def_line_set cimport CBlast_def_line_set
 from .toolkit.algo.blast.api.uniform_search cimport CSearchDatabase, EMoleculeType
 from .toolkit.objtools.blast.seqdb_reader.seqdb cimport CSeqDB, ESeqType
 
-from .objects cimport ObjectId, SeqLoc, SeqAlignSet, SeqAlign
+from .objects cimport ObjectId, SeqLoc, SeqAlignSet, SeqAlign, BioSeq
 from .objmgr cimport Scope
 from .objtools cimport DatabaseReader
 
 import os
-
-
-cdef extern from * nogil:
-    """
-    template <typename T>
-    std::string dump(ncbi::CSerialObject& source) {
-        std::string s;
-        s << source;
-        return s;
-    }
-    """
-    cdef string dump[T](T source)
+from ._utils import peekable, is_iterable
 
 
 # --- BLAST input --------------------------------------------------------------
@@ -248,8 +238,10 @@ cdef class Blast:
         subjects,
         bool scan_mode = False
     ):
-        cdef TSeqLocVector         _queries
-        cdef TSeqLocVector         _subjects
+        cdef TSeqLocVector         _queries_loc
+        cdef TSeqLocVector         _subjects_loc
+        cdef BioSeq                _query_seq
+        cdef BioSeq                _subject_seq
         cdef DatabaseReader        _db
         cdef BlastSeqLoc           seqloc
         cdef CRef[IQueryFactory]   query_factory
@@ -258,11 +250,18 @@ cdef class Blast:
         cdef CRef[CLocalBlast]     blast
 
         # prepare queries: a list of `BlastSeqLoc` objects 
-        if isinstance(queries, BlastSeqLoc):
-            queries = (queries, )
-        for seqloc in queries:
-            _queries.push_back(seqloc._seqloc)
-        query_factory.Reset(<IQueryFactory*> new CObjMgr_QueryFactory(_queries))
+        if isinstance(queries, BioSeq):
+            _query_seq = queries
+            if _query_seq._ref.GetObject().GetInst().GetRepr() != CSeq_inst_repr.eRepr_raw:
+                ty = _query_seq.instance.__class__.__name__
+                raise ValueError(f"Unsupported instance type: {ty}")
+            query_factory.Reset(<IQueryFactory*> new CObjMgrFree_QueryFactory(CConstRef[CBioseq](_query_seq._ref)))
+        else:
+            if not is_iterable(queries):
+                queries = (queries, )
+            for seqloc in queries:
+                _queries_loc.push_back(seqloc._seqloc)
+            query_factory.Reset(<IQueryFactory*> new CObjMgr_QueryFactory(_queries_loc))
 
         # prepare subjects: either a list of `BlastSeqLoc` objects, or a `DatabaseReader`
         if isinstance(subjects, DatabaseReader):
@@ -276,16 +275,26 @@ cdef class Blast:
                 raise ValueError(f"invalid sequence type: {_ty!r}")
             search_database.SetSeqDb((<DatabaseReader> subjects)._ref)
             db.Reset(new CLocalDbAdapter(search_database[0]))
+        elif isinstance(subjects, BioSeq):
+            _subject_seq = subjects
+            if _subject_seq._ref.GetObject().GetInst().GetRepr() != CSeq_inst_repr.eRepr_raw:
+                ty = _subject_seq.instance.__class__.__name__
+                raise ValueError(f"Unsupported instance type: {ty}")
+            subject_factory.Reset(<IQueryFactory*> new CObjMgrFree_QueryFactory(CConstRef[CBioseq](_subject_seq._ref)))
+            db.Reset(new CLocalDbAdapter(subject_factory, self._opt, scan_mode))
         else:
-            if isinstance(subjects, BlastSeqLoc):
+            if not is_iterable(subjects):
                 subjects = (subjects, )
             for seqloc in subjects:
-                _subjects.push_back(seqloc._seqloc)
-            subject_factory.Reset(<IQueryFactory*> new CObjMgr_QueryFactory(_subjects))
+                _subjects_loc.push_back(seqloc._seqloc)
+            subject_factory.Reset(<IQueryFactory*> new CObjMgr_QueryFactory(_subjects_loc))
             db.Reset(new CLocalDbAdapter(subject_factory, self._opt, scan_mode))
         
         # prepare the BLAST program
-        blast.Reset(new CLocalBlast(query_factory, self._opt, db))
+        try:
+            blast.Reset(new CLocalBlast(query_factory, self._opt, db))
+        except RuntimeError as err:
+            raise ValueError("Failed initializing BLAST") from err
         # if (m_InterruptFnx != NULL) {
         #     m_Blast->SetInterruptCallback(m_InterruptFnx, m_InterruptUserData);
         # }

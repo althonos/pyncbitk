@@ -437,8 +437,8 @@ cdef class SeqInst(Serial):
 
     @staticmethod
     cdef SeqInst _wrap(CRef[CSeq_inst] ref):
-        cdef SeqInst obj
-        cdef CSeq_inst_repr kind = ref.GetPointer().GetRepr()
+        cdef SeqInst        obj
+        cdef CSeq_inst_repr kind = ref.GetObject().GetRepr()
 
         if kind == CSeq_inst_repr.eRepr_not_set:
             obj = EmptyInst.__new__(LocalId)
