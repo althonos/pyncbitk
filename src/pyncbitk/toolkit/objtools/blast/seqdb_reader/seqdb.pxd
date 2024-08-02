@@ -62,18 +62,18 @@ cdef extern from "objtools/blast/seqdb_reader/seqdb.hpp" namespace "ncbi" nogil:
         bool operator!() const 
 
     cppclass CSeqDB(CObject):
-        CSeqDB(const string& dbname, ESeqType seqtype)
-        # CSeqDB(const string& dbname, ESeqType seqtype, CSeqDBGiList* gilist = NULL, bool use_atlas_lock = True)
-        # CSeqDB(const string& dbname, ESeqType seqtype, CSeqDBNegativeList* nlist)
-        # CSeqDB(const string& dbname, ESeqType seqtype, CSeqDBGiList* gilist, CSeqDBNegativeList* nlist)
-        # CSeqDB(const string& dbname, ESeqType seqtype, int oid_begin, int oid_end, CSeqDBGiList* gilist, CSeqDBNegativeList* nlist)
-        # CSeqDB(const string& dbname, ESeqType seqtype, CSeqDBIdSet ids)
-        # CSeqDB(const vector[string]& dbs, ESeqType seqtype, CSeqDBGiList* gilist = NULL)
-        # CSeqDB(const string& dbname, ESeqType seqtype, int oid_begin, int oid_end, bool use_mmap, CSeqDBGiList* gi_list = NULl)
-        # CSeqDB(const vector[string]& dbname, ESeqType seqtype, int oid_begin, int oid_end, bool use_mmap, CSeqDBGiList* gi_list = NULl)
+        CSeqDB(const string& dbname, ESeqType seqtype) except +
+        # CSeqDB(const string& dbname, ESeqType seqtype, CSeqDBGiList* gilist = NULL, bool use_atlas_lock = True) except +
+        # CSeqDB(const string& dbname, ESeqType seqtype, CSeqDBNegativeList* nlist) except +
+        # CSeqDB(const string& dbname, ESeqType seqtype, CSeqDBGiList* gilist, CSeqDBNegativeList* nlist) except +
+        # CSeqDB(const string& dbname, ESeqType seqtype, int oid_begin, int oid_end, CSeqDBGiList* gilist, CSeqDBNegativeList* nlist) except +
+        # CSeqDB(const string& dbname, ESeqType seqtype, CSeqDBIdSet ids) except +
+        # CSeqDB(const vector[string]& dbs, ESeqType seqtype, CSeqDBGiList* gilist = NULL) except +
+        # CSeqDB(const string& dbname, ESeqType seqtype, int oid_begin, int oid_end, bool use_mmap, CSeqDBGiList* gi_list = NULl) except +
+        # CSeqDB(const vector[string]& dbname, ESeqType seqtype, int oid_begin, int oid_end, bool use_mmap, CSeqDBGiList* gi_list = NULl) except +
 
         @staticmethod
-        string GenerateSearchPath()
+        string GenerateSearchPath() except +
 
         # int GetSeqLength(int oid) const
         # TGi GetSeqGI(int oid) const
@@ -85,8 +85,8 @@ cdef extern from "objtools/blast/seqdb_reader/seqdb.hpp" namespace "ncbi" nogil:
         # void GetTaxIDs(int oid, map[TGi, TTaxId]& gi_to_taxid, bool persist = False)
         # void GetTaxIDs(int oid, vector[TTaxId]& taxids, bool persist = False)
         # void GetAllTaxIds(int oid, set[TTaxId]& taxids)
-        CRef[CBioseq] GetBioseq(int oid, TGi target_gi = ZERO_GI, const CSeq_id* target_seq_id = NULL)
-        CRef[CBioseq] GetBioseqNoData(int oid, TGi target_gi = ZERO_GI, const CSeq_id* target_set_id = NULL)
+        CRef[CBioseq] GetBioseq(int oid, TGi target_gi = ZERO_GI, const CSeq_id* target_seq_id = NULL) except +
+        CRef[CBioseq] GetBioseqNoData(int oid, TGi target_gi = ZERO_GI, const CSeq_id* target_set_id = NULL) except +
 
         # int GetSequence(int oid, const char** buffer) const
         # int GetAmbigSeq(int oid, const char** buffer, int nucl_code) const

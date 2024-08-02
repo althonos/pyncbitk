@@ -36,6 +36,7 @@ cdef class FastaReader:
         _entry = self._reader.ReadOneSeq()
         return Entry._wrap(_entry)
 
+# --- BlastDatabase ------------------------------------------------------------
 
 cdef class BlastDatabaseIter:
     cdef CRef[CSeqDB]         _ref
