@@ -30,8 +30,19 @@ cdef class FastaReader:
         cdef bytes _path = os.fsencode(path)
         self._reader = new CFastaReader(_path)
 
-    def read(self):
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        cdef Entry entry = self.read()
+        if entry is None:
+            raise StopIteration
+        return entry
+
+    cpdef Entry read(self):
         assert self._reader != NULL
+        if self._reader.AtEOF():
+            return None
         _entry = self._reader.ReadOneSeq()
         return Entry._wrap(_entry)
 

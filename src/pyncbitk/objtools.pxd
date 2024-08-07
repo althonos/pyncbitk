@@ -21,6 +21,8 @@ import os
 cdef class FastaReader:
     cdef CFastaReader* _reader
 
+    cpdef Entry read(self)
+
 # --- BlastDatabase ------------------------------------------------------------
 
 cdef class DatabaseIter:
