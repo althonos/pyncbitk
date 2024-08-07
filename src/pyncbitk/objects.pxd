@@ -32,7 +32,7 @@ from .toolkit.objects.seqloc.textseq_id cimport CTextseq_id
 from .toolkit.objects.seqset.bioseq_set cimport CBioseq_set
 from .toolkit.objects.seqset.seq_entry cimport CSeq_entry
 from .toolkit.objects.seqset.seq_entry cimport E_Choice as CSeq_entry_choice
-from .toolkit.objects.seqalign.seq_align cimport CSeq_align
+from .toolkit.objects.seqalign.seq_align cimport CSeq_align, TDim
 from .toolkit.objects.seqalign.seq_align_set cimport CSeq_align_set
 from .toolkit.objects.seqalign.score cimport CScore, C_Value as CScore_value, E_Choice as CScore_value_choice
 from .toolkit.objmgr.object_manager cimport CObjectManager
@@ -256,11 +256,27 @@ cdef class SeqAlignScore:
     @staticmethod
     cdef SeqAlignScore _wrap(CRef[CScore] ref)
 
+cdef class AlignRow:
+    cdef CRef[CSeq_align] _ref
+    cdef TDim             _row
+
 cdef class SeqAlign(Serial):
     cdef CRef[CSeq_align] _ref
 
     @staticmethod
     cdef SeqAlign _wrap(CRef[CSeq_align] ref)
+
+cdef class GlobalSeqAlign(SeqAlign):
+    pass
+
+cdef class DiagonalSeqAlign(SeqAlign):
+    pass
+
+cdef class PartialSeqAlign(SeqAlign):
+    pass
+
+cdef class DiscontinuousSeqAlign(SeqAlign):
+    pass
 
 cdef class SeqAlignSet(Serial):
     cdef CRef[CSeq_align_set] _ref

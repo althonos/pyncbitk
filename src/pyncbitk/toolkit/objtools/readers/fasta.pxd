@@ -55,7 +55,7 @@ cdef extern from "objtools/readers/fasta.hpp" namespace "ncbi::objects" nogil:
         #             FIdCheck f_idcheck = CSeqIdCheck()
         #             );
 
-        bool AtEof() const
-        CRef[CSeq_entry] ReadOneSeq()
+        bool AtEOF() const
+        CRef[CSeq_entry] ReadOneSeq() except +
         # virtual CRef<CSeq_entry> ReadOneSeq(ILineErrorListener* pMessageListener = nullptr);
 

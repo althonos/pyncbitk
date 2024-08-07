@@ -1,5 +1,6 @@
 # cython: language_level=3, linetrace=True, binding=True
 
+from libc.math cimport NAN
 from libcpp cimport bool
 from libcpp.list cimport list as cpplist
 from libcpp.string cimport string
@@ -30,13 +31,14 @@ from .toolkit.objects.seq.seq_inst cimport EMol as CSeq_inst_mol
 from .toolkit.objects.seq.seq_inst cimport ERepr as CSeq_inst_repr
 from .toolkit.objects.seq.iupacna cimport CIUPACna
 from .toolkit.objects.seqloc.seq_id cimport CSeq_id
+from .toolkit.objects.seqloc.na_strand cimport ENa_strand
 from .toolkit.objects.seqloc.seq_id cimport E_Choice as CSeq_id_choice
 from .toolkit.objects.seqloc.seq_loc cimport CSeq_loc
 from .toolkit.objects.seqloc.seq_loc cimport E_Choice as CSeq_loc_choice
 from .toolkit.objects.seqloc.textseq_id cimport CTextseq_id
 from .toolkit.objects.seqset.seq_entry cimport CSeq_entry
 from .toolkit.objects.seqset.seq_entry cimport E_Choice as CSeq_entry_choice
-from .toolkit.objects.seqalign.seq_align cimport CSeq_align
+from .toolkit.objects.seqalign.seq_align cimport CSeq_align, EScoreType, EType as CSeq_align_type
 from .toolkit.objects.seqalign.seq_align_set cimport CSeq_align_set
 from .toolkit.objects.seqalign.score cimport CScore, C_Value as CScore_value, E_Choice as CScore_value_choice
 from .toolkit.objmgr.object_manager cimport CObjectManager
@@ -943,16 +945,83 @@ cdef class SeqAlignScore:
         raise TypeError(f"Unknown value type: {kind!r}")
 
 
+cdef class AlignRow:
+    
+    @property
+    def start(self):
+        cdef CSeq_align* obj = &self._ref.GetObject()
+        return obj.GetSeqStart(self._row)
+
+    @property
+    def stop(self):
+        cdef CSeq_align* obj = &self._ref.GetObject()
+        return obj.GetSeqStop(self._row)
+
+    @property
+    def id(self):
+        cdef CSeq_align*    obj = &self._ref.GetObject()
+        cdef const CSeq_id* id_ = &obj.GetSeq_id(self._row)
+        return SeqId._wrap(CRef[CSeq_id](<CSeq_id*> id_))
+
+
+cdef class AlignSegment:
+    pass
+
+
 cdef class SeqAlign(Serial):
 
     @staticmethod
     cdef SeqAlign _wrap(CRef[CSeq_align] ref):
-        cdef SeqAlign obj = SeqAlign.__new__(SeqAlign)
+        cdef SeqAlign        obj 
+        cdef CSeq_align_type ty  = ref.GetObject().GetType()
+        if ty == CSeq_align_type.eType_not_set:
+            obj = SeqAlign.__new__(SeqAlign)
+        elif ty == CSeq_align_type.eType_global:
+            obj = GlobalSeqAlign.__new__(GlobalSeqAlign)
+        elif ty == CSeq_align_type.eType_diags:
+            obj = DiagonalSeqAlign.__new__(DiagonalSeqAlign)
+        elif ty == CSeq_align_type.eType_partial:
+            obj = PartialSeqAlign.__new__(PartialSeqAlign)
+        elif ty == CSeq_align_type.eType_disc:
+            obj = DiscontinuousSeqAlign.__new__(DiscontinuousSeqAlign)
+        else:
+            raise RuntimeError("Unsupported `SeqAlign` type")
         obj._ref = ref
         return obj
 
     cdef CSerialObject* _serial(self):
         return <CSerialObject*> self._ref.GetNonNullPointer()
+
+    def __len__(self):
+        cdef CSeq_align* obj = &self._ref.GetObject()
+        if not obj.IsSetDim():
+            return 0
+        return obj.GetDim()
+
+    def __getitem__(self, ssize_t index):
+        cdef CSeq_align* obj    = &self._ref.GetObject()
+        cdef ssize_t     length = 0
+        cdef ssize_t     index_ = index
+
+        if obj.IsSetDim():
+            length = obj.GetDim()
+
+        if index_ < 0:
+            index_ += length
+        if index_ < 0 or index_ >= length:
+            raise IndexError(index)
+
+        cdef AlignRow row = AlignRow.__new__(AlignRow)
+        row._ref = self._ref
+        row._row = index
+        return row
+
+    @property
+    def evalue(self):
+        cdef double evalue = NAN
+        if not self._ref.GetObject().GetNamedScore(EScoreType.eScore_EValue, evalue):
+            return None
+        return evalue
 
     @property
     def scores(self):
@@ -967,6 +1036,19 @@ cdef class SeqAlign(Serial):
             scores.append(SeqAlignScore._wrap(ref))
 
         return scores
+
+
+cdef class GlobalSeqAlign(SeqAlign):
+    pass
+
+cdef class DiagonalSeqAlign(SeqAlign):
+    pass
+
+cdef class PartialSeqAlign(SeqAlign):
+    pass
+
+cdef class DiscontinuousSeqAlign(SeqAlign):
+    pass
 
 cdef class SeqAlignSet(Serial):
 

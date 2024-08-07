@@ -1,6 +1,7 @@
 from ....corelib.ncbiobj cimport CObject, CRef
 from .setup_factory cimport CThreadable
 from .blast_results cimport CSearchResultSet
+from .blast_types cimport TSearchMessages
 from .blast_options_handle cimport CBlastOptionsHandle
 from .uniform_search cimport CSearchDatabase
 from .query_data cimport IQueryFactory
@@ -16,7 +17,7 @@ cdef extern from "algo/blast/api/local_blast.hpp" namespace "ncbi::blast" nogil:
 
         CRef[CSearchResultSet] Run() except +
 
-        # TSearchMessages GetSearchMessages() const
+        TSearchMessages GetSearchMessages() const
         # Int4 GetNumExtensions()
         # BlastDiagnostics* GetDiagnostics()
         # void SetBatchNumber( int batch_num )
