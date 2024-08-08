@@ -38,7 +38,9 @@ from .toolkit.objects.seqloc.seq_loc cimport E_Choice as CSeq_loc_choice
 from .toolkit.objects.seqloc.textseq_id cimport CTextseq_id
 from .toolkit.objects.seqset.seq_entry cimport CSeq_entry
 from .toolkit.objects.seqset.seq_entry cimport E_Choice as CSeq_entry_choice
+from .toolkit.objects.seqalign.dense_seg cimport CDense_seg
 from .toolkit.objects.seqalign.seq_align cimport CSeq_align, EScoreType, EType as CSeq_align_type
+from .toolkit.objects.seqalign.seq_align cimport C_Segs, E_Choice as C_Segs_choice
 from .toolkit.objects.seqalign.seq_align_set cimport CSeq_align_set
 from .toolkit.objects.seqalign.score cimport CScore, C_Value as CScore_value, E_Choice as CScore_value_choice
 from .toolkit.objmgr.object_manager cimport CObjectManager
@@ -49,6 +51,20 @@ from .toolkit.serial.serialdef cimport ESerialRecursionMode, ESerialDataFormat, 
 from .toolkit.objects.blastdb.blast_def_line cimport CBlast_def_line
 from .toolkit.objects.blastdb.blast_def_line_set cimport CBlast_def_line_set
 from .toolkit.objects.seq.seqport_util cimport CSeqportUtil
+
+
+cdef dict _NA_STRAND_STR = {
+    ENa_strand.eNa_strand_unknown: "unknown",
+    ENa_strand.eNa_strand_plus: "plus",
+    ENa_strand.eNa_strand_minus: "minus",
+    ENa_strand.eNa_strand_both: "both",
+    ENa_strand.eNa_strand_both_rev: "bothrev",
+    ENa_strand.eNa_strand_other: "other",
+}
+
+cdef dict _NA_STRAND_ENUM = {
+    v:k for k,v in _NA_STRAND_STR.items()
+}
 
 
 # --- Serial -------------------------------------------------------------------
@@ -964,9 +980,97 @@ cdef class AlignRow:
         return SeqId._wrap(CRef[CSeq_id](<CSeq_id*> id_))
 
 
-cdef class AlignSegment:
-    pass
+cdef class AlignSegments(Serial):
+    
+    @staticmethod
+    cdef AlignSegments _wrap(CRef[C_Segs] ref):
+        cdef AlignSegments obj
+        cdef C_Segs_choice kind = ref.GetObject().Which() 
 
+        if kind == C_Segs.E_Choice.e_Denseg:
+            obj = DenseSegments.__new__(DenseSegments)
+        elif kind == C_Segs.E_Choice.e_not_set:
+            obj = AlignSegments.__new__(AlignSegments)
+        else:
+            raise NotImplementedError
+
+        obj._ref = ref
+        return obj
+
+    cdef CSerialObject* _serial(self):
+        return <CSerialObject*> self._ref.GetNonNullPointer()
+
+
+cdef class DenseSegments(AlignSegments):
+    
+    @property
+    def data(self):
+        cdef CRef[CDense_seg] ref
+        cdef CDense_seg* seg = &self._ref.GetObject().GetDensegMut()
+        return DenseSegmentsData._wrap(CRef[CDense_seg](seg))
+
+cdef class DenseSegmentsData(Serial):
+
+    @staticmethod
+    cdef DenseSegmentsData _wrap(CRef[CDense_seg] ref):
+        cdef DenseSegmentsData obj = DenseSegmentsData.__new__(DenseSegmentsData)
+        obj._ref = ref
+        return obj
+
+    cdef CSerialObject* _serial(self):
+        return <CSerialObject*> self._ref.GetNonNullPointer()
+
+    @property
+    def num_segments(self):
+        cdef CDense_seg* obj = &self._ref.GetObject()
+        return obj.GetNumseg()
+
+    @property
+    def ids(self):
+        """`list` of `SeqId`: The identifiers of the sequences in the segment.
+        """
+        cdef CDense_seg* obj = &self._ref.GetObject()
+        cdef list        ids = []
+
+        for ref in obj.GetIdsMut(): # FIXME: const iteration
+            ids.append(SeqId._wrap(ref))
+        return ids
+
+    @property
+    def lengths(self):
+        """`list` of `int`: The lengths of each segment.
+        """
+        # FIXME: make zero-copy
+        cdef CDense_seg* obj  = &self._ref.GetObject()
+        cdef list        lens = []
+
+        for length in obj.GetLensMut(): # FIXME: const iteration
+            lens.append(length)
+        return lens
+
+    @property
+    def starts(self):
+        """`list` of `int`: The start offsets for the sequences in each segment.
+        """
+        # FIXME: make zero-copy
+        cdef CDense_seg* obj    = &self._ref.GetObject()
+        cdef list        starts = []
+
+        for start in obj.GetStartsMut(): # FIXME: const iteration
+            starts.append(start)
+        return starts
+
+    @property
+    def strands(self):
+        """`list` of `str`, or `None`: The strand for each sequence, if any.
+        """
+        cdef ENa_strand  strand
+        cdef CDense_seg* obj     = &self._ref.GetObject()
+        cdef list        strands = []
+
+        for strand in obj.GetStrandsMut():
+            strands.append(_NA_STRAND_STR[strand])
+        return strands
 
 cdef class SeqAlign(Serial):
 
@@ -1036,6 +1140,14 @@ cdef class SeqAlign(Serial):
             scores.append(SeqAlignScore._wrap(ref))
 
         return scores
+
+    @property
+    def segments(self):
+        cdef CSeq_align*  obj = &self._ref.GetObject()
+        cdef CRef[C_Segs] ref = CRef[C_Segs](&obj.GetSegsMut())
+        return AlignSegments._wrap(ref)
+
+
 
 
 cdef class GlobalSeqAlign(SeqAlign):
