@@ -1,3 +1,5 @@
+# cython: language_level=3, linetrace=True, binding=True
+
 from ..toolkit.corelib.ncbiobj cimport CRef
 from ..toolkit.objects.seqalign.score cimport CScore
 from ..toolkit.objects.seqalign.seq_align cimport CSeq_align, TDim, C_Segs

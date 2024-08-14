@@ -1,8 +1,9 @@
+# cython: language_level=3, linetrace=True, binding=True
+
 from ..toolkit.corelib.ncbiobj cimport CRef
 from ..toolkit.objects.general.object_id cimport CObject_id
 
 from ..serial cimport Serial
-
 
 # --- ObjectId -----------------------------------------------------------------
 

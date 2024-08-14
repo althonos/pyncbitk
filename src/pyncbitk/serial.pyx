@@ -1,3 +1,5 @@
+# cython: language_level=3, linetrace=True, binding=True
+
 from libcpp.string cimport string
 
 from .toolkit.corelib.ncbistre cimport ostream, stringbuf, CNcbiOstream

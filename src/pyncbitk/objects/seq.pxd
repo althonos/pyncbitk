@@ -1,3 +1,5 @@
+# cython: language_level=3, linetrace=True, binding=True
+
 from ..toolkit.corelib.ncbiobj cimport CRef
 from ..toolkit.objects.seq.bioseq cimport CBioseq
 

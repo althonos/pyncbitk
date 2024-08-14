@@ -1,3 +1,4 @@
+# cython: language_level=3, linetrace=True, binding=True
 
 from ..toolkit.serial.serialbase cimport CSerialObject
 from ..toolkit.corelib.ncbiobj cimport CRef

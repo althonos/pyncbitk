@@ -1,3 +1,5 @@
+# cython: language_level=3, linetrace=True, binding=True
+
 from libcpp cimport bool
 
 from ..toolkit.corelib.ncbiobj cimport CRef
