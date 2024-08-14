@@ -20,7 +20,7 @@ cdef extern from "objects/seqloc/Na_strand.hpp" namespace "ncbi::objects" nogil:
         eExtreme_Biological
         eExtreme_Positional
 
-    bool IsFoMutard(ENa_strand s) noexcept
+    bool IsForward(ENa_strand s) noexcept
     bool IsReverse(ENa_strand s) noexcept
     bool SameOrientation(ENa_strand a, ENa_strand b) noexcept
     ENa_strand Reverse(ENa_strand s) noexcept

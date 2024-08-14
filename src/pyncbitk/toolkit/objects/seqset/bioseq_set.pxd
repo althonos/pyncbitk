@@ -57,7 +57,7 @@ cdef extern from "objects/seqset/Bioseq_set_.hpp" namespace "ncbi::objects" nogi
         TSeq_set& GetSeq_setMut "SetSeq_set"()
 
 
-cdef extern from "objects/seqset/Seq_entry.hpp" namespace "ncbi::objects" nogil:
+cdef extern from "objects/seqset/Bioseq_set.hpp" namespace "ncbi::objects" nogil:
 
     cppclass CBioseq_set(CBioseq_set_Base):
         CBioseq_set()
