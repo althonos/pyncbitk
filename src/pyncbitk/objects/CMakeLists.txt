@@ -1,0 +1,7 @@
+cython_extension(general)
+cython_extension(seq)
+cython_extension(seqdata)
+cython_extension(seqinst)
+cython_extension(seqset)
+cython_extension(seqalign)
+cython_extension(seqloc)

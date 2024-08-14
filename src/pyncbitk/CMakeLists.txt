@@ -2,6 +2,10 @@ find_package(Python COMPONENTS Interpreter Development.Module REQUIRED)
 
 # --- Cython compilation -------------------------------------------------------
 
+set(PYTHON_EXTENSIONS_SOURCE_DIR
+  ${PROJECT_SOURCE_DIR}/src
+)
+
 set(CYTHON_DIRECTIVES
     -X cdivision=True
     -X nonecheck=False
@@ -27,6 +31,7 @@ else()
   )
 endif()
 
+
 macro(cython_extension _name)
   add_custom_command(
     OUTPUT ${_name}.cpp
@@ -41,14 +46,20 @@ macro(cython_extension _name)
     MAIN_DEPENDENCY 
       ${_name}.pyx
     VERBATIM)
-  python_add_library(${_name} MODULE WITH_SOABI ${_name}.pyx ${_name}.cpp)
+
+  python_add_library("py_${_name}" MODULE WITH_SOABI ${_name}.pyx ${_name}.cpp)
+  SET_TARGET_PROPERTIES( "py_${_name}" PROPERTIES OUTPUT_NAME  ${_name} )
+
   foreach(_lib IN LISTS PYNCBITK_NCBI_LIBS)
-    target_link_libraries(${_name} PUBLIC ${_lib})
+    target_link_libraries("py_${_name}" PUBLIC ${_lib})
   endforeach()
-  install(TARGETS ${_name} DESTINATION ${CMAKE_PROJECT_NAME})
+
+  string(REGEX REPLACE "^${PYTHON_EXTENSIONS_SOURCE_DIR}/?" "" _dest_folder ${CMAKE_CURRENT_SOURCE_DIR})
+  install(TARGETS "py_${_name}" DESTINATION ${_dest_folder} )
 endmacro()
 
-cython_extension(objects)
+add_subdirectory(objects)
+cython_extension(serial)
 cython_extension(objmgr)
 cython_extension(objtools)
 cython_extension(algo)

@@ -12,7 +12,8 @@ from .toolkit.objects.seq.bioseq cimport CBioseq
 from .toolkit.objtools.readers.fasta cimport CFastaReader
 from .toolkit.objtools.blast.seqdb_reader.seqdb cimport CSeqDB, CSeqDBIter, ESeqType
 
-from .objects cimport Entry, BioSeq
+from .objects.seqset cimport Entry
+from .objects.seq cimport BioSeq
 
 import os
 

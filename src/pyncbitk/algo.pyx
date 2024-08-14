@@ -6,7 +6,7 @@ from libcpp.string cimport string
 from libcpp.utility cimport move
 
 from .toolkit.algo.blast.api.bl2seq cimport CBl2Seq
-from .toolkit.algo.blast.api.blast_types cimport EProgram, ProgramNameToEnum, TSeqAlignVector, EProgramToTaskName
+from .toolkit.algo.blast.api.blast_types cimport EProgram, ProgramNameToEnum, TSeqAlignVector, EProgramToTaskName, TSearchMessages
 from .toolkit.algo.blast.api.sseqloc cimport SSeqLoc, TSeqLocVector
 from .toolkit.algo.blast.api.local_blast cimport CLocalBlast
 from .toolkit.algo.blast.api.blast_options_handle cimport CBlastOptionsHandle, CBlastOptionsFactory
@@ -52,7 +52,10 @@ from .toolkit.objects.blastdb.blast_def_line_set cimport CBlast_def_line_set
 from .toolkit.algo.blast.api.uniform_search cimport CSearchDatabase, EMoleculeType
 from .toolkit.objtools.blast.seqdb_reader.seqdb cimport CSeqDB, ESeqType
 
-from .objects cimport ObjectId, SeqLoc, SeqAlignSet, SeqAlign, BioSeq
+from .objects.general cimport ObjectId
+from .objects.seqloc cimport SeqLoc
+from .objects.seqalign cimport SeqAlign, SeqAlignSet
+from .objects.seq cimport BioSeq
 from .objmgr cimport Scope
 from .objtools cimport DatabaseReader
 
@@ -305,6 +308,12 @@ cdef class Blast:
         # run BLAST and get results
         with nogil:
             results = blast.GetObject().Run()
+
+        # check for warnings or errors
+        messages = blast.GetObject().GetSearchMessages()
+        if messages.HasMessages():
+            print(messages.ToString().decode())
+
         return SearchResultsSet._wrap(results)
         # messages = blast.GetSearchMessages() # TODO
 
