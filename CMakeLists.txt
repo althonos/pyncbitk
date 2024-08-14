@@ -114,11 +114,15 @@ set(PYNCBITK_DISABLED_COMPONENTS
 )
 
 set(PYNCBITK_NCBI_LIBS
+    blast
+    blastdb
     biblio
     # biotree
+    bz2
     # cdd
     # cn3d
     connect
+    composition_adjustment
     # dbsnp_ptis
     # dbsnp_tooltip_service
     # docsum
@@ -130,6 +134,7 @@ set(PYNCBITK_NCBI_LIBS
     # gencoll_client
     gene_info
     gene_info_writer
+    general
     # genesbyloc
     genome_collection
     # homologene
@@ -149,18 +154,25 @@ set(PYNCBITK_NCBI_LIBS
     pub
     # pubmed
     # regexp
+    scoremat
     seq
     seqcode
     seqdb
     seqedit
+    seqmasks_io
     seqset
     seqsplit
     ##seqtest
     sequtil
+    sqlitewrapp
     submit
+    tables
     # tinyseq
     utrtprof
     writedb
+    xalgoblastdbindex
+    xalgodustmask
+    xalgowinmask
     xblast
     xcgi
     xcompress
@@ -170,7 +182,10 @@ set(PYNCBITK_NCBI_LIBS
     xcser
     xlogging
     xncbi
+    xnetblastcli
+    xnetblast
     xobjmgr
+    xobjread
     xobjutil
     # xregexp
     xser
@@ -211,12 +226,15 @@ link_directories(${CMAKE_BINARY_DIR}/../lib)
 
 # Install required libraries
 if(PYNCBITK_INSTALL_LIBS)
+    set(PYTHON_LIBS_INSTALL_DIR "${CMAKE_PROJECT_NAME}.libs")
     foreach(_lib IN LISTS PYNCBITK_NCBI_LIBS)
         if(TARGET ${_lib})
             install(TARGETS ${_lib} DESTINATION ${SKBUILD_PLATLIB_DIR}/${CMAKE_PROJECT_NAME}.libs)
         else()
             message(SEND_ERROR "Unknown requested library: ${_lib}")
         endif()
+        # set_target_properties(${_lib} PROPERTIES INSTALL_RPATH "\$ORIGIN/../${PYTHON_LIBS_INSTALL_DIR}")
+        set_target_properties(${_lib} PROPERTIES INSTALL_RPATH "\$ORIGIN/.")
     endforeach()
 endif()
 
