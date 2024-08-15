@@ -20,6 +20,8 @@ import os
 # --- FastaReader --------------------------------------------------------------
 
 cdef class FastaReader:
+    """An iterative reader over the sequences in a FASTA file.
+    """
 
     def __cinit__(self):
         self._reader = NULL
@@ -27,7 +29,7 @@ cdef class FastaReader:
     def __dealloc__(self):
         del self._reader
 
-    def __init__(self, path):
+    def __init__(self, object path):
         cdef bytes _path = os.fsencode(path)
         self._reader = new CFastaReader(_path)
 
@@ -50,6 +52,8 @@ cdef class FastaReader:
 # --- BlastDatabase ------------------------------------------------------------
 
 cdef class DatabaseIter:
+    """An iterator over the sequences of a BLAST database.
+    """
 
     def __init__(self, DatabaseReader db):
 
@@ -82,12 +86,26 @@ cdef class DatabaseIter:
 
 
 cdef class DatabaseReader:
+    """A handle allowing to read the contents of a BLAST database.
+    """
 
     @staticmethod
     def _search_path():
         return CSeqDB.GenerateSearchPath().decode()
 
     def __init__(self, object name, str type = None):
+        """__init__(self, name, type=None)\n--\n
+
+        Create a new reader for a database of the given name.
+
+        Arguments:
+            name (`str`): The name of the database, as given when the
+                database was created.
+            type (`str` or `None`): The type of sequences in the database.
+                If `None` given, the database type will be detected from 
+                the metadata.
+
+        """
         cdef bytes   _name = name.encode()  # FIXME: os.fsencode?
         cdef CSeqDB* _db   = new CSeqDB(<string> _name, ESeqType.eUnknown)
         self._ref.Reset(_db)

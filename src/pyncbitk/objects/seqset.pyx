@@ -13,6 +13,10 @@ from .seq cimport BioSeq
 # --- BioSeqSet ----------------------------------------------------------------
 
 cdef class BioSeqSet:
+    """A set of sequence entries.
+    """
+
+    # TODO: subclasses
 
     def __init__(self):
         pass
@@ -30,6 +34,8 @@ cdef class BioSeqSet:
 # --- Entry --------------------------------------------------------------------
 
 cdef class Entry(Serial):
+    """A sequence entry.
+    """
 
     @staticmethod
     cdef Entry _wrap(CRef[CSeq_entry] ref):

@@ -184,6 +184,15 @@ cdef class DenseSegmentsData(Serial):
         return strands
 
 cdef class SeqAlign(Serial):
+    """A sequence alignment, mapping the coordinates of a `BioSeq` to others.
+
+    Sequence alignments are composed of segments, i.e aligned regions which
+    contain one or more sequences.
+
+    """
+
+    # FIXME: Reorganize and maybe make the default `__getitem__` access the
+    #        segments rather than the rows
 
     @staticmethod
     cdef SeqAlign _wrap(CRef[CSeq_align] ref):
@@ -240,6 +249,7 @@ cdef class SeqAlign(Serial):
 
     @property
     def scores(self):
+        # FIXME: Turn into a dict?
         cdef CRef[CScore]  ref
         cdef SeqAlignScore score
         cdef list          scores = []
@@ -254,6 +264,7 @@ cdef class SeqAlign(Serial):
 
     @property
     def segments(self):
+
         cdef CSeq_align*  obj = &self._ref.GetObject()
         cdef CRef[C_Segs] ref = CRef[C_Segs](&obj.GetSegsMut())
         return AlignSegments._wrap(ref)
@@ -262,7 +273,8 @@ cdef class SeqAlign(Serial):
 
 
 cdef class GlobalSeqAlign(SeqAlign):
-    pass
+    """A global alignment over the complete lengths of several `BioSeq`.
+    """
 
 cdef class DiagonalSeqAlign(SeqAlign):
     pass

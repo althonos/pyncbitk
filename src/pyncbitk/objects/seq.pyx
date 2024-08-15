@@ -15,6 +15,8 @@ from .seqloc cimport SeqId, LocalId
 # --- BioSeq -------------------------------------------------------------------
 
 cdef class BioSeq(Serial):
+    """A biological sequence.
+    """
 
     @staticmethod
     cdef BioSeq _wrap(CRef[CBioseq] ref):

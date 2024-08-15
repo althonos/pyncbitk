@@ -3,6 +3,7 @@ from libcpp cimport bool
 from ...serial.serialbase cimport CSerialObject
 from .seq_id cimport CSeq_id
 from .na_strand cimport ENa_strand
+from .seq_interval cimport CSeq_interval
 
 cdef extern from "objects/seqloc/Seq_loc_.hpp" namespace "ncbi::objects::CSeq_loc_Base" nogil:
 
@@ -22,7 +23,7 @@ cdef extern from "objects/seqloc/Seq_loc_.hpp" namespace "ncbi::objects::CSeq_lo
 
     ctypedef CSeq_id TEmpty
     ctypedef CSeq_id TWhole
-    # typedef CSeq_interval TInt
+    ctypedef CSeq_interval TInt
     # typedef CPacked_seqint TPacked_int
     # typedef CSeq_point TPnt
     # typedef CPacked_seqpnt TPacked_pnt
@@ -61,10 +62,10 @@ cdef extern from "objects/seqloc/Seq_loc_.hpp" namespace "ncbi::objects" nogil:
         TWhole& GetWholeMut "SetWhole" ()
         void SetWhole(TWhole& value)
 
-        # bool IsInt() const
-        # const TInt& GetInt() const
-        # TInt& SetInt()
-        # void SetInt(TInt& value)
+        bool IsInt() const
+        const TInt& GetInt() const
+        TInt& GetIntMut "SetInt"()
+        void SetInt(TInt& value)
 
         # bool IsPacked_int() const
         # const TPacked_int& GetPacked_int() const

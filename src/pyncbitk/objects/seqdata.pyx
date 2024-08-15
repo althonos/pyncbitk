@@ -160,6 +160,8 @@ cdef class IupacNaData(SeqNaData):
 
     @property
     def length(self):
+        """`int`: The length of the sequence data.
+        """
         return self._ref.GetObject().GetIupacna().Get().size()
 
     @property

@@ -183,6 +183,12 @@ cdef extern from "objects/seqloc/Seq_id_.hpp" namespace "ncbi::objects::CSeq_id"
 
     ctypedef int TParseFlags
 
+    enum E_SIC:
+        e_error
+        e_DIFF
+        e_NO
+        e_YES
+
 cdef extern from "objects/seqloc/Seq_id.hpp" namespace "ncbi::objects" nogil:
 
     cppclass CSeq_id(CSeq_id_Base, CSerializable):
@@ -190,4 +196,4 @@ cdef extern from "objects/seqloc/Seq_id.hpp" namespace "ncbi::objects" nogil:
         CSeq_id(const CTempString& the_id) except +
         CSeq_id(const CTempString& the_id, TParseFlags flags) except +
 
-    
+        E_SIC Compare(const CSeq_id& sid2) const

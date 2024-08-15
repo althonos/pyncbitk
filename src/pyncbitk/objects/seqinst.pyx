@@ -10,6 +10,9 @@ from ..toolkit.serial.serialdef cimport ESerialRecursionMode, ESerialDataFormat,
 from ..serial cimport Serial
 from .seqdata cimport SeqData, SeqNaData, SeqAaData
 
+from .seqdata import SeqData
+
+
 # --- SeqInst ------------------------------------------------------------------
 
 cdef dict _SEQINST_MOLECULE_STR = {
@@ -50,6 +53,8 @@ cdef dict _SEQINST_STRAND_ENUM = {
 }
 
 cdef class SeqInst(Serial):
+    """Abstract base class for declaring the contents of a sequence.
+    """
 
     @staticmethod
     cdef SeqInst _wrap(CRef[CSeq_inst] ref):
@@ -132,41 +137,57 @@ cdef class SeqInst(Serial):
 
     @property
     def length(self):
+        """`int`: The length of the sequence.
+        """
         if not self._ref.GetObject().IsSetLength():
             return None
         return self._ref.GetObject().GetLength()
 
     @property
     def molecule(self):
+        """`str` or `None`: The kind of molecule of the sequence, if any.
+        """
         cdef CSeq_inst_mol kind = self._ref.GetPointer().GetMol()
         return _SEQINST_MOLECULE_STR[kind]
 
     @property
     def topology(self):
+        """`str` or `None`: The topology of the sequence, if any.
+        """
         if not self._ref.GetObject().IsSetTopology():
             return None
         return _SEQINST_TOPOLOGY_STR[self._ref.GetObject().GetTopology()]
 
     @property
-    def strand(self):
+    def strandedness(self):
+        """`str` or `None`: The strandedness of the sequence, if any. 
+        """
         if not self._ref.GetObject().IsSetStrand():
             return None
         return _SEQINST_STRAND_STR[self._ref.GetObject().GetStrand()]
 
     @property
     def data(self):
+        """`SeqData` or `None`: The concrete sequence data.
+        """
         if not self._ref.GetObject().IsSetSeq_data():
             return None
         return SeqData._wrap(CRef[CSeq_data](&self._ref.GetObject().GetSeq_dataMut()))
 
 
 cdef class EmptyInst(SeqInst):
+    """An instance corresponding to an empty sequences.
+    """
     pass
 
 cdef class VirtualInst(SeqInst):
+    """An instance corresponding to a sequence with no data.
+    """
     pass
 
 cdef class ContinuousInst(SeqInst):
+    """An instance corresponding to a single continuous sequence.
+    """
 
     def __init__(
         self,
@@ -211,23 +232,36 @@ cdef class ContinuousInst(SeqInst):
         return f"{ty}({', '.join(args)})"
 
 cdef class SegmentedInst(SeqInst):
-    pass
+    """An instance corresponding to a segmented sequence.
+    """
 
 cdef class ConstructedInst(SeqInst):
-    pass
+    """An instance corresponding to a constructed sequence.
+    """
 
 cdef class RefInst(SeqInst):
-    pass
+    """An instance corresponding to a reference to another sequence.
+    """
 
 cdef class ConsensusInst(SeqInst):
-    pass
+    """An instance corresponding to a consensus sequence.
+    """
 
 cdef class MapInst(SeqInst):
-    pass
+    """An instance corresponding to an ordered mapping.
+    """
 
 cdef class DeltaInst(SeqInst):
+    """An instance corresponding to changed applied to other sequences.
+    """
 
     cpdef ContinuousInst to_continuous(self):
+        """Transform this instance to a continuous sequence instance.
+
+        Returns:
+            `ContinuousInst`: The equivalent instance as a single 
+            continuous sequence instance.
+        """
         cdef CSeq_inst* copy = new CSeq_inst()
         copy.Assign(self._ref.GetNonNullPointer()[0], ESerialRecursionMode.eRecursive)
         if not copy.ConvertDeltaToRaw():

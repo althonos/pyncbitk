@@ -4,7 +4,7 @@ from ..toolkit.serial.serialbase cimport CSerialObject
 from ..toolkit.objects.general.object_id cimport CObject_id
 from ..toolkit.objects.seqloc.textseq_id cimport CTextseq_id
 from ..toolkit.objects.seqloc.seq_loc cimport CSeq_loc, E_Choice as CSeq_loc_choice
-from ..toolkit.objects.seqloc.seq_id cimport CSeq_id, E_Choice as CSeq_id_choice
+from ..toolkit.objects.seqloc.seq_id cimport CSeq_id, E_Choice as CSeq_id_choice, E_SIC as CSeq_id_SIC
 from ..toolkit.corelib.ncbiobj cimport CRef
 from ..toolkit.corelib.tempstr cimport CTempString
 
@@ -14,17 +14,23 @@ from .general cimport ObjectId
 # --- SeqLoc -------------------------------------------------------------------
 
 cdef class SeqLoc(Serial):
+    """An abstract base class for defining a location in a `BioSeq`.
+    """
 
     cdef CSerialObject* _serial(self):
         return <CSerialObject*> self._loc.GetNonNullPointer()
 
 cdef class NullLoc(SeqLoc):
-    pass
+    """A gap of unknown size.
+    """
 
 cdef class EmptySeqLoc(SeqLoc):
-    pass
+    """A gap of unknown size inside an alignment.
+    """
 
 cdef class WholeSeqLoc(SeqLoc):
+    """A reference to an entire `BioSeq`.
+    """
 
     def __init__(self, SeqId id):
         cdef CSeq_loc* loc = new CSeq_loc()
@@ -33,34 +39,72 @@ cdef class WholeSeqLoc(SeqLoc):
         self._loc.Reset(loc)
 
     @property
-    def id(self):
+    def sequence_id(self):
+        """`SeqId`: The identifier of the sequence.
+        """
         id_ = CRef[CSeq_id](&self._loc.GetNonNullPointer().GetWholeMut())
         return SeqId._wrap(id_)
 
 cdef class SeqIntervalLoc(SeqLoc):
-    pass
+    """A reference to an interval on a `BioSeq`.
+    """
+    
+    @property
+    def sequence_id(self):
+        """`SeqId`: The identifier of the sequence.
+        """
+        data = &self._loc.GetNonNullPointer().GetIntMut()
+        id_ = CRef[CSeq_id](&data.GetIdMut())
+        return SeqId._wrap(id_)
+
+    @property
+    def start(self):
+        """`int`: The beginining of the sequence interval.
+        """
+        data = &self._loc.GetNonNullPointer().GetIntMut()
+        return data.GetFrom()
+
+    @property
+    def stop(self):
+        """`int`: The beginining of the sequence interval.
+        """
+        data = &self._loc.GetNonNullPointer().GetIntMut()
+        return data.GetTo()
+
 
 cdef class PackedSeqLoc(SeqLoc):
-    pass
+    """A reference to a series of intervals on a `BioSeq`.
+    """
+
+cdef class PointLoc(SeqLoc):
+    """A reference to a single point on a `BioSeq`.
+    """
 
 cdef class PackedPointsLoc(SeqLoc):
-    pass
+    """A reference to a series of points on a `BioSeq`.
+    """
 
 cdef class MixLoc(SeqLoc):
-    pass
+    """An arbitrarily complex location.
+    """
 
 cdef class EquivalentLoc(SeqLoc):
-    pass
+    """A set of equivalent locations.
+    """
 
 cdef class BondLoc(SeqLoc):
-    pass
+    """A chemical bond between two residues.
+    """
 
 cdef class FeatureLoc(SeqLoc):
-    pass
+    """A location indirectly referenced through a feature.
+    """
 
 # --- SeqId --------------------------------------------------------------------
 
 cdef class SeqId(Serial):
+    """An abstract base class for defining a sequence identifier.
+    """
 
     @staticmethod
     cdef SeqId _wrap(CRef[CSeq_id] ref):
@@ -82,13 +126,45 @@ cdef class SeqId(Serial):
     cdef CSerialObject* _serial(self):
         return <CSerialObject*> self._ref.GetNonNullPointer()
 
+    def __eq__(self, object other):
+        cdef SeqId       other_
+        cdef CSeq_id_SIC result
+
+        if not isinstance(other, SeqId):
+            return NotImplemented
+
+        other_ = other
+        result = self._ref.GetObject().Compare(other_._ref.GetObject())
+        
+        if result == CSeq_id_SIC.e_DIFF:
+            return NotImplemented
+        elif result == CSeq_id_SIC.e_error:
+            raise RuntimeError(f"Failed to compare {self!r} and {other!r}")
+        elif result == CSeq_id_SIC.e_YES:
+            return True
+        else:
+            return False
+
     @staticmethod
     def parse(str text):
+        """Parse an identifier from an arbitrary string.
+
+        Returns:
+            `SeqId`: The appropriate `SeqId` subclass for the given 
+            identifier string.
+
+        Example:
+            >>> SeqId.parse("JH379476.1")
+            GenBankId(TextSeqId('JH379476', version=1))
+
+        """
         cdef bytes _text = text.encode()
         cdef CSeq_id* _id = new CSeq_id(CTempString(_text))
         return SeqId._wrap(CRef[CSeq_id](_id))
 
 cdef class LocalId(SeqId):
+    """A local identifier for naming privately maintained data.
+    """
 
     def __init__(self, ObjectId id):
         cdef CSeq_id* obj = new CSeq_id()
@@ -106,9 +182,16 @@ cdef class LocalId(SeqId):
         return ObjectId._wrap(CRef[CObject_id](id))
 
 cdef class RefSeqId(SeqId):
-    pass
+    """A sequence identifier from the NCBI Reference Sequence project.
+    """
 
 cdef class GenBankId(SeqId):
+    """A sequence identifier from the NCBI GenBank database.
+    """
+
+    def __repr__(self):
+        cdef str ty = type(self).__name__
+        return f"{ty}({self.id!r})"
 
     @property
     def id(self):
@@ -117,10 +200,12 @@ cdef class GenBankId(SeqId):
 
 
 cdef class ProteinDataBankId(SeqId):
-    pass
+    """A sequence identifier from the Protein Data Bank.
+    """
 
 cdef class GeneralId(SeqId):
-    pass
+    """A sequence identifier from a local database.
+    """
 
 cdef class TextSeqId(Serial):
     # FIXME: Consider removing this data class and using instead an abstract
