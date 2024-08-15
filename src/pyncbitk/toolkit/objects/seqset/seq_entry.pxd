@@ -1,6 +1,6 @@
 from libcpp cimport bool
 
-from ...serial.serialbase cimport CSerialObject
+from ...serial.serialbase cimport CSerialObject, EResetVariant
 from ...serial.serializable cimport CSerializable
 from ..seq.bioseq cimport CBioseq
 from .bioseq_set cimport CBioseq_set
@@ -27,14 +27,18 @@ cdef extern from "objects/seqset/Seq_entry_.hpp" namespace "ncbi::objects" nogil
         E_Choice Which() const
         void CheckSelected(E_Choice index) const
 
+        void Select(E_Choice index)
+        void Select(E_Choice index, EResetVariant reset)
+        # void Select(E_Choice index, EResetVariant reset, CObjectMemoryPool* pool)
+
         bool IsSeq() const
         const TSeq& GetSeq() const
-        TSeq& SetSeq()
-        # void SetSeq(TSeq& value)
+        TSeq& GetSeqMut "SetSeq"()
+        void SetSeq(TSeq& value)
 
         bool IsSet() const
         const TSet& GetSet() const
-        TSet& SetSet()
+        TSet& GetSetMut "SetSet"()
         void SetSet(TSet& value)
 
 

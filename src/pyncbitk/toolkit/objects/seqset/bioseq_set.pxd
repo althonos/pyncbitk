@@ -4,6 +4,7 @@ from libcpp.list cimport list
 from ...corelib.ncbiobj cimport CObject, CRef, CConstRef
 from ...serial.serialbase cimport CSerialObject
 from .seq_entry cimport CSeq_entry
+from ..general.object_id cimport CObject_id
 
 
 cdef extern from "objects/seqset/Bioseq_set_.hpp" namespace "ncbi::objects::CBioseq_set_Base" nogil:
@@ -34,7 +35,7 @@ cdef extern from "objects/seqset/Bioseq_set_.hpp" namespace "ncbi::objects::CBio
         eClass_paired_end_reads 
         eClass_small_genome_set 
 
-    # ctypedef CObject_id TId
+    ctypedef CObject_id TId
     # ctypedef CDbtag TColl
     # ctypedef int TLevel
     # ctypedef EClass TClass
@@ -49,6 +50,13 @@ cdef extern from "objects/seqset/Bioseq_set_.hpp" namespace "ncbi::objects" nogi
 
     cppclass CBioseq_set_Base(CSerialObject):
         CBioseq_set_Base()
+
+        bool IsSetId() const
+        bool CanGetId() const
+        void ResetId()
+        const TId& GetId() const
+        void SetId(TId& value)
+        TId& GetIdMut "SetId"()
 
         bool IsSetSeq_set() const
         bool CanGetSeq_set() const

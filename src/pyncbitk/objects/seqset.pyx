@@ -4,9 +4,10 @@ from libcpp.list cimport list as cpplist
 
 from ..toolkit.corelib.ncbiobj cimport CRef
 from ..toolkit.objects.seqset.seq_entry cimport CSeq_entry, E_Choice as CSeq_entry_choice
-from ..toolkit.serial.serialbase cimport CSerialObject
+from ..toolkit.serial.serialbase cimport CSerialObject, EResetVariant
 from ..toolkit.objects.seq.bioseq cimport CBioseq
 
+from .general cimport ObjectId
 from .seqset cimport Entry
 from .seq cimport BioSeq
 
@@ -18,8 +19,31 @@ cdef class BioSeqSet:
 
     # TODO: subclasses
 
-    def __init__(self):
-        pass
+    def __init__(
+        self,
+        object items=(),
+        *,
+        ObjectId id = None
+    ):
+        cdef Entry        entry
+        cdef CBioseq_set* seqset = new CBioseq_set()
+
+        try:
+            if id is not None:
+                seqset.SetId(id._ref.GetObject())
+            for item in items:
+                if isinstance(item, Entry):
+                    entry = item
+                elif isinstance(item, BioSeq):
+                    entry = SeqEntry(item)
+                elif isinstance(item, BioSeqSet):
+                    entry = SetEntry(item)
+                else:
+                    ty = item.__class__.__name__
+                    raise TypeError(f"expected Entry, BioSeq or BioSeqSet, got {ty}")
+                seqset.GetSeq_setMut().push_back(entry._ref)
+        finally:
+            self._ref.Reset(seqset)
 
     def __len__(self):
         assert self._ref.GetObject().IsSetSeq_set()
@@ -57,13 +81,24 @@ cdef class Entry(Serial):
 
 cdef class SeqEntry(Entry):
 
+    def __init__(self, BioSeq sequence):
+        cdef CSeq_entry* entry = new CSeq_entry()
+        entry.Select(CSeq_entry_choice.e_Seq, EResetVariant.eDoResetVariant)
+        entry.SetSeq(sequence._ref.GetObject())
+        self._ref.Reset(entry)
+
     @property
     def seq(self):
-        cdef CBioseq* bioseq = &self._ref.GetNonNullPointer().SetSeq()
+        cdef CBioseq* bioseq = &self._ref.GetNonNullPointer().GetSeqMut()
         return BioSeq._wrap(CRef[CBioseq](bioseq))
 
 
 cdef class SetEntry(Entry):
-    pass
+
+    def __init__(self, BioSeqSet set):
+        cdef CSeq_entry* entry = new CSeq_entry()
+        entry.Select(CSeq_entry_choice.e_Set, EResetVariant.eDoResetVariant)
+        entry.SetSet(set._ref.GetObject())
+        self._ref.Reset(entry)
 
 
