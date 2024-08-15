@@ -18,6 +18,8 @@ from ..serial cimport Serial
 # --- SeqData ------------------------------------------------------------------
 
 cdef class SeqData(Serial):
+    """An abstract base storage of sequence data.
+    """
 
     @staticmethod
     cdef SeqData _wrap(CRef[CSeq_data] ref):
@@ -84,8 +86,10 @@ cdef class SeqData(Serial):
 
 
 cdef class SeqAaData(SeqData):
+    """An abstract base storage of amino-acid sequence data.
+    """
     
-    def decode(self):
+    cpdef str decode(self):
         cdef CSeq_data*       out  
         cdef CSeq_data*       data = &self._ref.GetObject()
         cdef CSeq_data_choice kind = data.Which()
@@ -99,8 +103,10 @@ cdef class SeqAaData(SeqData):
             del out
 
 cdef class SeqNaData(SeqData):
+    """An abstract base storage of nucleotide sequence data.
+    """
     
-    def decode(self):
+    cpdef str decode(self):
         cdef CSeq_data*       out  
         cdef CSeq_data*       data = &self._ref.GetObject()
         cdef CSeq_data_choice kind = data.Which()
@@ -114,6 +120,8 @@ cdef class SeqNaData(SeqData):
             del out
 
 cdef class IupacNaData(SeqNaData):
+    """Nucleotide sequence data stored as a IUPAC nucleotide string.
+    """
 
     def __init__(self, object data):
         cdef bytes      _data
@@ -158,19 +166,59 @@ cdef class IupacNaData(SeqNaData):
     def data(self):
         return self.decode()
 
-    def decode(self):
+    cpdef str decode(self):
         return self._ref.GetObject().GetIupacna().Get().decode()
 
 
 cdef class IupacAaData(SeqAaData):
+    """Nucleotide sequence data stored in a IUPAC-UBI amino-acid string.
+
+    The IUPAC-IUB Commission on Biochemical Nomenclature defined a code
+    of one-letter abbreviations for the 20 standard amino-acids, as well
+    as undeterminate and unknown symbols.
+
+    """
     
-    def decode(self):
+    cpdef str decode(self):
         return self._ref.GetObject().GetIupacaa().Get().decode()
 
 cdef class Ncbi2NaData(SeqNaData):
-    pass
+    """Nucleotide sequence data stored with 2-bit encoding.
+
+    A nucleic acid containing no ambiguous bases can be encoded using a 
+    two-bit encoding per base, representing one of the four nucleobases:
+    ``A``, ``C``, ``G`` or ``T``. This encoding is the most compact for
+    unambiguous sequences.
+
+    """
+
+    # def __getbuffer__(self, Py_buffer* buffer, int flags):
+    #     cdef const vector[char]* data = &self._ref.GetObject().GetNcbi2na().Get()
+
+    #     if flags & PyBUF_FORMAT:
+    #         buffer.format = b"B"
+    #     else:
+    #         buffer.format = NULL
+
+    #     buffer.buf = <void*> data.data()
+    #     buffer.internal = NULL
+    #     buffer.itemsize = sizeof(char)
+    #     buffer.len = data.size() * sizeof(char)
+    #     buffer.ndim = 1
+    #     buffer.obj = self
+    #     buffer.readonly = True
+    #     buffer.shape = NULL
+    #     buffer.suboffsets = NULL
+    #     buffer.strides = NULL
+
+    # @property
+    # def data(self):
+    #     cdef const vector[char]* data = &self._ref.GetObject().GetNcbi2na().Get()
+    #     return PyBytes_FromStringAndSize(data.data(), data.size())
 
 cdef class Ncbi4NaData(SeqNaData):
+    """Nucleotide sequence data stored with 4-bit encoding.
+    """
 
     def __getbuffer__(self, Py_buffer* buffer, int flags):
         cdef const vector[char]* data = &self._ref.GetObject().GetNcbi4na().Get()
@@ -198,24 +246,37 @@ cdef class Ncbi4NaData(SeqNaData):
 
 
 cdef class Ncbi8NaData(SeqNaData):
+    """Amino-acid sequence data with support for modified residues.
+    """
     pass
 
 cdef class NcbiPNaData(SeqNaData):
-    pass
+    """Nucleotide sequence data storing probabilities for each position.
+    """
 
 cdef class Ncbi8AaData(SeqAaData):
     pass
 
 cdef class NcbiEAaData(SeqAaData):
-    def decode(self):
+    """Amino-acid sequence data storing an NCBI-extended string.
+
+    This representation adds symbols for the non-standard selenocysteine
+    amino-acid (`U`) as well as support for termination or gap characters.
+
+    """
+
+    cpdef str decode(self):
         return self._ref.GetObject().GetNcbieaa().Get().decode()
 
 cdef class NcbiPAaData(SeqAaData):
-    pass
+    """Amino-acid sequence data storing probabilities for each position.
+    """
 
 cdef class NcbiStdAa(SeqAaData):
-    pass
+    """Amino-acid sequence data stored as ordinal encoding.
+    """
 
 cdef class GapData(SeqData):
-    pass
+    """A virtual sequence data storage representing a gap.
+    """
 

@@ -20,12 +20,10 @@ cdef class SeqData(Serial):
     cpdef SeqData reverse_complement(self, bool pack=*)
 
 cdef class SeqAaData(SeqData):
-    # cpdef str decode(self)
-    pass
+    cpdef str decode(self)
 
 cdef class SeqNaData(SeqData):
-    # cpdef str decode(self)
-    pass
+    cpdef str decode(self)
 
 cdef class IupacNaData(SeqNaData):
     pass
