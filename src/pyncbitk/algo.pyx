@@ -18,8 +18,10 @@ from .toolkit.corelib.ncbiobj cimport CConstRef, CRef
 from .toolkit.objects.general.object_id cimport CObject_id
 from .toolkit.objects.general.object_id cimport E_Choice as CObject_id_choice
 from .toolkit.objects.seq.bioseq cimport CBioseq
+from .toolkit.objects.seqset.bioseq_set cimport CBioseq_set
 from .toolkit.objects.seq.seq_data cimport CSeq_data
 from .toolkit.objects.seq.seq_inst cimport ERepr as CSeq_inst_repr
+from .toolkit.objects.seqloc.seq_id cimport CSeq_id
 from .toolkit.objmgr.object_manager cimport CObjectManager
 from .toolkit.objmgr.scope cimport CScope
 from .toolkit.objtools.readers.fasta cimport CFastaReader
@@ -29,7 +31,7 @@ from .toolkit.algo.blast.api.uniform_search cimport CSearchDatabase, EMoleculeTy
 from .toolkit.objtools.blast.seqdb_reader.seqdb cimport ESeqType
 
 from .objects.general cimport ObjectId
-from .objects.seqloc cimport SeqLoc
+from .objects.seqloc cimport SeqLoc, SeqId
 from .objects.seqalign cimport SeqAlign, SeqAlignSet
 from .objects.seq cimport BioSeq
 from .objects.seqset cimport BioSeqSet
@@ -60,6 +62,7 @@ cdef class BlastSeqLoc:
 
 ctypedef fused BlastQueries:
     BioSeq
+    BioSeqSet
     object
 
 ctypedef fused BlastSubjects:
@@ -105,6 +108,11 @@ cdef class SearchResults:
         return obj
 
     @property
+    def query_id(self):
+        cdef CSeq_id* seq_id = <CSeq_id*> self._ref.GetObject().GetSeqId().GetNonNullPointer()
+        return SeqId._wrap(CRef[CSeq_id](seq_id))
+
+    @property
     def alignments(self):
         return SeqAlignSet._wrap(self._ref.GetObject().GetSeqAlignMut())
 
@@ -122,10 +130,14 @@ cdef class Blast:
         self,
         *,
         int window_size = 40,
+        double evalue = 10.0,
+        int max_target_sequences = 500,
     ):
         if self._opt.Empty():
             raise TypeError("Cannot instantiate abstract class Blast")
         self.window_size = window_size
+        self.evalue = evalue
+        self.max_target_sequences = max_target_sequences
 
     def __repr__(self):
         cdef str ty = self.__class__.__name__
@@ -180,6 +192,12 @@ cdef class Blast:
         """
         return self._opt.GetObject().GetEvalueThreshold()
 
+    @evalue.setter
+    def evalue(self, double evalue):
+        if evalue <= 0:
+            raise ValueError(f"`evalue` must be greater than zero, got {evalue!r}")
+        self._opt.GetObject().SetEvalueThreshold(evalue)
+
     @property
     def percent_identity(self):
         """`float`: Percentage identity threshold for saving hits.
@@ -209,7 +227,7 @@ cdef class Blast:
         return self._opt.GetObject().GetCullingLimit()
 
     @property
-    def db_size(self):
+    def database_size(self):
         """`int`: The effective length of the database.
         """
         return self._opt.GetObject().GetDbLength()
@@ -219,6 +237,18 @@ cdef class Blast:
         """`int`: The effective length of the search space.
         """
         return self._opt.GetObject().GetEffectiveSearchSpace()
+
+    @property
+    def max_target_sequences(self):
+        """`int`: The maximum number of aligned sequences to retain.
+        """
+        return self._opt.GetObject().GetHitlistSize()
+
+    @max_target_sequences.setter
+    def max_target_sequences(self, int max_target_sequences):
+        if max_target_sequences <= 0:
+            raise ValueError(f"`max_target_sequences` must be greater than zero, got {max_target_sequences!r}")
+        self._opt.GetObject().SetHitlistSize(max_target_sequences)
 
     # --- Public Methods -------------------------------------------------------
 
@@ -230,9 +260,6 @@ cdef class Blast:
     ):
         cdef TSeqLocVector         _queries_loc
         cdef TSeqLocVector         _subjects_loc
-        cdef BioSeq                _query_seq
-        cdef BioSeq                _subject_seq
-        cdef DatabaseReader        _db
         cdef BlastSeqLoc           seqloc
         cdef CRef[IQueryFactory]   query_factory
         cdef CRef[IQueryFactory]   subject_factory
@@ -241,11 +268,12 @@ cdef class Blast:
 
         # prepare queries: a list of `BlastSeqLoc` objects 
         if BlastQueries is BioSeq:
-            _query_seq = queries
-            if _query_seq._ref.GetObject().GetInst().GetRepr() != CSeq_inst_repr.eRepr_raw:
-                ty = _query_seq.instance.__class__.__name__
+            if queries._ref.GetObject().GetInst().GetRepr() != CSeq_inst_repr.eRepr_raw:
+                ty = queries.instance.__class__.__name__
                 raise ValueError(f"Unsupported instance type: {ty}")
-            query_factory.Reset(<IQueryFactory*> new CObjMgrFree_QueryFactory(CConstRef[CBioseq](_query_seq._ref)))
+            query_factory.Reset(<IQueryFactory*> new CObjMgrFree_QueryFactory(CConstRef[CBioseq](queries._ref)))
+        elif BlastQueries is BioSeqSet:
+            query_factory.Reset(<IQueryFactory*> new CObjMgrFree_QueryFactory(CConstRef[CBioseq_set](queries._ref)))
         else:
             if not is_iterable(queries):
                 queries = (queries, )
@@ -255,22 +283,20 @@ cdef class Blast:
 
         # prepare subjects: either a list of `BlastSeqLoc` objects, or a `DatabaseReader`
         if BlastSubjects is DatabaseReader:
-            _db = subjects
-            _ty = _db._ref.GetObject().GetSequenceType()
+            _ty = subjects._ref.GetObject().GetSequenceType()
             if _ty == ESeqType.eProtein:
                 search_database = new CSearchDatabase(string(), EMoleculeType.eBlastDbIsProtein)
             elif _ty == ESeqType.eNucleotide:
                 search_database = new CSearchDatabase(string(), EMoleculeType.eBlastDbIsNucleotide)
             else:
                 raise ValueError(f"invalid sequence type: {_ty!r}")
-            search_database.SetSeqDb((<DatabaseReader> subjects)._ref)
+            search_database.SetSeqDb(subjects._ref)
             db.Reset(new CLocalDbAdapter(search_database[0]))
         elif BlastSubjects is BioSeq:
-            _subject_seq = subjects
-            if _subject_seq._ref.GetObject().GetInst().GetRepr() != CSeq_inst_repr.eRepr_raw:
-                ty = _subject_seq.instance.__class__.__name__
+            if subjects._ref.GetObject().GetInst().GetRepr() != CSeq_inst_repr.eRepr_raw:
+                ty = subjects.instance.__class__.__name__
                 raise ValueError(f"Unsupported instance type: {ty}")
-            subject_factory.Reset(<IQueryFactory*> new CObjMgrFree_QueryFactory(CConstRef[CBioseq](_subject_seq._ref)))
+            subject_factory.Reset(<IQueryFactory*> new CObjMgrFree_QueryFactory(CConstRef[CBioseq](subjects._ref)))
             db.Reset(new CLocalDbAdapter(subject_factory, self._opt, scan_mode))
         else:
             if not is_iterable(subjects):
@@ -320,11 +346,9 @@ cdef class BlastN(NucleotideBlast):
     def __init__(
         self,
         *,
-        int window_size = 40,
+        **kwargs,
     ):
         cdef CBlastNucleotideOptionsHandle* handle = new CBlastNucleotideOptionsHandle()
         handle.SetTraditionalBlastnDefaults()
         self._opt.Reset(<CBlastOptionsHandle*> handle)
-        super().__init__(
-            window_size=window_size,
-        )
+        super().__init__(**kwargs)
