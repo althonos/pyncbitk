@@ -32,6 +32,7 @@ from .objects.general cimport ObjectId
 from .objects.seqloc cimport SeqLoc
 from .objects.seqalign cimport SeqAlign, SeqAlignSet
 from .objects.seq cimport BioSeq
+from .objects.seqset cimport BioSeqSet
 from .objmgr cimport Scope
 from .objtools cimport DatabaseReader
 
@@ -55,6 +56,16 @@ cdef class BlastSeqLoc:
 
     def __init__(self, SeqLoc loc, Scope scope, SeqLoc mask = None):
         self._seqloc = SSeqLoc(loc._loc.GetObject(), scope._scope.GetObject())
+
+
+ctypedef fused BlastQueries:
+    BioSeq
+    object
+
+ctypedef fused BlastSubjects:
+    BioSeq
+    DatabaseReader
+    object
 
 # --- BLAST results ------------------------------------------------------------
 
@@ -213,8 +224,8 @@ cdef class Blast:
 
     cpdef SearchResultsSet run(
         self,
-        queries,
-        subjects,
+        BlastQueries queries,
+        BlastSubjects subjects,
         bool scan_mode = False
     ):
         cdef TSeqLocVector         _queries_loc
@@ -229,7 +240,7 @@ cdef class Blast:
         cdef CRef[CLocalBlast]     blast
 
         # prepare queries: a list of `BlastSeqLoc` objects 
-        if isinstance(queries, BioSeq):
+        if BlastQueries is BioSeq:
             _query_seq = queries
             if _query_seq._ref.GetObject().GetInst().GetRepr() != CSeq_inst_repr.eRepr_raw:
                 ty = _query_seq.instance.__class__.__name__
@@ -243,7 +254,7 @@ cdef class Blast:
             query_factory.Reset(<IQueryFactory*> new CObjMgr_QueryFactory(_queries_loc))
 
         # prepare subjects: either a list of `BlastSeqLoc` objects, or a `DatabaseReader`
-        if isinstance(subjects, DatabaseReader):
+        if BlastSubjects is DatabaseReader:
             _db = subjects
             _ty = _db._ref.GetObject().GetSequenceType()
             if _ty == ESeqType.eProtein:
@@ -254,7 +265,7 @@ cdef class Blast:
                 raise ValueError(f"invalid sequence type: {_ty!r}")
             search_database.SetSeqDb((<DatabaseReader> subjects)._ref)
             db.Reset(new CLocalDbAdapter(search_database[0]))
-        elif isinstance(subjects, BioSeq):
+        elif BlastSubjects is BioSeq:
             _subject_seq = subjects
             if _subject_seq._ref.GetObject().GetInst().GetRepr() != CSeq_inst_repr.eRepr_raw:
                 ty = _subject_seq.instance.__class__.__name__
