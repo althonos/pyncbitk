@@ -13,8 +13,8 @@ cdef class ObjectId(Serial):
     @staticmethod
     cdef ObjectId _wrap(CRef[CObject_id] ref)
      
-cdef class StrId(ObjectId):
-    pass
+# cdef class StrId(ObjectId):
+#     pass
 
-cdef class IntId(ObjectId):
-    pass
+# cdef class IntId(ObjectId):
+#     pass
