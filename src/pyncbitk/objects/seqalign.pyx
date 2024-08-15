@@ -239,9 +239,55 @@ cdef class SeqAlign(Serial):
         row._ref = self._ref
         row._row = index
         return row
+        
+    @property
+    def bitscore(self):
+        """`float` or `None`: The BLAST-specific bit score.
+        """
+        cdef double bitscore = NAN
+        if not self._ref.GetObject().GetNamedScore(EScoreType.eScore_BitScore, bitscore):
+            return None
+        return bitscore
+
+    @property
+    def percent_identity(self):
+        r"""`float` or `None`: The percent identity of the alignment.
+
+        This refers to the BLAST-style identity, which is computed 
+        including gaps over the whole alignment:
+
+        .. math::
+
+            id = 100 \times \frac{\text{matches}}{\text{alignment length}}
+
+        """
+        cdef double value = NAN
+        if not self._ref.GetObject().GetNamedScore(EScoreType.eScore_PercentIdentity, value):
+            return None
+        return value
+
+    @property
+    def percent_coverage(self):
+        r"""`float` or `None`: The percent query coverage, if any. 
+
+        BLAST ignores the polyA tail when computing coverage for nucleotide
+        sequences:
+
+        .. math::
+
+            cov = 100 \times \frac{\text{matches} + \text{mismatches}}
+                                  {\text{alignment length} - \text{polyA tail}}
+
+        """
+        cdef double cov = NAN
+        if not self._ref.GetObject().GetNamedScore(EScoreType.eScore_PercentCoverage, cov):
+            return None
+        return cov
 
     @property
     def evalue(self):
+        """`float` or `None`: The BLAST-specific expectation value.
+        """
         cdef double evalue = NAN
         if not self._ref.GetObject().GetNamedScore(EScoreType.eScore_EValue, evalue):
             return None
@@ -264,12 +310,9 @@ cdef class SeqAlign(Serial):
 
     @property
     def segments(self):
-
         cdef CSeq_align*  obj = &self._ref.GetObject()
         cdef CRef[C_Segs] ref = CRef[C_Segs](&obj.GetSegsMut())
         return AlignSegments._wrap(ref)
-
-
 
 
 cdef class GlobalSeqAlign(SeqAlign):

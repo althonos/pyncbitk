@@ -39,8 +39,6 @@ cdef extern from "objects/seqalign/Seq_align_.hpp" namespace "ncbi::objects::CSe
 
 cdef extern from "objects/seqalign/Seq_align_.hpp" namespace "ncbi::objects::CSeq_align_Base" nogil:
 
-    ctypedef CSerialObject Tparent
-    
     enum EType:
         eType_not_set
         eType_global
@@ -153,7 +151,6 @@ cdef extern from "objects/seqalign/Seq_align_.hpp" namespace "ncbi::objects" nog
 
 cdef extern from "objects/seqalign/Seq_align.hpp" namespace "ncbi::objects::CSeq_align" nogil:
 
-    ctypedef CSeq_align_Base Tparent
     ctypedef int TDim
 
     enum EScoreType:
