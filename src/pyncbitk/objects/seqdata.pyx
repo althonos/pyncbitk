@@ -12,6 +12,7 @@ from ..toolkit.objects.seq.seq_data cimport CSeq_data, E_Choice as CSeq_data_cho
 from ..toolkit.serial.serialbase cimport CSerialObject
 from ..toolkit.objects.seq.seqport_util cimport CSeqportUtil
 from ..toolkit.objects.seq.iupacna cimport CIUPACna
+from ..toolkit.objects.seq.iupacaa cimport CIUPACaa
 
 from ..serial cimport Serial
 
@@ -180,6 +181,51 @@ cdef class IupacAaData(SeqAaData):
     as undeterminate and unknown symbols.
 
     """
+
+    def __init__(self, object data):
+        cdef bytes      _data
+
+        if isinstance(data, str):
+            _data = data.encode()
+        else:
+            _data = data
+
+        super().__init__()
+        self._ref.GetObject().Select(CSeq_data_choice.e_Iupacaa)
+        self._ref.GetObject().SetIupacaa(CIUPACaa(<string> _data))
+
+    def __repr__(self):
+        cdef str ty = self.__class__.__name__
+        return f"{ty}({self.data!r})"
+
+    def __getbuffer__(self, Py_buffer* buffer, int flags):
+        cdef const string* data = &self._ref.GetObject().GetIupacna().Get()
+
+        if flags & PyBUF_FORMAT:
+            buffer.format = b"B"
+        else:
+            buffer.format = NULL
+
+        buffer.buf = <void*> data.data()
+        buffer.internal = NULL
+        buffer.itemsize = sizeof(char)
+        buffer.len = data.size() * sizeof(char)
+        buffer.ndim = 1
+        buffer.obj = self
+        buffer.readonly = True
+        buffer.shape = NULL
+        buffer.suboffsets = NULL
+        buffer.strides = NULL
+
+    @property
+    def length(self):
+        """`int`: The length of the sequence data.
+        """
+        return self._ref.GetObject().GetIupacna().Get().size()
+
+    @property
+    def data(self):
+        return self.decode()
     
     cpdef str decode(self):
         return self._ref.GetObject().GetIupacaa().Get().decode()
@@ -248,8 +294,6 @@ cdef class Ncbi4NaData(SeqNaData):
 
 
 cdef class Ncbi8NaData(SeqNaData):
-    """Amino-acid sequence data with support for modified residues.
-    """
     pass
 
 cdef class NcbiPNaData(SeqNaData):
@@ -257,7 +301,8 @@ cdef class NcbiPNaData(SeqNaData):
     """
 
 cdef class Ncbi8AaData(SeqAaData):
-    pass
+    """Amino-acid sequence data with support for modified residues.
+    """
 
 cdef class NcbiEAaData(SeqAaData):
     """Amino-acid sequence data storing an NCBI-extended string.
