@@ -40,7 +40,7 @@ cdef dict _SEQINST_TOPOLOGY_ENUM = {
     v:k for k,v in _SEQINST_TOPOLOGY_STR.items()
 }
 
-cdef dict _SEQINST_STRAND_STR = {
+cdef dict _SEQINST_STRANDEDNESS_STR = {
     EStrand.eStrand_not_set: None,
     EStrand.eStrand_ss: "single",
     EStrand.eStrand_ds: "double",
@@ -48,8 +48,8 @@ cdef dict _SEQINST_STRAND_STR = {
     EStrand.eStrand_other: "other",
 }
 
-cdef dict _SEQINST_STRAND_ENUM = {
-    v:k for k,v in _SEQINST_STRAND_STR.items()
+cdef dict _SEQINST_STRANDEDNESS_ENUM = {
+    v:k for k,v in _SEQINST_STRANDEDNESS_STR.items()
 }
 
 cdef class SeqInst(Serial):
@@ -92,7 +92,7 @@ cdef class SeqInst(Serial):
         self,
         *,
         str topology="linear",
-        str strand=None,
+        str strandedness=None,
         str molecule=None,
         object length=None,
     ):
@@ -100,14 +100,14 @@ cdef class SeqInst(Serial):
         if molecule not in _SEQINST_MOLECULE_ENUM:
             raise ValueError(f"invalid molecule: {molecule!r}")
 
-        # try to detect strand if possible
-        if strand is None:
+        # try to detect strandedness if possible
+        if strandedness is None:
             if molecule == "dna":
-                strand = "double"
+                strandedness = "double"
             elif molecule == "rna" or molecule == "protein":
-                strand = "single"
-        elif strand not in _SEQINST_STRAND_ENUM:
-            raise ValueError(f"invalid strand: {strand!r}")
+                strandedness = "single"
+        elif strandedness not in _SEQINST_STRANDEDNESS_ENUM:
+            raise ValueError(f"invalid strandedness: {strandedness!r}")
 
         # check topology
         if topology not in _SEQINST_TOPOLOGY_ENUM:
@@ -116,7 +116,7 @@ cdef class SeqInst(Serial):
         # set data
         cdef CSeq_inst* obj = new CSeq_inst()
         obj.SetMol(_SEQINST_MOLECULE_ENUM[molecule])
-        obj.SetStrand(_SEQINST_STRAND_ENUM[strand])
+        obj.SetStrand(_SEQINST_STRANDEDNESS_ENUM[strandedness])
         obj.SetTopology(_SEQINST_TOPOLOGY_ENUM[topology])
         if length is not None:
             obj.SetLength(length)
@@ -128,8 +128,8 @@ cdef class SeqInst(Serial):
 
         if self.topology != "linear":
             args.append(f"topology={self.topology!r}")
-        if self.strand is not None:
-            args.append(f"strand={self.strand!r}")
+        if self.strandedness is not None:
+            args.append(f"strand={self.strandedness!r}")
         if self.molecule is not None:
             args.append(f"molecule={self.molecule!r}")
 
@@ -164,7 +164,7 @@ cdef class SeqInst(Serial):
         """
         if not self._ref.GetObject().IsSetStrand():
             return None
-        return _SEQINST_STRAND_STR[self._ref.GetNonNullPointer().GetStrand()]
+        return _SEQINST_STRANDEDNESS_STR[self._ref.GetNonNullPointer().GetStrand()]
 
     @property
     def data(self):
@@ -194,7 +194,7 @@ cdef class ContinuousInst(SeqInst):
         SeqData data,
         *,
         topology="linear",
-        strand=None,
+        strandedness=None,
         molecule=None,
         length=None,
     ):
@@ -209,7 +209,7 @@ cdef class ContinuousInst(SeqInst):
 
         super().__init__(
             topology=topology,
-            strand=strand,
+            strandedness=strandedness,
             molecule=molecule,
             length=length
         )
@@ -224,8 +224,8 @@ cdef class ContinuousInst(SeqInst):
 
         if self.topology != "linear":
             args.append(f"topology={self.topology!r}")
-        if self.strand is not None:
-            args.append(f"strand={self.strand!r}")
+        if self.strandedness is not None:
+            args.append(f"strandedness={self.strandedness!r}")
         if self.molecule is not None:
             args.append(f"molecule={self.molecule!r}")
 
