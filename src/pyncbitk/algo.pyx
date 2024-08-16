@@ -67,6 +67,7 @@ ctypedef fused BlastQueries:
 
 ctypedef fused BlastSubjects:
     BioSeq
+    BioSeqSet
     DatabaseReader
     object
 
@@ -297,6 +298,9 @@ cdef class Blast:
                 ty = subjects.instance.__class__.__name__
                 raise ValueError(f"Unsupported instance type: {ty}")
             subject_factory.Reset(<IQueryFactory*> new CObjMgrFree_QueryFactory(CConstRef[CBioseq](subjects._ref)))
+            db.Reset(new CLocalDbAdapter(subject_factory, self._opt, scan_mode))
+        elif BlastSubjects is BioSeqSet:
+            subject_factory.Reset(<IQueryFactory*> new CObjMgrFree_QueryFactory(CConstRef[CBioseq_set](subjects._ref)))
             db.Reset(new CLocalDbAdapter(subject_factory, self._opt, scan_mode))
         else:
             if not is_iterable(subjects):
