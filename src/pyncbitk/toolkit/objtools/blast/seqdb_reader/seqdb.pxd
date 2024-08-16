@@ -85,7 +85,9 @@ cdef extern from "objtools/blast/seqdb_reader/seqdb.hpp" namespace "ncbi" nogil:
         # void GetTaxIDs(int oid, map[TGi, TTaxId]& gi_to_taxid, bool persist = False)
         # void GetTaxIDs(int oid, vector[TTaxId]& taxids, bool persist = False)
         # void GetAllTaxIds(int oid, set[TTaxId]& taxids)
-        CRef[CBioseq] GetBioseq(int oid, TGi target_gi = ZERO_GI, const CSeq_id* target_seq_id = NULL) except +
+        CRef[CBioseq] GetBioseq(int oid) except +
+        CRef[CBioseq] GetBioseq(int oid, TGi target_gi) except +
+        CRef[CBioseq] GetBioseq(int oid, TGi target_gi, const CSeq_id* target_seq_id) except +
         CRef[CBioseq] GetBioseqNoData(int oid, TGi target_gi = ZERO_GI, const CSeq_id* target_set_id = NULL) except +
 
         # int GetSequence(int oid, const char** buffer) const

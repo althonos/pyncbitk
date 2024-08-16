@@ -9,8 +9,10 @@ from libcpp.utility cimport move
 
 from .toolkit.corelib.ncbiobj cimport CRef
 from .toolkit.objects.seq.bioseq cimport CBioseq
-from .toolkit.objtools.readers.fasta cimport CFastaReader
+from .toolkit.objtools.readers.fasta cimport CFastaReader, EFlags as CFastaReader_Flags
 from .toolkit.objtools.blast.seqdb_reader.seqdb cimport CSeqDB, CSeqDBIter, ESeqType
+from .toolkit.objtools.blast.seqdb_reader.seqdbcommon cimport EBlastDbVersion, EOidMaskType
+from .toolkit.objtools.blast.seqdb_writer.writedb cimport CWriteDB, EIndexType
 
 from .objects.seqset cimport Entry
 from .objects.seq cimport BioSeq
@@ -31,7 +33,10 @@ cdef class FastaReader:
 
     def __init__(self, object path):
         cdef bytes _path = os.fsencode(path)
-        self._reader = new CFastaReader(_path)
+        self._reader = new CFastaReader(
+            _path, 
+            CFastaReader_Flags.fLeaveAsText,
+        )
 
     def __iter__(self):
         return self
@@ -115,3 +120,54 @@ cdef class DatabaseReader:
 
     def __len__(self):
         return self._ref.GetObject().GetNumSeqs()
+
+
+cdef class DatabaseWriter:
+    """A handle allowing to write sequences to a BLAST database.
+    """
+
+    def __init__(self, name, type, *, title = None):
+        cdef bytes     _path
+        cdef bytes     _title
+        # cdef CWriteDB* writer
+
+        _path = os.fsencode(name)
+
+        if title is None:
+            _title = _path
+        elif isinstance(title, str):
+            _title = title.encode()
+        else:
+            _title = title
+
+        writer = new CWriteDB(
+            _path,
+            ESeqType.eNucleotide,
+            _title,
+            # itype = EIndexType.eDefault,
+            # parse_ids = True,
+            # long_ids = False,
+            # use_gi_mask = False,
+            # dbver = EBlastDbVersion.eBDB_Version4,
+            # limit_defline = False,
+            # oid_masks = EOidMaskType.fNone,
+            # scan_bioseq_4_cfastareader_usrobj = False,
+        )
+        self._ref.Reset(writer)
+        self.closed = False
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.close()
+        return None
+
+    def append(self, BioSeq sequence):
+        cdef CWriteDB* writer = self._ref.GetNonNullPointer()
+        writer.AddSequence(sequence._ref.GetObject())
+
+    def close(self):
+        if not self.closed:
+            self._ref.GetNonNullPointer().Close()
+            self.closed = True
