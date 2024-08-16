@@ -195,7 +195,7 @@ cdef class GenBankId(SeqId):
 
     @property
     def id(self):
-        cdef CTextseq_id* id = &self._ref.GetObject().GetGenbankMut()
+        cdef CTextseq_id* id = &self._ref.GetNonNullPointer().GetGenbankMut()
         return TextSeqId._wrap(CRef[CTextseq_id](id))
 
 
@@ -259,28 +259,28 @@ cdef class TextSeqId(Serial):
 
     @property
     def accession(self):
-        if not self._ref.GetObject().IsSetAccession():
+        if not self._ref.GetNonNullPointer().IsSetAccession():
             return None
-        return self._ref.GetObject().GetAccession().decode()
+        return self._ref.GetNonNullPointer().GetAccession().decode()
 
     @property
     def name(self):
-        if not self._ref.GetObject().IsSetName():
+        if not self._ref.GetNonNullPointer().IsSetName():
             return None
-        return self._ref.GetObject().GetName().decode()
+        return self._ref.GetNonNullPointer().GetName().decode()
 
     @property
     def version(self):
-        if not self._ref.GetObject().IsSetVersion():
+        if not self._ref.GetNonNullPointer().IsSetVersion():
             return None
-        return self._ref.GetObject().GetVersion()
+        return self._ref.GetNonNullPointer().GetVersion()
 
     @version.setter
     def version(self, int version):
-        self._ref.GetObject().SetVersion(version)
+        self._ref.GetNonNullPointer().SetVersion(version)
 
     @property
     def release(self):
-        if not self._ref.GetObject().IsSetRelease():
+        if not self._ref.GetNonNullPointer().IsSetRelease():
             return None
-        return self._ref.GetObject().GetRelease().decode()
+        return self._ref.GetNonNullPointer().GetRelease().decode()

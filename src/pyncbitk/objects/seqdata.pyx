@@ -25,7 +25,7 @@ cdef class SeqData(Serial):
     @staticmethod
     cdef SeqData _wrap(CRef[CSeq_data] ref):
         cdef SeqData          obj
-        cdef CSeq_data_choice kind = ref.GetObject().Which()
+        cdef CSeq_data_choice kind = ref.GetNonNullPointer().Which()
 
         if kind == CSeq_data_choice.e_Iupacna:
             obj = IupacNaData.__new__(IupacNaData)
@@ -92,7 +92,7 @@ cdef class SeqAaData(SeqData):
     
     cpdef str decode(self):
         cdef CSeq_data*       out  
-        cdef CSeq_data*       data = &self._ref.GetObject()
+        cdef CSeq_data*       data = self._ref.GetNonNullPointer()
         cdef CSeq_data_choice kind = data.Which()
 
         try:
@@ -109,7 +109,7 @@ cdef class SeqNaData(SeqData):
     
     cpdef str decode(self):
         cdef CSeq_data*       out  
-        cdef CSeq_data*       data = &self._ref.GetObject()
+        cdef CSeq_data*       data = self._ref.GetNonNullPointer()
         cdef CSeq_data_choice kind = data.Which()
 
         try:
@@ -133,15 +133,15 @@ cdef class IupacNaData(SeqNaData):
             _data = data
 
         super().__init__()
-        self._ref.GetObject().Select(CSeq_data_choice.e_Iupacna)
-        self._ref.GetObject().SetIupacna(CIUPACna(<string> _data))
+        self._ref.GetNonNullPointer().Select(CSeq_data_choice.e_Iupacna)
+        self._ref.GetNonNullPointer().SetIupacna(CIUPACna(<string> _data))
 
     def __repr__(self):
         cdef str ty = self.__class__.__name__
         return f"{ty}({self.data!r})"
 
     def __getbuffer__(self, Py_buffer* buffer, int flags):
-        cdef const string* data = &self._ref.GetObject().GetIupacna().Get()
+        cdef const string* data = &self._ref.GetNonNullPointer().GetIupacna().Get()
 
         if flags & PyBUF_FORMAT:
             buffer.format = b"B"
@@ -163,14 +163,14 @@ cdef class IupacNaData(SeqNaData):
     def length(self):
         """`int`: The length of the sequence data.
         """
-        return self._ref.GetObject().GetIupacna().Get().size()
+        return self._ref.GetNonNullPointer().GetIupacna().Get().size()
 
     @property
     def data(self):
         return self.decode()
 
     cpdef str decode(self):
-        return self._ref.GetObject().GetIupacna().Get().decode()
+        return self._ref.GetNonNullPointer().GetIupacna().Get().decode()
 
 
 cdef class IupacAaData(SeqAaData):
@@ -191,15 +191,15 @@ cdef class IupacAaData(SeqAaData):
             _data = data
 
         super().__init__()
-        self._ref.GetObject().Select(CSeq_data_choice.e_Iupacaa)
-        self._ref.GetObject().SetIupacaa(CIUPACaa(<string> _data))
+        self._ref.GetNonNullPointer().Select(CSeq_data_choice.e_Iupacaa)
+        self._ref.GetNonNullPointer().SetIupacaa(CIUPACaa(<string> _data))
 
     def __repr__(self):
         cdef str ty = self.__class__.__name__
         return f"{ty}({self.data!r})"
 
     def __getbuffer__(self, Py_buffer* buffer, int flags):
-        cdef const string* data = &self._ref.GetObject().GetIupacna().Get()
+        cdef const string* data = &self._ref.GetNonNullPointer().GetIupacna().Get()
 
         if flags & PyBUF_FORMAT:
             buffer.format = b"B"
@@ -221,14 +221,14 @@ cdef class IupacAaData(SeqAaData):
     def length(self):
         """`int`: The length of the sequence data.
         """
-        return self._ref.GetObject().GetIupacna().Get().size()
+        return self._ref.GetNonNullPointer().GetIupacna().Get().size()
 
     @property
     def data(self):
         return self.decode()
     
     cpdef str decode(self):
-        return self._ref.GetObject().GetIupacaa().Get().decode()
+        return self._ref.GetNonNullPointer().GetIupacaa().Get().decode()
 
 cdef class Ncbi2NaData(SeqNaData):
     """Nucleotide sequence data stored with 2-bit encoding.
@@ -269,7 +269,7 @@ cdef class Ncbi4NaData(SeqNaData):
     """
 
     def __getbuffer__(self, Py_buffer* buffer, int flags):
-        cdef const vector[char]* data = &self._ref.GetObject().GetNcbi4na().Get()
+        cdef const vector[char]* data = &self._ref.GetNonNullPointer().GetNcbi4na().Get()
 
         if flags & PyBUF_FORMAT:
             buffer.format = b"B"
@@ -289,7 +289,7 @@ cdef class Ncbi4NaData(SeqNaData):
 
     @property
     def data(self):
-        cdef const vector[char]* data = &self._ref.GetObject().GetNcbi4na().Get()
+        cdef const vector[char]* data = &self._ref.GetNonNullPointer().GetNcbi4na().Get()
         return PyBytes_FromStringAndSize(data.data(), data.size())
 
 
@@ -313,7 +313,7 @@ cdef class NcbiEAaData(SeqAaData):
     """
 
     cpdef str decode(self):
-        return self._ref.GetObject().GetNcbieaa().Get().decode()
+        return self._ref.GetNonNullPointer().GetNcbieaa().Get().decode()
 
 cdef class NcbiPAaData(SeqAaData):
     """Amino-acid sequence data storing probabilities for each position.

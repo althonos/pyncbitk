@@ -82,18 +82,18 @@ cdef class SearchResultsSet:
         return obj
 
     def __len__(self):
-        return self._ref.GetObject().size()
+        return self._ref.GetNonNullPointer().size()
 
     def __getitem__(self, ssize_t index):
         cdef ssize_t _index  = index
-        cdef ssize_t _length = self._ref.GetObject().size()
+        cdef ssize_t _length = self._ref.GetNonNullPointer().size()
 
         if _index < 0:
             _index += _length
         if _index < 0 or _index >= _length:
             raise IndexError(index)
 
-        cdef CSearchResultSet* obj  = &self._ref.GetObject()
+        cdef CSearchResultSet* obj  = self._ref.GetNonNullPointer()
         cdef CSearchResults*   item = &obj[0][<CSearchResults_size_type> _index]
         return SearchResults._wrap(CRef[CSearchResults](item))
 
@@ -109,12 +109,12 @@ cdef class SearchResults:
 
     @property
     def query_id(self):
-        cdef CSeq_id* seq_id = <CSeq_id*> self._ref.GetObject().GetSeqId().GetNonNullPointer()
+        cdef CSeq_id* seq_id = <CSeq_id*> self._ref.GetNonNullPointer().GetSeqId().GetNonNullPointer()
         return SeqId._wrap(CRef[CSeq_id](seq_id))
 
     @property
     def alignments(self):
-        return SeqAlignSet._wrap(self._ref.GetObject().GetSeqAlignMut())
+        return SeqAlignSet._wrap(self._ref.GetNonNullPointer().GetSeqAlignMut())
 
 
 # --- BLAST --------------------------------------------------------------------
@@ -147,74 +147,74 @@ cdef class Blast:
 
     @property
     def program(self):
-        cdef EProgram program = self._opt.GetObject().GetOptions().GetProgram()
+        cdef EProgram program = self._opt.GetNonNullPointer().GetOptions().GetProgram()
         return EProgramToTaskName(program).decode('ascii')
 
     @property
     def window_size(self):
         """`int`: The window size for multiple hits.
         """
-        return self._opt.GetObject().GetWindowSize()
+        return self._opt.GetNonNullPointer().GetWindowSize()
 
     @window_size.setter
     def window_size(self, int window_size):
         if window_size < 0:
             raise ValueError(f"window_size must be a positive integer, got {window_size!r}")
-        self._opt.GetObject().SetWindowSize(window_size)
+        self._opt.GetNonNullPointer().SetWindowSize(window_size)
 
     @property
     def off_diagonal_range(self):
         """`int`: The number of off-diagonals to search for the second hit.
         """
-        return self._opt.GetObject().GetOffDiagonalRange()
+        return self._opt.GetNonNullPointer().GetOffDiagonalRange()
 
     @property
     def xdrop_gap(self):
         """`float`: X-dropoff value (in bits) for preliminary gapped extensions.
         """
-        return self._opt.GetObject().GetGapXDropoff()
+        return self._opt.GetNonNullPointer().GetGapXDropoff()
 
     @property
     def xdrop_gap_final(self):
         """`float`: X-dropoff value (in bits) for final gapped alignment.
         """
-        return self._opt.GetObject().GetGapXDropoffFinal()
+        return self._opt.GetNonNullPointer().GetGapXDropoffFinal()
 
     # @property
     # def max_hsps(self):
     #     """`int`: Maximum number of HSPs per subject to save for each query.
     #     """
-    #     return self._opt.GetObject().GetMaxHspsPerSubject()
+    #     return self._opt.GetNonNullPointer().GetMaxHspsPerSubject()
 
     @property
     def evalue(self):
         """`float`: Expectation value (E) threshold for saving hits.
         """
-        return self._opt.GetObject().GetEvalueThreshold()
+        return self._opt.GetNonNullPointer().GetEvalueThreshold()
 
     @evalue.setter
     def evalue(self, double evalue):
         if evalue <= 0:
             raise ValueError(f"`evalue` must be greater than zero, got {evalue!r}")
-        self._opt.GetObject().SetEvalueThreshold(evalue)
+        self._opt.GetNonNullPointer().SetEvalueThreshold(evalue)
 
     @property
     def percent_identity(self):
         """`float`: Percentage identity threshold for saving hits.
         """
-        return self._opt.GetObject().GetPercentIdentity()
+        return self._opt.GetNonNullPointer().GetPercentIdentity()
 
     @property
     def coverage_hsp(self):
         """`float`: Query coverage percentage per HSP.
         """
-        return self._opt.GetObject().GetQueryCovHspPerc()
+        return self._opt.GetNonNullPointer().GetQueryCovHspPerc()
 
     @property
     def gapped(self):
         """`bool`: `False` if alignments are performed in ungapped mode only.
         """
-        return self._opt.GetObject().GetGappedMode()
+        return self._opt.GetNonNullPointer().GetGappedMode()
 
     @property
     def culling_limit(self):
@@ -224,31 +224,31 @@ cdef class Blast:
         higher-scoring hits, delete the hit.
 
         """
-        return self._opt.GetObject().GetCullingLimit()
+        return self._opt.GetNonNullPointer().GetCullingLimit()
 
     @property
     def database_size(self):
         """`int`: The effective length of the database.
         """
-        return self._opt.GetObject().GetDbLength()
+        return self._opt.GetNonNullPointer().GetDbLength()
 
     @property
     def search_space(self):
         """`int`: The effective length of the search space.
         """
-        return self._opt.GetObject().GetEffectiveSearchSpace()
+        return self._opt.GetNonNullPointer().GetEffectiveSearchSpace()
 
     @property
     def max_target_sequences(self):
         """`int`: The maximum number of aligned sequences to retain.
         """
-        return self._opt.GetObject().GetHitlistSize()
+        return self._opt.GetNonNullPointer().GetHitlistSize()
 
     @max_target_sequences.setter
     def max_target_sequences(self, int max_target_sequences):
         if max_target_sequences <= 0:
             raise ValueError(f"`max_target_sequences` must be greater than zero, got {max_target_sequences!r}")
-        self._opt.GetObject().SetHitlistSize(max_target_sequences)
+        self._opt.GetNonNullPointer().SetHitlistSize(max_target_sequences)
 
     # --- Public Methods -------------------------------------------------------
 
@@ -268,7 +268,7 @@ cdef class Blast:
 
         # prepare queries: a list of `BlastSeqLoc` objects 
         if BlastQueries is BioSeq:
-            if queries._ref.GetObject().GetInst().GetRepr() != CSeq_inst_repr.eRepr_raw:
+            if queries._ref.GetNonNullPointer().GetInst().GetRepr() != CSeq_inst_repr.eRepr_raw:
                 ty = queries.instance.__class__.__name__
                 raise ValueError(f"Unsupported instance type: {ty}")
             query_factory.Reset(<IQueryFactory*> new CObjMgrFree_QueryFactory(CConstRef[CBioseq](queries._ref)))
@@ -283,7 +283,7 @@ cdef class Blast:
 
         # prepare subjects: either a list of `BlastSeqLoc` objects, or a `DatabaseReader`
         if BlastSubjects is DatabaseReader:
-            _ty = subjects._ref.GetObject().GetSequenceType()
+            _ty = subjects._ref.GetNonNullPointer().GetSequenceType()
             if _ty == ESeqType.eProtein:
                 search_database = new CSearchDatabase(string(), EMoleculeType.eBlastDbIsProtein)
             elif _ty == ESeqType.eNucleotide:
@@ -293,7 +293,7 @@ cdef class Blast:
             search_database.SetSeqDb(subjects._ref)
             db.Reset(new CLocalDbAdapter(search_database[0]))
         elif BlastSubjects is BioSeq:
-            if subjects._ref.GetObject().GetInst().GetRepr() != CSeq_inst_repr.eRepr_raw:
+            if subjects._ref.GetNonNullPointer().GetInst().GetRepr() != CSeq_inst_repr.eRepr_raw:
                 ty = subjects.instance.__class__.__name__
                 raise ValueError(f"Unsupported instance type: {ty}")
             subject_factory.Reset(<IQueryFactory*> new CObjMgrFree_QueryFactory(CConstRef[CBioseq](subjects._ref)))
@@ -320,10 +320,10 @@ cdef class Blast:
 
         # run BLAST and get results
         with nogil:
-            results = blast.GetObject().Run()
+            results = blast.GetNonNullPointer().Run()
 
         # check for warnings or errors
-        messages = blast.GetObject().GetSearchMessages()
+        messages = blast.GetNonNullPointer().GetSearchMessages()
         if messages.HasMessages():
             print(messages.ToString().decode())
 

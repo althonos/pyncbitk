@@ -55,7 +55,7 @@ cdef class ObjectId(Serial):
     def value(self):
         """`str` or `int`: The actual value of the object identifier.
         """
-        cdef CObject_id*       obj  = &self._ref.GetObject()
+        cdef CObject_id*       obj  = self._ref.GetNonNullPointer()
         cdef CObject_id_choice kind = obj.Which()
         if kind == CObject_id_choice.e_Id:
             return obj.GetId()

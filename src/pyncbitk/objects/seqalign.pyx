@@ -55,15 +55,15 @@ cdef class SeqAlignScore:
 
     @property
     def id(self):
-        if not self._ref.GetObject().IsSetId():
+        if not self._ref.GetNonNullPointer().IsSetId():
             return None
-        id_ = &self._ref.GetObject().GetIdMut()
+        id_ = &self._ref.GetNonNullPointer().GetIdMut()
         cref = CRef[CObject_id](id_)
         return ObjectId._wrap(cref)
 
     @property
     def value(self):
-        value = &self._ref.GetObject().GetValueMut()
+        value = &self._ref.GetNonNullPointer().GetValueMut()
         kind = value.Which()
         if kind == CScore_value_choice.e_Int:
             return value.GetInt()
@@ -76,17 +76,17 @@ cdef class AlignRow:
     
     @property
     def start(self):
-        cdef CSeq_align* obj = &self._ref.GetObject()
+        cdef CSeq_align* obj = self._ref.GetNonNullPointer()
         return obj.GetSeqStart(self._row)
 
     @property
     def stop(self):
-        cdef CSeq_align* obj = &self._ref.GetObject()
+        cdef CSeq_align* obj = self._ref.GetNonNullPointer()
         return obj.GetSeqStop(self._row)
 
     @property
     def id(self):
-        cdef CSeq_align*    obj = &self._ref.GetObject()
+        cdef CSeq_align*    obj = self._ref.GetNonNullPointer()
         cdef const CSeq_id* id_ = &obj.GetSeq_id(self._row)
         return SeqId._wrap(CRef[CSeq_id](<CSeq_id*> id_))
 
@@ -96,7 +96,7 @@ cdef class AlignSegments(Serial):
     @staticmethod
     cdef AlignSegments _wrap(CRef[C_Segs] ref):
         cdef AlignSegments obj
-        cdef C_Segs_choice kind = ref.GetObject().Which() 
+        cdef C_Segs_choice kind = ref.GetNonNullPointer().Which() 
 
         if kind == C_Segs.E_Choice.e_Denseg:
             obj = DenseSegments.__new__(DenseSegments)
@@ -117,7 +117,7 @@ cdef class DenseSegments(AlignSegments):
     @property
     def data(self):
         cdef CRef[CDense_seg] ref
-        cdef CDense_seg* seg = &self._ref.GetObject().GetDensegMut()
+        cdef CDense_seg* seg = &self._ref.GetNonNullPointer().GetDensegMut()
         return DenseSegmentsData._wrap(CRef[CDense_seg](seg))
 
 cdef class DenseSegmentsData(Serial):
@@ -133,14 +133,14 @@ cdef class DenseSegmentsData(Serial):
 
     @property
     def num_segments(self):
-        cdef CDense_seg* obj = &self._ref.GetObject()
+        cdef CDense_seg* obj = self._ref.GetNonNullPointer()
         return obj.GetNumseg()
 
     @property
     def ids(self):
         """`list` of `SeqId`: The identifiers of the sequences in the segment.
         """
-        cdef CDense_seg* obj = &self._ref.GetObject()
+        cdef CDense_seg* obj = self._ref.GetNonNullPointer()
         cdef list        ids = []
 
         for ref in obj.GetIdsMut(): # FIXME: const iteration

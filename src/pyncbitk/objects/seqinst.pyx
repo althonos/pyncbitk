@@ -59,7 +59,7 @@ cdef class SeqInst(Serial):
     @staticmethod
     cdef SeqInst _wrap(CRef[CSeq_inst] ref):
         cdef SeqInst        obj
-        cdef CSeq_inst_repr kind = ref.GetObject().GetRepr()
+        cdef CSeq_inst_repr kind = ref.GetNonNullPointer().GetRepr()
 
         if kind == CSeq_inst_repr.eRepr_not_set:
             obj = EmptyInst.__new__(EmptyInst)
@@ -156,7 +156,7 @@ cdef class SeqInst(Serial):
         """
         if not self._ref.GetObject().IsSetTopology():
             return None
-        return _SEQINST_TOPOLOGY_STR[self._ref.GetObject().GetTopology()]
+        return _SEQINST_TOPOLOGY_STR[self._ref.GetNonNullPointer().GetTopology()]
 
     @property
     def strandedness(self):
@@ -164,7 +164,7 @@ cdef class SeqInst(Serial):
         """
         if not self._ref.GetObject().IsSetStrand():
             return None
-        return _SEQINST_STRAND_STR[self._ref.GetObject().GetStrand()]
+        return _SEQINST_STRAND_STR[self._ref.GetNonNullPointer().GetStrand()]
 
     @property
     def data(self):
@@ -172,7 +172,7 @@ cdef class SeqInst(Serial):
         """
         if not self._ref.GetObject().IsSetSeq_data():
             return None
-        return SeqData._wrap(CRef[CSeq_data](&self._ref.GetObject().GetSeq_dataMut()))
+        return SeqData._wrap(CRef[CSeq_data](&self._ref.GetNonNullPointer().GetSeq_dataMut()))
 
 
 cdef class EmptyInst(SeqInst):
@@ -214,7 +214,7 @@ cdef class ContinuousInst(SeqInst):
             length=length
         )
 
-        cdef CSeq_inst* obj = &self._ref.GetObject()
+        cdef CSeq_inst* obj = self._ref.GetNonNullPointer()
         obj.SetRepr(CSeq_inst_repr.eRepr_raw)
         obj.SetSeq_data(data._ref.GetObject())
 

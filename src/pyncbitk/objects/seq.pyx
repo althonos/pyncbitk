@@ -55,7 +55,7 @@ cdef class BioSeq(Serial):
 
         cdef SeqId                  seqid
         cdef list                   ids   = []
-        cdef cpplist[CRef[CSeq_id]] _ids  = self._ref.GetObject().GetId()
+        cdef cpplist[CRef[CSeq_id]] _ids  = self._ref.GetNonNullPointer().GetId()
 
         for ref in _ids:
             ids.append(SeqId._wrap(ref))
@@ -67,4 +67,4 @@ cdef class BioSeq(Serial):
         """`SeqInst`: The actual sequence instance.
         """
         assert self._ref.GetNonNullPointer().IsSetInst()  # mandatory
-        return SeqInst._wrap(CRef[CSeq_inst](&self._ref.GetObject().GetInstMut()))
+        return SeqInst._wrap(CRef[CSeq_inst](&self._ref.GetNonNullPointer().GetInstMut()))
