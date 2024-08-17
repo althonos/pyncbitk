@@ -9,9 +9,14 @@ requires-python = ">=3.7"
 
 [tool.cibuildwheel]
 build-verbosity = 1
+before-all = "pip install sccache"
+
+[tool.cibuildwheel.environment]
+CMAKE_C_COMPILER_LAUNCHER = "sccache"
+CMAKE_CXX_COMPILER_LAUNCHER = "sccache"
 
 [tool.scikit-build]
-build-dir = "build/{build_type}/{wheel_tag}"
+build-dir = "build/{build_type}/build"
 cmake.build-type = "Release"
 editable.rebuild = true
 editable.verbose=false
