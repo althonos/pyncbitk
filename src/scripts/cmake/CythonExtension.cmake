@@ -27,13 +27,7 @@ else()
 endif()
 
 macro(cython_extension _name)
-
-  set(options)
-  set(oneValueArgs)
-  set(multiValueArgs DEPENDS)
-  cmake_parse_arguments(CYTHON_EXTENSION "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN} )
-  message("CYTHON_EXTENSION_DEPENDS: ${CYTHON_EXTENSION_DEPENDS}")
-
+  cmake_parse_arguments(CYTHON_EXTENSION "" "" "DEPENDS" ${ARGN} )
 
   # Make sure that the source directory is known
   if(NOT DEFINED PYTHON_EXTENSIONS_SOURCE_DIR)
@@ -45,33 +39,36 @@ macro(cython_extension _name)
     OUTPUT ${_name}.cpp
     COMMENT
       "Making ${CMAKE_CURRENT_BINARY_DIR}/${_name}.cpp from ${CMAKE_CURRENT_SOURCE_DIR}/${_name}.pyx"
-    COMMAND 
+    COMMAND
       Python::Interpreter -m cython
-            "${CMAKE_CURRENT_SOURCE_DIR}/${_name}.pyx" 
+            "${CMAKE_CURRENT_SOURCE_DIR}/${_name}.pyx"
             --output-file ${_name}.cpp
             --cplus
             ${CYTHON_DIRECTIVES}
-    MAIN_DEPENDENCY 
+    MAIN_DEPENDENCY
       ${_name}.pyx
     VERBATIM)
-  
-  # Define the Python extension as an NCBIptb custom target
-  set(_target "py_${_name}")
-  function(${_name}_definition) 
+
+  # Build fully-qualified module name as the target name
+  string(REGEX REPLACE "^${PYTHON_EXTENSIONS_SOURCE_DIR}/?" "" _dest_folder ${NCBI_CURRENT_SOURCE_DIR})
+  string(REPLACE "/" "." _target ${_dest_folder}.${_name})
+
+  # Build the Python extension as an NCBIptb custom target
+  function(${_name}_definition)
     # Add Python library target
     python_add_library(${_target} MODULE WITH_SOABI ${_name}.pyx ${_name}.cpp)
     set_target_properties(${_target} PROPERTIES OUTPUT_NAME ${_name} )
-    
-    # Link required libraries
+
+    # Link required NCBI dependencies
     foreach(_lib IN LISTS NCBI_${NCBI_PROJECT}_NCBILIB)
       target_link_libraries(${_target} PUBLIC $<TARGET_LINKER_FILE:${_lib}>)
     endforeach()
-    
+
     # Preserve the relative project structure in the install directory
     string(REGEX REPLACE "^${PYTHON_EXTENSIONS_SOURCE_DIR}/?" "" _dest_folder ${CMAKE_CURRENT_SOURCE_DIR})
     install(TARGETS ${_target} DESTINATION ${_dest_folder} )
     message(DEBUG "Install folder for extension ${_name}: ${_dest_folder}")
-    
+
     # Patch the RPATH to the installed libs (only if libs are installed locally)
     if(DEFINED PYTHON_LIBS_INSTALL_DIR)
       cmake_path(SET _path NORMALIZE ${_dest_folder})
@@ -84,14 +81,14 @@ macro(cython_extension _name)
       set_target_properties(${_target} PROPERTIES INSTALL_RPATH ${_rpath})
       message(DEBUG "RPATH for extension ${_name}: ${_rpath}")
     endif()
-  
+
   endfunction()
   NCBI_begin_custom_target(${_target})
-      NCBI_project_tags(python)
-      foreach(_dep IN LISTS CYTHON_EXTENSION_DEPENDS)
-        NCBI_custom_target_dependencies(${_dep})
-      endforeach()
-      NCBI_custom_target_definition(${_name}_definition)
+    NCBI_project_tags(python)
+    foreach(_dep IN LISTS CYTHON_EXTENSION_DEPENDS)
+      NCBI_custom_target_dependencies(${_dep})
+    endforeach()
+    NCBI_custom_target_definition(${_name}_definition)
   NCBI_end_custom_target()
 
   # Add the targets to the list of Cython extensions
