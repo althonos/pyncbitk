@@ -14,6 +14,7 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 # --- NCBI C++ Toolkit ---------------------------------------------------------
 
+# Setup project filters to build only the required projects
 set(PYNCBITK_PROJECT_LIST
     corelib
     serial
@@ -29,11 +30,7 @@ set(PYNCBITK_PROJECT_LIST
     algo/blast/api
 )
 
-set(PYNCBITK_PROJECT_FEATURES
-    -OpenMP
-    -SSE
-)
-
+# Disable optional components to facilitate build
 set(PYNCBITK_DISABLED_COMPONENTS
     BACKWARD
     BerkeleyDB
@@ -113,6 +110,7 @@ set(PYNCBITK_DISABLED_COMPONENTS
     ZSTD
 )
 
+# List required libraries to install in the built wheel
 set(PYNCBITK_NCBI_LIBS
     blast
     blastdb
@@ -193,6 +191,13 @@ set(PYNCBITK_NCBI_LIBS
     xutil
     z
 )
+
+# Disable SSE4 if requested
+if(PYNCBITK_DISABLE_SSE4)
+    set(PYNCBITK_PROJECT_FEATURES -OpenMP -SSE)
+else()
+    set(PYNCBITK_PROJECT_FEATURES -OpenMP)
+endif()
 
 # Set path to Toolkit sources
 set(NCBITK_TREE_ROOT        ${CMAKE_CURRENT_SOURCE_DIR}/vendor/ncbi-cxx-toolkit-public)
