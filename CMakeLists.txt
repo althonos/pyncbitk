@@ -12,9 +12,11 @@ enable_language(CXX)
 set(BUILD_SHARED_LIBS ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
-# --- NCBI C++ Toolkit ---------------------------------------------------------
+# Symlink to the C++ Toolkit sources so that NCBIptb is happy with the project structure
+file(CREATE_LINK ../vendor/ncbi-cxx-toolkit-public/src     src/toolkit     COPY_ON_ERROR SYMBOLIC)
+file(CREATE_LINK ../vendor/ncbi-cxx-toolkit-public/include include/toolkit COPY_ON_ERROR SYMBOLIC)
 
-# Disable optional components to facilitate build
+# Disable optional components to simplify compilation
 set(PYNCBITK_DISABLED_COMPONENTS
     BACKWARD
     BerkeleyDB
@@ -93,29 +95,22 @@ set(PYNCBITK_DISABLED_COMPONENTS
     Z
     ZSTD
 )
+foreach(_component IN LISTS PYNCBITK_DISABLED_COMPONENTS)
+    set(NCBI_COMPONENT_${_component}_DISABLED ON)
+endforeach()
 
-# Disable SSE4 if requested
+# Disable SSE4 (only if requested)
 if(PYNCBITK_DISABLE_SSE4)
     set(PYNCBITK_PROJECT_FEATURES -OpenMP -SSE)
 else()
     set(PYNCBITK_PROJECT_FEATURES -OpenMP)
 endif()
 
-# Set path to Toolkit sources
-set(NCBITK_TREE_ROOT        ${CMAKE_CURRENT_LIST_DIR}/vendor/ncbi-cxx-toolkit-public)
-set(NCBITK_SRC_ROOT         ${CMAKE_CURRENT_LIST_DIR}/vendor/ncbi-cxx-toolkit-public/src)
-set(NCBITK_INC_ROOT         ${CMAKE_CURRENT_LIST_DIR}/vendor/ncbi-cxx-toolkit-public/include)
-
 # Configure Toolkit build
-set(NCBI_WITHOUT_MT                ON)
-set(NCBI_PTBCFG_PROJECT_LIST       pyncbitk)
+set(NCBI_WITHOUT_MT          ON)
+set(NCBI_PTBCFG_PROJECT_LIST pyncbitk)
 
-# Disable unneeded external dependencies
-foreach(_component IN LISTS PYNCBITK_DISABLED_COMPONENTS)
-    set(NCBI_COMPONENT_${_component}_DISABLED ON)
-endforeach()
-
-# 
+# Install shared library objects to `pyncbitk.libs` (like cibuildwheel)
 if(PYNCBITK_INSTALL_LIBS)
     set(PYTHON_LIBS_INSTALL_DIR "${CMAKE_PROJECT_NAME}.libs")
 endif()
@@ -127,7 +122,7 @@ include(${CMAKE_CURRENT_LIST_DIR}/src/scripts/cmake/CythonExtension.cmake)
 # Build project targets
 NCBI_add_subdirectory(src)
 
-# Install transitive dependencies 
+# Install transitive dependencies to the shared library folders
 if(PYNCBITK_INSTALL_LIBS)
     message("Patching install libs")
     get_property(_exts GLOBAL PROPERTY PYNCBITK_CYTHON_EXTENSIONS)
