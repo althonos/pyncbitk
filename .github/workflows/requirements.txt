@@ -1,4 +1,3 @@
 coverage ~=7.0
 cython ~=3.0
 scikit-build-core
-sccache
