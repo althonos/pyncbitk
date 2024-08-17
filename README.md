@@ -1,4 +1,4 @@
-# 🧰🧰 PyNCBItk [![Stars](https://img.shields.io/github/stars/althonos/pyncbitk.svg?style=social&maxAge=3600&label=Star)](https://github.com/althonos/pyncbitk/stargazers)
+# 🧬🧰 PyNCBItk [![Stars](https://img.shields.io/github/stars/althonos/pyncbitk.svg?style=social&maxAge=3600&label=Star)](https://github.com/althonos/pyncbitk/stargazers)
 
 *[Cython](https://cython.org/) bindings and Python interface to the [NCBI C++ Toolkit](https://www.ncbi.nlm.nih.gov/toolkit).*
 
