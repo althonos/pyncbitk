@@ -14,22 +14,6 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 # --- NCBI C++ Toolkit ---------------------------------------------------------
 
-# Setup project filters to build only the required projects
-set(PYNCBITK_PROJECT_LIST
-    corelib
-    serial
-    objects/general
-    objects/blastdb
-    objects/seq
-    objects/seqalign
-    objects/seqloc
-    objects/seqset
-    objtools/readers
-    objtools/blast
-    objmgr
-    algo/blast/api
-)
-
 # Disable optional components to facilitate build
 set(PYNCBITK_DISABLED_COMPONENTS
     BACKWARD
@@ -62,7 +46,7 @@ set(PYNCBITK_DISABLED_COMPONENTS
     JPEG
     LAPACK
     LEVELDB
-    # LMDB
+    LMDB
     LZO
     MONGOC
     MONGOCXX
@@ -110,88 +94,6 @@ set(PYNCBITK_DISABLED_COMPONENTS
     ZSTD
 )
 
-# List required libraries to install in the built wheel
-set(PYNCBITK_NCBI_LIBS
-    blast
-    blastdb
-    biblio
-    # biotree
-    bz2
-    # cdd
-    # cn3d
-    connect
-    composition_adjustment
-    # dbsnp_ptis
-    # dbsnp_tooltip_service
-    # docsum
-    # entrez2
-    # entrez2cli
-    # entrezgene
-    # gbproj
-    # gbseq
-    # gencoll_client
-    gene_info
-    gene_info_writer
-    general
-    # genesbyloc
-    genome_collection
-    # homologene
-    # id1
-    # id1cli
-    # id2
-    # id2cli
-    # insdseq
-    medline
-    # mim
-    # m
-    # mmdb
-    # ncbimime
-    # objcoords
-    # objprt
-    # proj
-    pub
-    # pubmed
-    # regexp
-    scoremat
-    seq
-    seqcode
-    seqdb
-    seqedit
-    seqmasks_io
-    seqset
-    seqsplit
-    ##seqtest
-    sequtil
-    sqlitewrapp
-    submit
-    tables
-    # tinyseq
-    utrtprof
-    writedb
-    xalgoblastdbindex
-    xalgodustmask
-    xalgowinmask
-    xblast
-    xcgi
-    xcompress
-    xconnect
-    xconnext
-    # xconnserv
-    xcser
-    xlogging
-    xncbi
-    xnetblastcli
-    xnetblast
-    xobjmgr
-    xobjread
-    xobjutil
-    # xregexp
-    xser
-    # xthrserv
-    xutil
-    z
-)
-
 # Disable SSE4 if requested
 if(PYNCBITK_DISABLE_SSE4)
     set(PYNCBITK_PROJECT_FEATURES -OpenMP -SSE)
@@ -200,51 +102,42 @@ else()
 endif()
 
 # Set path to Toolkit sources
-set(NCBITK_TREE_ROOT        ${CMAKE_CURRENT_SOURCE_DIR}/vendor/ncbi-cxx-toolkit-public)
-set(NCBITK_SRC_ROOT         ${CMAKE_CURRENT_SOURCE_DIR}/vendor/ncbi-cxx-toolkit-public/src)
-set(NCBI_TREE_ROOT          ${CMAKE_CURRENT_SOURCE_DIR}/vendor/ncbi-cxx-toolkit-public)
-set(NCBI_SRC_ROOT           ${CMAKE_CURRENT_SOURCE_DIR}/vendor/ncbi-cxx-toolkit-public/src)
-set(NCBI_BUILD_ROOT         ${CMAKE_CURRENT_BINARY_DIR}/ncbi)
+set(NCBITK_TREE_ROOT        ${CMAKE_CURRENT_LIST_DIR}/vendor/ncbi-cxx-toolkit-public)
+set(NCBITK_SRC_ROOT         ${CMAKE_CURRENT_LIST_DIR}/vendor/ncbi-cxx-toolkit-public/src)
+set(NCBITK_INC_ROOT         ${CMAKE_CURRENT_LIST_DIR}/vendor/ncbi-cxx-toolkit-public/include)
 
 # Configure Toolkit build
 set(NCBI_WITHOUT_MT                ON)
-set(NCBI_VERBOSE_PROJECTS          "")
-set(NCBI_PTBCFG_PROJECT_COMPONENTS "")
-set(NCBI_PTBCFG_PROJECT_FEATURES   ${PYNCBITK_PROJECT_FEATURES})
-set(NCBI_PTBCFG_PROJECT_LIST       ${PYNCBITK_PROJECT_LIST})
-set(NCBI_PTBCFG_PROJECT_TAGS       "-test")
-set(NCBI_PTBCFG_PROJECT_TARGETS    "")
-set(NCBI_PTBCFG_ALLOW_COMPOSITE    OFF)
-set(NCBI_PTBCFG_SKIP_ANALYSIS      OFF)
+set(NCBI_PTBCFG_PROJECT_LIST       pyncbitk)
 
 # Disable unneeded external dependencies
 foreach(_component IN LISTS PYNCBITK_DISABLED_COMPONENTS)
     set(NCBI_COMPONENT_${_component}_DISABLED ON)
 endforeach()
 
-# Run NCBI C++ Toolkit configuration and build libraries
-include(${CMAKE_CURRENT_SOURCE_DIR}/vendor/ncbi-cxx-toolkit-public/src/build-system/cmake/CMake.NCBItoolkit.cmake)
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/vendor/ncbi-cxx-toolkit-public/src)
-
-# Register library directory
-link_directories(${CMAKE_BINARY_DIR}/../lib)
-
-# Install required libraries
+# 
 if(PYNCBITK_INSTALL_LIBS)
     set(PYTHON_LIBS_INSTALL_DIR "${CMAKE_PROJECT_NAME}.libs")
-    foreach(_lib IN LISTS PYNCBITK_NCBI_LIBS)
-        if(TARGET ${_lib})
-            install(TARGETS ${_lib} DESTINATION ${SKBUILD_PLATLIB_DIR}/${CMAKE_PROJECT_NAME}.libs)
-        else()
-            message(SEND_ERROR "Unknown requested library: ${_lib}")
-        endif()
+endif()
+
+# Run NCBI C++ Toolkit configuration
+include(${CMAKE_CURRENT_LIST_DIR}/vendor/ncbi-cxx-toolkit-public/src/build-system/cmake/CMake.NCBItoolkit.cmake)
+include(${CMAKE_CURRENT_LIST_DIR}/src/scripts/cmake/CythonExtension.cmake)
+
+# Build project targets
+NCBI_add_subdirectory(src)
+
+# Install transitive dependencies 
+if(PYNCBITK_INSTALL_LIBS)
+    message("Patching install libs")
+    get_property(_exts GLOBAL PROPERTY PYNCBITK_CYTHON_EXTENSIONS)
+    foreach(_ext IN LISTS _exts)
+        get_property(_deps GLOBAL PROPERTY NCBI_PTBPROP_DEPS_${_ext})
+        list(APPEND PYNCBITK_DEPENDENCIES ${_deps})
+    endforeach()
+    list(REMOVE_DUPLICATES PYNCBITK_DEPENDENCIES)
+    foreach(_lib IN LISTS _deps)
+        install(TARGETS ${_lib} DESTINATION ${SKBUILD_PLATLIB_DIR}/${CMAKE_PROJECT_NAME}.libs)
         set_target_properties(${_lib} PROPERTIES INSTALL_RPATH "\$ORIGIN/.")
     endforeach()
 endif()
-
-# --- PyNCBItk -----------------------------------------------------------------
-
-find_package(Python COMPONENTS Interpreter Development.Module REQUIRED)
-
-# Build Python extension
-add_subdirectory(src)
