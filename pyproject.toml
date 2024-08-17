@@ -12,11 +12,17 @@ build-verbosity = 1
 
 [tool.scikit-build]
 build-dir = "build/{build_type}/{wheel_tag}"
-cmake.build-type = "Debug"
+cmake.build-type = "Release"
+editable.rebuild = true
+editable.verbose=false
 
 [tool.scikit-build.cmake.define]
 PYNCBITK_INSTALL_LIBS = { env = "PYNCBITK_INSTALL_LIBS", default = true }
 PYNCBITK_DISABLE_SSE4 = { env = "PYNCBITK_DISABLE_SSE4", default = false }
+
+[[tool.scikit-build.overrides]]
+if.state = "editable"
+cmake.build-type = "Debug"
 
 [[tool.scikit-build.overrides]]
 if.env.CIBUILDWHEEL = "ON"
