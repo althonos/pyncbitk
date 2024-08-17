@@ -8,11 +8,6 @@ from ..serial cimport Serial
 
 # --- ObjectId -----------------------------------------------------------------
 
-ctypedef fused ObjectIdValue:
-    int
-    str
-    bytes
-
 cdef class ObjectId(Serial):
     """A basic identifier for any NCBI Toolkit object.
     """
@@ -34,17 +29,20 @@ cdef class ObjectId(Serial):
     cdef CSerialObject* _serial(self):
         return <CSerialObject*> self._ref.GetNonNullPointer()
 
-    def __init__(self, ObjectId value):
+    def __init__(self, object value):
+        cdef bytes       _b
         cdef CObject_id* obj = new CObject_id()
-        if ObjectId is int:
+        if isinstance(value, int):
             obj.Select(CObject_id_choice.e_Id)
             obj.SetId(value)
-        elif ObjectId is str:
+        elif isinstance(value, str):
+            _b = value.encode()
             obj.Select(CObject_id_choice.e_Str)
-            obj.SetStr(value.encode())
-        elif ObjectId is bytes:
+            obj.SetStr(_b)
+        else:
+            _b = value
             obj.Select(CObject_id_choice.e_Str)
-            obj.SetStr(value)
+            obj.SetStr(_b)
         self._ref.Reset(obj)
 
     def __repr__(self):
