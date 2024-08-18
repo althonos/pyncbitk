@@ -11,6 +11,7 @@ import warnings
 import pkgutil
 
 import pyncbitk
+import pyncbitk.objects.seqloc
 
 
 def _load_tests_from_module(tests, module, globs, setUp=None, tearDown=None):
@@ -43,32 +44,33 @@ def load_tests(loader, tests, ignore):
         return tests
 
     # recursively traverse all library submodules and load tests from them
-    packages = [None, pyncbitk]
+    modules = [None, pyncbitk, pyncbitk.objects.seqloc]
 
-    for pkg in iter(packages.pop, None):
-        for (_, subpkgname, subispkg) in pkgutil.walk_packages(pkg.__path__):
-            # do not import __main__ module to avoid side effects!
-            if subpkgname.startswith(("__main__", "__test__", "tests")):
-                continue
-            # import the submodule and add it to the tests
-            module = importlib.import_module(".".join([pkg.__name__, subpkgname]))
-            globs = dict(
-                **module.__dict__
+    for module in iter(modules.pop, None):
+        # import the submodule and add it to the tests
+        globs = dict(**module.__dict__)
+        # remove some duplicate tests declared by Cython
+        if hasattr(module, "__test__") and hasattr(module, "__reduce_cython__"):
+            module.__test__.clear()
+        tests.addTests(
+            doctest.DocTestSuite(
+                module,
+                globs=globs,
+                setUp=setUp,
+                tearDown=tearDown,
+                optionflags=+doctest.ELLIPSIS,
             )
-            # remove some duplicate tests declared by Cython
-            if hasattr(module, "__test__") and hasattr(module, "__reduce_cython__"):
-                module.__test__.clear()
-            tests.addTests(
-                doctest.DocTestSuite(
-                    module,
-                    globs=globs,
-                    setUp=setUp,
-                    tearDown=tearDown,
-                    optionflags=+doctest.ELLIPSIS,
-                )
-            )
-            # if the submodule is a package, we need to process its submodules
-            # as well, so we add it to the package queue
-            if subispkg and subpkgname != "tests":
-                packages.append(module)
+        )
+        # explore submodules recursively
+        if hasattr(module, "__path__"):
+            for (_, subpkgname, subispkg) in pkgutil.walk_packages(module.__path__):
+                # do not import __main__ module to avoid side effects!
+                if subpkgname.startswith(("__main__", "__test__", "tests")):
+                    continue
+                # if the submodule is a package, we need to process its submodules
+                # as well, so we add it to the package queue
+                #if subispkg and subpkgname != "tests":
+                submodule = importlib.import_module(".".join([module.__name__, subpkgname]))
+                modules.append(submodule)
+
     return tests
