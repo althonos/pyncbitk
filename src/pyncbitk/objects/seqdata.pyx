@@ -14,15 +14,14 @@ from ..toolkit.serial.serialbase cimport CSerialObject
 from ..toolkit.objects.seq.seqport_util cimport CSeqportUtil
 from ..toolkit.objects.seq.iupacna cimport CIUPACna
 from ..toolkit.objects.seq.iupacaa cimport CIUPACaa
+from ..toolkit.objects.seq.ncbi2na cimport CNCBI2na
 from ..toolkit.objects.seq.ncbi4na cimport CNCBI4na
+from ..toolkit.objects.seq.ncbi8na cimport CNCBI8na
+from ..toolkit.objects.seq.ncbieaa cimport CNCBIeaa
 
 from ..serial cimport Serial
 
-# --- Utils --------------------------------------------------------------------
-
-ctypedef fused bytestring:
-    str
-    const char[::1]
+import pickle
 
 # --- SeqData ------------------------------------------------------------------
 
@@ -119,6 +118,7 @@ cdef class SeqAaData(SeqData):
         finally:
             del out
 
+
 cdef class SeqNaData(SeqData):
     """An abstract base storage of nucleotide sequence data.
     """
@@ -135,6 +135,7 @@ cdef class SeqNaData(SeqData):
             return out.GetIupacna().Get().decode()
         finally:
             del out
+
 
 cdef class IupacNaData(SeqNaData):
     """Nucleotide sequence data stored as a IUPAC nucleotide string.
@@ -163,6 +164,11 @@ cdef class IupacNaData(SeqNaData):
             self._ref.GetNonNullPointer().SetIupacna(CIUPACna(s))
 
         self._validate()
+
+    def __reduce_ex__(self, protocol):
+        if protocol >= 5:
+            return type(self), (pickle.PickleBuffer(self),), None
+        return type(self), (memoryview(self).tobytes(),), None
 
     def __repr__(self):
         cdef str ty = self.__class__.__name__
@@ -234,6 +240,11 @@ cdef class IupacAaData(SeqAaData):
 
         self._validate()
 
+    def __reduce_ex__(self, protocol):
+        if protocol >= 5:
+            return type(self), (pickle.PickleBuffer(self),), None
+        return type(self), (memoryview(self).tobytes(),), None
+
     def __repr__(self):
         cdef str ty = self.__class__.__name__
         return f"{ty}({self.data!r})"
@@ -270,6 +281,7 @@ cdef class IupacAaData(SeqAaData):
     cpdef str decode(self):
         return self._ref.GetNonNullPointer().GetIupacaa().Get().decode()
 
+
 cdef class Ncbi2NaData(SeqNaData):
     """Nucleotide sequence data stored with 2-bit encoding.
 
@@ -280,29 +292,55 @@ cdef class Ncbi2NaData(SeqNaData):
 
     """
 
-    # def __getbuffer__(self, Py_buffer* buffer, int flags):
-    #     cdef const vector[char]* data = &self._ref.GetObject().GetNcbi2na().Get()
+    def __init__(self, object data):
+        cdef CNCBI2na        raw
+        cdef const char[::1] view = data
+        cdef size_t          l    = view.shape[0]
+        cdef vector[char]    vec  = vector[char]()
 
-    #     if flags & PyBUF_FORMAT:
-    #         buffer.format = b"B"
-    #     else:
-    #         buffer.format = NULL
+        super().__init__()
 
-    #     buffer.buf = <void*> data.data()
-    #     buffer.internal = NULL
-    #     buffer.itemsize = sizeof(char)
-    #     buffer.len = data.size() * sizeof(char)
-    #     buffer.ndim = 1
-    #     buffer.obj = self
-    #     buffer.readonly = True
-    #     buffer.shape = NULL
-    #     buffer.suboffsets = NULL
-    #     buffer.strides = NULL
+        with nogil:
+            vec.insert(vec.end(), &view[0], &view[l-1])
+            raw = CNCBI2na(vec)
+            self._ref.GetNonNullPointer().Select(CSeq_data_choice.e_Ncbi2na)
+            swap[CNCBI2na](self._ref.GetNonNullPointer().GetNcbi2naMut(), raw)
 
-    # @property
-    # def data(self):
-    #     cdef const vector[char]* data = &self._ref.GetObject().GetNcbi2na().Get()
-    #     return PyBytes_FromStringAndSize(data.data(), data.size())
+        self._validate()
+
+    def __reduce_ex__(self, protocol):
+        if protocol >= 5:
+            return type(self), (pickle.PickleBuffer(self),), None
+        return type(self), (memoryview(self).tobytes(),), None
+
+    def __repr__(self):
+        cdef str ty = self.__class__.__name__
+        return f"{ty}({self.data!r})"
+
+    def __getbuffer__(self, Py_buffer* buffer, int flags):
+        cdef const vector[char]* data = &self._ref.GetObject().GetNcbi2na().Get()
+
+        if flags & PyBUF_FORMAT:
+            buffer.format = b"B"
+        else:
+            buffer.format = NULL
+
+        buffer.buf = <void*> data.data()
+        buffer.internal = NULL
+        buffer.itemsize = sizeof(char)
+        buffer.len = data.size() * sizeof(char)
+        buffer.ndim = 1
+        buffer.obj = self
+        buffer.readonly = True
+        buffer.shape = NULL
+        buffer.suboffsets = NULL
+        buffer.strides = NULL
+
+    @property
+    def data(self):
+        cdef const vector[char]* data = &self._ref.GetObject().GetNcbi2na().Get()
+        return PyBytes_FromStringAndSize(data.data(), data.size())
+
 
 cdef class Ncbi4NaData(SeqNaData):
     """Nucleotide sequence data stored with 4-bit encoding.
@@ -323,6 +361,15 @@ cdef class Ncbi4NaData(SeqNaData):
             swap[CNCBI4na](self._ref.GetNonNullPointer().GetNcbi4naMut(), raw)
 
         self._validate()
+
+    def __reduce_ex__(self, protocol):
+        if protocol >= 5:
+            return type(self), (pickle.PickleBuffer(self),), None
+        return type(self), (memoryview(self).tobytes(),), None
+
+    def __repr__(self):
+        cdef str ty = self.__class__.__name__
+        return f"{ty}({self.data!r})"
 
     def __getbuffer__(self, Py_buffer* buffer, int flags):
         cdef const vector[char]* data = &self._ref.GetNonNullPointer().GetNcbi4na().Get()
@@ -350,17 +397,67 @@ cdef class Ncbi4NaData(SeqNaData):
 
 
 cdef class Ncbi8NaData(SeqNaData):
-    pass
+    def __init__(self, object data):
+        cdef CNCBI8na        raw
+        cdef const char[::1] view = data
+        cdef size_t          l    = view.shape[0]
+        cdef vector[char]    vec  = vector[char]()
+
+        super().__init__()
+
+        with nogil:
+            vec.insert(vec.end(), &view[0], &view[l-1])
+            raw = CNCBI8na(vec)
+            self._ref.GetNonNullPointer().Select(CSeq_data_choice.e_Ncbi8na)
+            swap[CNCBI8na](self._ref.GetNonNullPointer().GetNcbi8naMut(), raw)
+
+        self._validate()
+
+    def __reduce_ex__(self, protocol):
+        if protocol >= 5:
+            return type(self), (pickle.PickleBuffer(self),), None
+        return type(self), (memoryview(self).tobytes(),), None
+
+    def __repr__(self):
+        cdef str ty = self.__class__.__name__
+        return f"{ty}({self.data!r})"
+
+    def __getbuffer__(self, Py_buffer* buffer, int flags):
+        cdef const vector[char]* data = &self._ref.GetNonNullPointer().GetNcbi8na().Get()
+
+        if flags & PyBUF_FORMAT:
+            buffer.format = b"B"
+        else:
+            buffer.format = NULL
+
+        buffer.buf = <void*> data.data()
+        buffer.internal = NULL
+        buffer.itemsize = sizeof(char)
+        buffer.len = data.size() * sizeof(char)
+        buffer.ndim = 1
+        buffer.obj = self
+        buffer.readonly = True
+        buffer.shape = NULL
+        buffer.suboffsets = NULL
+        buffer.strides = NULL
+
+    @property
+    def data(self):
+        cdef const vector[char]* data = &self._ref.GetNonNullPointer().GetNcbi8na().Get()
+        return PyBytes_FromStringAndSize(data.data(), data.size())
+
 
 cdef class NcbiPNaData(SeqNaData):
     """Nucleotide sequence data storing probabilities for each position.
     """
 
+
 cdef class Ncbi8AaData(SeqAaData):
     """Amino-acid sequence data with support for modified residues.
     """
 
-cdef class NcbiEAaData(SeqAaData):
+
+cdef class NcbiEAaData(IupacAaData):
     """Amino-acid sequence data storing an NCBI-extended string.
 
     This representation adds symbols for the non-standard selenocysteine
@@ -372,16 +469,49 @@ cdef class NcbiEAaData(SeqAaData):
     def encode(str data):
         return NcbiEAaData(data)
 
+    def __init__(self, object data):
+        cdef bytes                    _data
+        cdef const unsigned char[::1] _view
+        cdef string                   s
+
+        if isinstance(data, str):
+            _data = data.encode()
+            _view = _data
+        else:
+            _view = data
+
+        super().__init__()
+
+        with nogil:
+            s = string(<const char*> &_view[0], _view.shape[0])
+            self._ref.GetNonNullPointer().Select(CSeq_data_choice.e_Ncbieaa)
+            self._ref.GetNonNullPointer().SetNcbieaa(CNCBIeaa(s))
+
+        self._validate()
+
+    @property
+    def length(self):
+        """`int`: The length of the sequence data.
+        """
+        return self._ref.GetNonNullPointer().GetNcbieaa().Get().size()
+
+    @property
+    def data(self):
+        return self.decode()
+
     cpdef str decode(self):
         return self._ref.GetNonNullPointer().GetNcbieaa().Get().decode()
+
 
 cdef class NcbiPAaData(SeqAaData):
     """Amino-acid sequence data storing probabilities for each position.
     """
 
+
 cdef class NcbiStdAa(SeqAaData):
     """Amino-acid sequence data stored as ordinal encoding.
     """
+
 
 cdef class GapData(SeqData):
     """A virtual sequence data storage representing a gap.

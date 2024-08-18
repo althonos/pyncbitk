@@ -47,7 +47,7 @@ cdef class NcbiPNaData(SeqNaData):
 cdef class Ncbi8AaData(SeqAaData):
     pass
 
-cdef class NcbiEAaData(SeqAaData):
+cdef class NcbiEAaData(IupacAaData):
     pass
 
 cdef class NcbiPAaData(SeqAaData):

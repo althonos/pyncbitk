@@ -6,7 +6,9 @@ from ...corelib.ncbimisc cimport TSeqPos
 from ...serial.serialbase cimport CSerialObject
 from .iupacna cimport CIUPACna
 from .iupacaa cimport CIUPACaa
+from .ncbi2na cimport CNCBI2na
 from .ncbi4na cimport CNCBI4na
+from .ncbi8na cimport CNCBI8na
 from .ncbieaa cimport CNCBIeaa
 
 cdef extern from "objects/seq/Seq_data_.hpp" namespace "ncbi::objects::CSeq_data_Base" nogil:
@@ -27,9 +29,9 @@ cdef extern from "objects/seq/Seq_data_.hpp" namespace "ncbi::objects::CSeq_data
 
     ctypedef CIUPACna TIupacna
     ctypedef CIUPACaa TIupacaa
-    # ctypedef CNCBI2na TNcbi2na
+    ctypedef CNCBI2na TNcbi2na
     ctypedef CNCBI4na TNcbi4na
-    # ctypedef CNCBI8na TNcbi8na
+    ctypedef CNCBI8na TNcbi8na
     # ctypedef CNCBIpna TNcbipna
     # ctypedef CNCBI8aa TNcbi8aa
     ctypedef CNCBIeaa TNcbieaa
@@ -66,17 +68,17 @@ cdef extern from "objects/seq/Seq_data_.hpp" namespace "ncbi::objects" nogil:
         TIupacaa& GetIupacaaMut "SetIupacaa"()
         void SetIupacaa(const TIupacaa& value)
 
-        # bool IsNcbi2na() const
-        # const TNcbi2na& GetNcbi2na() const
-        # TNcbi2na& GetNcbi2naMut "SetNcbi2na"()
+        bool IsNcbi2na() const
+        const TNcbi2na& GetNcbi2na() const
+        TNcbi2na& GetNcbi2naMut "SetNcbi2na"()
 
         bool IsNcbi4na() const
         const TNcbi4na& GetNcbi4na() const
         TNcbi4na& GetNcbi4naMut "SetNcbi4na"()
 
-        # bool IsNcbi8na() const
-        # const TNcbi8na& GetNcbi8na() const
-        # TNcbi8na& GetNcbi8naMut "SetNcbi8na"()
+        bool IsNcbi8na() const
+        const TNcbi8na& GetNcbi8na() const
+        TNcbi8na& GetNcbi8naMut "SetNcbi8na"()
 
         # bool IsNcbipna() const
         # const TNcbipna& GetNcbipna() const
