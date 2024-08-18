@@ -13,8 +13,8 @@ set(BUILD_SHARED_LIBS ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 # Symlink to the C++ Toolkit sources so that NCBIptb is happy with the project structure
-file(CREATE_LINK ../vendor/ncbi-cxx-toolkit-public/src     src/toolkit     COPY_ON_ERROR SYMBOLIC)
-file(CREATE_LINK ../vendor/ncbi-cxx-toolkit-public/include include/toolkit COPY_ON_ERROR SYMBOLIC)
+file(CREATE_LINK ../vendor/ncbi-cxx-toolkit-public/src     src/ncbi-cxx-toolkit-public     COPY_ON_ERROR SYMBOLIC)
+file(CREATE_LINK ../vendor/ncbi-cxx-toolkit-public/include include/ncbi-cxx-toolkit-public COPY_ON_ERROR SYMBOLIC)
 
 # Disable optional components to simplify compilation
 set(PYNCBITK_DISABLED_COMPONENTS
