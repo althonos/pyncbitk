@@ -29,27 +29,41 @@ cdef class BioSeq(Serial):
 
     def __init__(
         self,
-        object ids not None,
         SeqInst instance not None,
+        SeqId id,
+        *ids,
     ):
+        """__init__(self, instance, id, *ids)\n--\n
+
+        Create a new sequence with the given instance and identifiers.
+
+        """
         cdef SeqId    id_
         cdef CBioseq* obj = new CBioseq()
 
         obj.SetInst(instance._ref.GetObject())
+        obj.SetId().push_back(id._ref)
         for id_ in ids:
             obj.SetId().push_back(id_._ref)
-        if obj.GetId().size() == 0:
-            raise ValueError("BioSeq must have at least one identifier")
 
         self._ref.Reset(obj)
 
     def __repr__(self):
         cdef str ty = self.__class__.__name__
-        return f"{ty}({self.ids!r}, {self.instance!r})"
+        return f"{ty}({self.instance!r}, {', '.join(repr(id_) for id_ in self.ids)})"
+
+    @property
+    def id(self):
+        """`~pyncbitk.objects.seqloc.SeqId`: The first sequence identifier.
+        """
+        assert self._ref.GetNonNullPointer().IsSetId()  # mandatory
+
+        cdef cpplist[CRef[CSeq_id]] _ids  = self._ref.GetNonNullPointer().GetId()
+        return SeqId._wrap(_ids.front())
 
     @property
     def ids(self):
-        """`list` of `SeqId`: The identifiers of the sequence.
+        """`list` of `~pyncbitk.objects.seqloc.SeqId`: The sequence identifiers.
         """
         assert self._ref.GetNonNullPointer().IsSetId()  # mandatory
 
@@ -64,7 +78,7 @@ cdef class BioSeq(Serial):
 
     @property
     def instance(self):
-        """`SeqInst`: The actual sequence instance.
+        """`~pyncbitk.objects.seqinst.SeqInst`: The sequence instance.
         """
         assert self._ref.GetNonNullPointer().IsSetInst()  # mandatory
         return SeqInst._wrap(CRef[CSeq_inst](&self._ref.GetNonNullPointer().GetInstMut()))

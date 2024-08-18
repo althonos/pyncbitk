@@ -160,7 +160,7 @@ cdef class SeqInst(Serial):
 
     @property
     def strandedness(self):
-        """`str` or `None`: The strandedness of the sequence, if any. 
+        """`str` or `None`: The strandedness of the sequence, if any.
         """
         if not self._ref.GetObject().IsSetStrand():
             return None
@@ -176,14 +176,12 @@ cdef class SeqInst(Serial):
 
 
 cdef class EmptyInst(SeqInst):
-    """An instance corresponding to an empty sequences.
+    """An instance corresponding to an empty sequence.
     """
-    pass
 
 cdef class VirtualInst(SeqInst):
     """An instance corresponding to a sequence with no data.
     """
-    pass
 
 cdef class ContinuousInst(SeqInst):
     """An instance corresponding to a single continuous sequence.
@@ -259,7 +257,7 @@ cdef class DeltaInst(SeqInst):
         """Transform this instance to a continuous sequence instance.
 
         Returns:
-            `ContinuousInst`: The equivalent instance as a single 
+            `ContinuousInst`: The equivalent instance as a single
             continuous sequence instance.
         """
         cdef CSeq_inst* copy = new CSeq_inst()
