@@ -9,6 +9,7 @@ from libcpp.utility cimport move
 
 from .toolkit.corelib.ncbiobj cimport CRef
 from .toolkit.objects.seq.bioseq cimport CBioseq
+from .toolkit.objects.seqset.seq_entry cimport CSeq_entry
 from .toolkit.objtools.readers.fasta cimport CFastaReader, EFlags as CFastaReader_Flags
 from .toolkit.objtools.blast.seqdb_reader.seqdb cimport CSeqDB, CSeqDBIter, ESeqType
 from .toolkit.objtools.blast.seqdb_reader.seqdbcommon cimport EBlastDbVersion, EOidMaskType
@@ -31,28 +32,41 @@ cdef class FastaReader:
     def __dealloc__(self):
         del self._reader
 
-    def __init__(self, object path):
+    def __init__(
+        self,
+        object path,
+        *,
+        bool split = True,
+    ):
         cdef bytes _path = os.fsencode(path)
-        self._reader = new CFastaReader(
-            _path, 
-            CFastaReader_Flags.fLeaveAsText,
-        )
+        cdef int   flags = 0
+
+        if not split:
+            flags |= CFastaReader_Flags.fNoSplit
+
+        self._reader = new CFastaReader(_path, flags)
 
     def __iter__(self):
         return self
 
     def __next__(self):
-        cdef Entry entry = self.read()
-        if entry is None:
+        cdef BioSeq seq = self.read()
+        if seq is None:
             raise StopIteration
-        return entry
+        return seq
 
-    cpdef Entry read(self):
+    cpdef BioSeq read(self):
         assert self._reader != NULL
+
+        cdef CRef[CSeq_entry] entry
+        cdef CBioseq*         bioseq
+
         if self._reader.AtEOF():
             return None
-        _entry = self._reader.ReadOneSeq()
-        return Entry._wrap(_entry)
+
+        entry = self._reader.ReadOneSeq()
+        bioseq = &entry.GetNonNullPointer().GetSeqMut()
+        return BioSeq._wrap(CRef[CBioseq](bioseq))
 
 # --- BlastDatabase ------------------------------------------------------------
 
@@ -107,7 +121,7 @@ cdef class DatabaseReader:
             name (`str`): The name of the database, as given when the
                 database was created.
             type (`str` or `None`): The type of sequences in the database.
-                If `None` given, the database type will be detected from 
+                If `None` given, the database type will be detected from
                 the metadata.
 
         """

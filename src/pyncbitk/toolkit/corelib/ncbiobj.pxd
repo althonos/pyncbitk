@@ -82,3 +82,7 @@ cdef extern from "corelib/ncbiobj.hpp" namespace "ncbi" nogil:
         C& GetObject() except +
 
         TObjectType& operator*() const
+
+    cppclass CObjectFor[T](CObject):
+        T& GetDataMut "GetData"()
+        const T& GetData() const

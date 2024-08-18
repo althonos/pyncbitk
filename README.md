@@ -61,12 +61,12 @@ $ pip install --no-build-isolation . -v
 ## 💡 Example
 
 ```python
+from pyncbitk.objects.seqset import BioSeqSet
 from pyncbitk.objtools import DatabaseReader, FastaReader
 from pyncbitk.algo import BlastN
 
 # read the queries from a FASTA file
-query_file = FastaReader("queries.fna")
-queries = list(query_file)
+queries = BioSeqSet(FastaReader("queries.fna"))
 
 # open a database of subject sequences
 db = DatabaseReader("database.fna")

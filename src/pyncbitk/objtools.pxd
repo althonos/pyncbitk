@@ -23,7 +23,7 @@ import os
 cdef class FastaReader:
     cdef CFastaReader* _reader
 
-    cpdef Entry read(self)
+    cpdef BioSeq read(self)
 
 # --- BlastDatabase ------------------------------------------------------------
 
