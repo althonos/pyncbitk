@@ -14,6 +14,7 @@ cdef class SeqData(Serial):
 
     @staticmethod
     cdef SeqData _wrap(CRef[CSeq_data] ref)
+    cdef bool _validate(self) except False
 
     cpdef SeqData copy(self, bool pack=*)
     cpdef SeqData complement(self, bool pack=*)

@@ -134,7 +134,7 @@ cdef class SeqId(Serial):
             return NotImplemented
 
         other_ = other
-        result = self._ref.GetObject().Compare(other_._ref.GetObject())
+        result = self._ref.GetNonNullPointer().Compare(other_._ref.GetObject())
         
         if result == CSeq_id_SIC.e_DIFF:
             return NotImplemented

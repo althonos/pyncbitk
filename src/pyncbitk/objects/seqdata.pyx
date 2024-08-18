@@ -1,5 +1,6 @@
 # cython: language_level=3, linetrace=True, binding=True
 
+from libcpp.algorithm cimport swap
 from libcpp.string cimport string
 from libcpp.vector cimport vector
 
@@ -13,8 +14,15 @@ from ..toolkit.serial.serialbase cimport CSerialObject
 from ..toolkit.objects.seq.seqport_util cimport CSeqportUtil
 from ..toolkit.objects.seq.iupacna cimport CIUPACna
 from ..toolkit.objects.seq.iupacaa cimport CIUPACaa
+from ..toolkit.objects.seq.ncbi4na cimport CNCBI4na
 
 from ..serial cimport Serial
+
+# --- Utils --------------------------------------------------------------------
+
+ctypedef fused bytestring:
+    str
+    const char[::1]
 
 # --- SeqData ------------------------------------------------------------------
 
@@ -27,7 +35,9 @@ cdef class SeqData(Serial):
         cdef SeqData          obj
         cdef CSeq_data_choice kind = ref.GetNonNullPointer().Which()
 
-        if kind == CSeq_data_choice.e_Iupacna:
+        if kind == CSeq_data_choice.e_not_set:
+            obj = SeqData.__new__(SeqData)
+        elif kind == CSeq_data_choice.e_Iupacna:
             obj = IupacNaData.__new__(IupacNaData)
         elif kind == CSeq_data_choice.e_Iupacaa:
             obj = IupacAaData.__new__(IupacAaData)
@@ -58,8 +68,14 @@ cdef class SeqData(Serial):
     cdef CSerialObject* _serial(self):
         return <CSerialObject*> self._ref.GetNonNullPointer()
 
+    cdef bool _validate(self) except False:
+        if not CSeqportUtil.FastValidate(self._ref.GetObject()):
+            raise ValueError("Invalid elements in sequence data")
+        return True
+
     def __init__(self):
         self._ref.Reset(new CSeq_data())
+        self._ref.GetNonNullPointer().Select(CSeq_data_choice.e_not_set)
 
     cpdef SeqData complement(self, bool pack=False):
         cdef CSeq_data* data = new CSeq_data()
@@ -89,9 +105,9 @@ cdef class SeqData(Serial):
 cdef class SeqAaData(SeqData):
     """An abstract base storage of amino-acid sequence data.
     """
-    
+
     cpdef str decode(self):
-        cdef CSeq_data*       out  
+        cdef CSeq_data*       out
         cdef CSeq_data*       data = self._ref.GetNonNullPointer()
         cdef CSeq_data_choice kind = data.Which()
 
@@ -106,9 +122,9 @@ cdef class SeqAaData(SeqData):
 cdef class SeqNaData(SeqData):
     """An abstract base storage of nucleotide sequence data.
     """
-    
+
     cpdef str decode(self):
-        cdef CSeq_data*       out  
+        cdef CSeq_data*       out
         cdef CSeq_data*       data = self._ref.GetNonNullPointer()
         cdef CSeq_data_choice kind = data.Which()
 
@@ -124,17 +140,29 @@ cdef class IupacNaData(SeqNaData):
     """Nucleotide sequence data stored as a IUPAC nucleotide string.
     """
 
-    def __init__(self, object data):
-        cdef bytes      _data
+    @staticmethod
+    def encode(str data):
+        return IupacNaData(data)
+
+    def __init__(self, object data not None):
+        cdef bytes                    _data
+        cdef const unsigned char[::1] _view
+        cdef string                   s
 
         if isinstance(data, str):
             _data = data.encode()
+            _view = _data
         else:
-            _data = data
+            _view = data
 
         super().__init__()
-        self._ref.GetNonNullPointer().Select(CSeq_data_choice.e_Iupacna)
-        self._ref.GetNonNullPointer().SetIupacna(CIUPACna(<string> _data))
+
+        with nogil:
+            s = string(<const char*> &_view[0], _view.shape[0])
+            self._ref.GetNonNullPointer().Select(CSeq_data_choice.e_Iupacna)
+            self._ref.GetNonNullPointer().SetIupacna(CIUPACna(s))
+
+        self._validate()
 
     def __repr__(self):
         cdef str ty = self.__class__.__name__
@@ -182,17 +210,27 @@ cdef class IupacAaData(SeqAaData):
 
     """
 
+    @staticmethod
+    def encode(str data):
+        return IupacAaData(data)
+
     def __init__(self, object data):
-        cdef bytes      _data
+        cdef bytes                    _data
+        cdef const unsigned char[::1] _view
+        cdef string                   s
 
         if isinstance(data, str):
             _data = data.encode()
+            _view = _data
         else:
-            _data = data
+            _view = data
 
         super().__init__()
-        self._ref.GetNonNullPointer().Select(CSeq_data_choice.e_Iupacaa)
-        self._ref.GetNonNullPointer().SetIupacaa(CIUPACaa(<string> _data))
+
+        with nogil:
+            s = string(<const char*> &_view[0], _view.shape[0])
+            self._ref.GetNonNullPointer().Select(CSeq_data_choice.e_Iupacaa)
+            self._ref.GetNonNullPointer().SetIupacaa(CIUPACaa(s))
 
     def __repr__(self):
         cdef str ty = self.__class__.__name__
@@ -226,14 +264,14 @@ cdef class IupacAaData(SeqAaData):
     @property
     def data(self):
         return self.decode()
-    
+
     cpdef str decode(self):
         return self._ref.GetNonNullPointer().GetIupacaa().Get().decode()
 
 cdef class Ncbi2NaData(SeqNaData):
     """Nucleotide sequence data stored with 2-bit encoding.
 
-    A nucleic acid containing no ambiguous bases can be encoded using a 
+    A nucleic acid containing no ambiguous bases can be encoded using a
     two-bit encoding per base, representing one of the four nucleobases:
     ``A``, ``C``, ``G`` or ``T``. This encoding is the most compact for
     unambiguous sequences.
@@ -267,6 +305,20 @@ cdef class Ncbi2NaData(SeqNaData):
 cdef class Ncbi4NaData(SeqNaData):
     """Nucleotide sequence data stored with 4-bit encoding.
     """
+
+    def __init__(self, object data):
+        cdef CNCBI4na        raw
+        cdef const char[::1] view = data
+        cdef size_t          l    = view.shape[0]
+        cdef vector[char]    vec  = vector[char]()
+
+        super().__init__()
+
+        with nogil:
+            vec.insert(vec.end(), &view[0], &view[l-1])
+            raw = CNCBI4na(vec)
+            self._ref.GetNonNullPointer().Select(CSeq_data_choice.e_Ncbi4na)
+            swap[CNCBI4na](self._ref.GetNonNullPointer().GetNcbi4naMut(), raw)
 
     def __getbuffer__(self, Py_buffer* buffer, int flags):
         cdef const vector[char]* data = &self._ref.GetNonNullPointer().GetNcbi4na().Get()
@@ -311,6 +363,10 @@ cdef class NcbiEAaData(SeqAaData):
     amino-acid (`U`) as well as support for termination or gap characters.
 
     """
+
+    @staticmethod
+    def encode(str data):
+        return NcbiEAaData(data)
 
     cpdef str decode(self):
         return self._ref.GetNonNullPointer().GetNcbieaa().Get().decode()
