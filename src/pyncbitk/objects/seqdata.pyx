@@ -232,6 +232,8 @@ cdef class IupacAaData(SeqAaData):
             self._ref.GetNonNullPointer().Select(CSeq_data_choice.e_Iupacaa)
             self._ref.GetNonNullPointer().SetIupacaa(CIUPACaa(s))
 
+        self._validate()
+
     def __repr__(self):
         cdef str ty = self.__class__.__name__
         return f"{ty}({self.data!r})"
@@ -319,6 +321,8 @@ cdef class Ncbi4NaData(SeqNaData):
             raw = CNCBI4na(vec)
             self._ref.GetNonNullPointer().Select(CSeq_data_choice.e_Ncbi4na)
             swap[CNCBI4na](self._ref.GetNonNullPointer().GetNcbi4naMut(), raw)
+
+        self._validate()
 
     def __getbuffer__(self, Py_buffer* buffer, int flags):
         cdef const vector[char]* data = &self._ref.GetNonNullPointer().GetNcbi4na().Get()
