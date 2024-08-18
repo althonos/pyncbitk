@@ -9,6 +9,8 @@ from .toolkit.algo.blast.api.sseqloc cimport SSeqLoc, TSeqLocVector
 from .toolkit.algo.blast.api.local_blast cimport CLocalBlast
 from .toolkit.algo.blast.api.blast_options_handle cimport CBlastOptionsHandle, CBlastOptionsFactory
 from .toolkit.algo.blast.api.blast_nucl_options cimport CBlastNucleotideOptionsHandle
+from .toolkit.algo.blast.api.blast_prot_options cimport CBlastProteinOptionsHandle
+from .toolkit.algo.blast.api.tblastn_options cimport CTBlastnOptionsHandle
 from .toolkit.algo.blast.api.query_data cimport IQueryFactory
 from .toolkit.algo.blast.api.objmgr_query_data cimport CObjMgr_QueryFactory
 from .toolkit.algo.blast.api.objmgrfree_query_data cimport CObjMgrFree_QueryFactory
@@ -345,6 +347,18 @@ cdef class MappingBlast(Blast):
     pass
 
 
+cdef class BlastP(ProteinBlast):
+
+    def __init__(
+        self,
+        *,
+        **kwargs,
+    ):
+        cdef CBlastProteinOptionsHandle* handle = new CBlastProteinOptionsHandle()
+        self._opt.Reset(<CBlastOptionsHandle*> handle)
+        super().__init__(**kwargs)
+
+
 cdef class BlastN(NucleotideBlast):
 
     def __init__(
@@ -356,3 +370,44 @@ cdef class BlastN(NucleotideBlast):
         handle.SetTraditionalBlastnDefaults()
         self._opt.Reset(<CBlastOptionsHandle*> handle)
         super().__init__(**kwargs)
+
+
+cdef class TBlastN(ProteinBlast):
+
+    def __init__(
+        self,
+        *,
+        int genetic_code = 1,
+        int max_intron_length = 0,
+        **kwargs,
+    ):
+        cdef CTBlastnOptionsHandle* handle = new CTBlastnOptionsHandle()
+        self._opt.Reset(<CBlastOptionsHandle*> handle)
+        super().__init__(**kwargs)
+        self.genetic_code = genetic_code
+
+    @property
+    def max_intron_length(self):
+        """`int`: Largest allowed intron in a translated nucleotide sequence.
+        """
+        cdef CTBlastnOptionsHandle* handle = <CTBlastnOptionsHandle*> self._opt.GetNonNullPointer()
+        return handle.GetLongestIntronLength()
+
+    @max_intron_length.setter
+    def max_intron_length(self, int max_intron_length):
+        cdef CTBlastnOptionsHandle* handle = <CTBlastnOptionsHandle*> self._opt.GetNonNullPointer()
+        if max_intron_length < 0:
+            raise ValueError(f"`max_target_sequences` must be a positive integer, got {max_intron_length!r}")
+        handle.SetLongestIntronLength(max_intron_length)
+
+    @property
+    def genetic_code(self):
+        """`int`: Genetic code to use for translating the database sequences.
+        """
+        cdef CTBlastnOptionsHandle* handle = <CTBlastnOptionsHandle*> self._opt.GetNonNullPointer()
+        return handle.GetDbGeneticCode()
+
+    @genetic_code.setter
+    def genetic_code(self, int genetic_code):
+        cdef CTBlastnOptionsHandle* handle = <CTBlastnOptionsHandle*> self._opt.GetNonNullPointer()
+        handle.SetDbGeneticCode(genetic_code)
