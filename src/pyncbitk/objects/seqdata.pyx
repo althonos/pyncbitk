@@ -7,6 +7,7 @@ from libcpp.vector cimport vector
 from cpython cimport Py_buffer
 from cpython.bytes cimport PyBytes_FromStringAndSize
 from cpython.buffer cimport PyBUF_FORMAT
+from cpython.object cimport Py_LT, Py_EQ, Py_GT, Py_LE, Py_NE, Py_GE
 
 from ..toolkit.corelib.ncbiobj cimport CRef
 from ..toolkit.objects.seq.seq_data cimport CSeq_data, E_Choice as CSeq_data_choice
@@ -75,6 +76,9 @@ cdef class SeqData(Serial):
     def __init__(self):
         self._ref.Reset(new CSeq_data())
         self._ref.GetNonNullPointer().Select(CSeq_data_choice.e_not_set)
+
+    def __copy__(self):
+        return self.copy()
 
     cpdef SeqData complement(self, bool pack=False):
         cdef CSeq_data* data = new CSeq_data()
@@ -173,6 +177,34 @@ cdef class IupacNaData(SeqNaData):
     def __repr__(self):
         cdef str ty = self.__class__.__name__
         return f"{ty}({self.data!r})"
+
+    def __richcmp__(self, other, int op):
+        cdef IupacNaData   _other
+        cdef const string* s1
+        cdef const string* s2
+        cdef int           status
+
+        if not isinstance(other, IupacNaData):
+            return NotImplemented
+
+        _other = other
+        s1 = &self._ref.GetNonNullPointer().GetIupacna().Get()
+        s2 = &_other._ref.GetNonNullPointer().GetIupacna().Get()
+
+        with nogil:
+            status = s1[0].compare(s2[0])
+        if op == Py_EQ:
+            return status == 0
+        elif op == Py_NE:
+            return status != 0
+        elif op == Py_GT:
+            return status > 0
+        elif op == Py_LE:
+            return status <= 0
+        elif op == Py_LT:
+            return status < 0
+        elif op == Py_GE:
+            return status >= 0
 
     def __getbuffer__(self, Py_buffer* buffer, int flags):
         cdef const string* data = &self._ref.GetNonNullPointer().GetIupacna().Get()
