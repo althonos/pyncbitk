@@ -23,3 +23,8 @@ PYNCBITK_DISABLE_SSE4 = { env = "PYNCBITK_DISABLE_SSE4", default = false }
 [[tool.scikit-build.overrides]]
 if.state = "editable"
 cmake.build-type = "Debug"
+
+[[tool.scikit-build-overrides]]
+if.env.SCCACHE = true
+cmake.define.CMAKE_C_COMPILER_LAUNCHER = "sccache"
+cmake.define.CMAKE_CXX_COMPILER_LAUNCHER = "sccache"
