@@ -32,15 +32,24 @@ cdef class WholeSeqLoc(SeqLoc):
     """A reference to an entire `BioSeq`.
     """
 
-    def __init__(self, SeqId id):
+    def __init__(self, SeqId sequence_id):
+        """__init__(self, id)\n--\n
+
+        Create a new location referencing the given sequence.
+
+        Arguments:
+            sequence_id (`~pyncbitk.objects.seqloc.SeqId`): The identifier
+                of the sequence being referenced. 
+
+        """
         cdef CSeq_loc* loc = new CSeq_loc()
         loc.Select(CSeq_loc_choice.e_Whole)
-        loc.SetWhole( id._ref.GetNonNullPointer()[0] )
+        loc.SetWhole(sequence_id._ref.GetNonNullPointer()[0] )
         self._loc.Reset(loc)
 
     @property
     def sequence_id(self):
-        """`SeqId`: The identifier of the sequence.
+        """`~pyncbitk.objects.seqloc.SeqId`: The identifier of the sequence.
         """
         id_ = CRef[CSeq_id](&self._loc.GetNonNullPointer().GetWholeMut())
         return SeqId._wrap(id_)
@@ -51,7 +60,7 @@ cdef class SeqIntervalLoc(SeqLoc):
     
     @property
     def sequence_id(self):
-        """`SeqId`: The identifier of the sequence.
+        """`~pyncbitk.objects.seqloc.SeqId`: The identifier of the sequence.
         """
         data = &self._loc.GetNonNullPointer().GetIntMut()
         id_ = CRef[CSeq_id](&data.GetIdMut())
@@ -167,6 +176,14 @@ cdef class LocalId(SeqId):
     """
 
     def __init__(self, ObjectId id):
+        """__init__(self, id)\n--\n
+
+        Create a new local identifier.
+
+        Arguments:
+            id (`~pyncbitk.objects.general.ObjectId`): The object identifier.
+
+        """
         cdef CSeq_id* obj = new CSeq_id()
         obj.Select(CSeq_id_choice.e_Local)
         obj.SetLocal(id._ref.GetObject())
@@ -177,7 +194,9 @@ cdef class LocalId(SeqId):
         return f"{ty}({self.id!r})"
 
     @property
-    def id(self):
+    def object_id(self):
+        """`~pyncbitk.objects.general.ObjectId`: The object identifier.
+        """
         cdef CObject_id* id = &self._ref.GetNonNullPointer().GetLocalMut()
         return ObjectId._wrap(CRef[CObject_id](id))
 

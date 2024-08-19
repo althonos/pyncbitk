@@ -48,7 +48,7 @@ from ._utils import peekable, is_iterable
 
 # cdef class BlastDbLoc:
 #     cdef CRef[CSearchDatabase] _ref
-    
+
 #     def __init__(self, str name not None, protein=False):
 #         cdef bytes            _name = name.encode() # FIXME: os.fsencode?
 #         cdef CSearchDatabase* _db   = new CSearchDatabase(_name, EMoleculeType.eBlastDbIsNucleotide)
@@ -150,6 +150,8 @@ cdef class Blast:
 
     @property
     def program(self):
+        """`str`: The name of the BLAST program.
+        """
         cdef EProgram program = self._opt.GetNonNullPointer().GetOptions().GetProgram()
         return EProgramToTaskName(program).decode('ascii')
 
@@ -261,6 +263,23 @@ cdef class Blast:
         BlastSubjects subjects,
         bool scan_mode = False
     ):
+        """Run a BLAST query with the given sequences.
+
+        Arguments:
+            queries (`BioSeq` or `BioSeqSet`): The queries to use on the
+                subject sequences.
+            subjects (`BioSeq`, `BioSeqSet`, or `DatabaseReader`): The
+                subjects sequences to search. A BLAST database can be given
+                by passing a `~pyncbitk.objtools.DatabaseReader` objects
+                directly.
+            scan_mode (`bool`): Set to `True` to run the database search
+                in scan mode.
+
+        Returns:
+            `~pyncbitk.algo.SearchResultsSet`: The list of search results,
+            with one `~pyncbitk.algo.SearchResults` item per query.
+
+        """
         cdef TSeqLocVector         _queries_loc
         cdef TSeqLocVector         _subjects_loc
         cdef BlastSeqLoc           seqloc
@@ -269,7 +288,7 @@ cdef class Blast:
         cdef CRef[CLocalDbAdapter] db
         cdef CRef[CLocalBlast]     blast
 
-        # prepare queries: a list of `BlastSeqLoc` objects 
+        # prepare queries: a list of `BlastSeqLoc` objects
         if BlastQueries is BioSeq:
             if queries._ref.GetNonNullPointer().GetInst().GetRepr() != CSeq_inst_repr.eRepr_raw:
                 ty = queries.instance.__class__.__name__
@@ -311,7 +330,7 @@ cdef class Blast:
                 _subjects_loc.push_back(seqloc._seqloc)
             subject_factory.Reset(<IQueryFactory*> new CObjMgr_QueryFactory(_subjects_loc))
             db.Reset(new CLocalDbAdapter(subject_factory, self._opt, scan_mode))
-        
+
         # prepare the BLAST program
         try:
             blast.Reset(new CLocalBlast(query_factory, self._opt, db))
@@ -340,8 +359,10 @@ cdef class Blast:
 cdef class NucleotideBlast(Blast):
     pass
 
+
 cdef class ProteinBlast(Blast):
     pass
+
 
 cdef class MappingBlast(Blast):
     pass
