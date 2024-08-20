@@ -191,7 +191,7 @@ cdef class LocalId(SeqId):
 
     def __repr__(self):
         cdef str ty = type(self).__name__
-        return f"{ty}({self.id!r})"
+        return f"{ty}({self.object_id!r})"
 
     @property
     def object_id(self):
