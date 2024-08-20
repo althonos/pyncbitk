@@ -58,3 +58,5 @@ cdef class SeqAlignSet(Serial):
 
     @staticmethod
     cdef SeqAlignSet _wrap(CRef[CSeq_align_set] ref)
+
+    cpdef int master_coverage(self) except? 0

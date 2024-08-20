@@ -17,11 +17,8 @@ from .toolkit.algo.blast.api.objmgrfree_query_data cimport CObjMgrFree_QueryFact
 from .toolkit.algo.blast.api.local_db_adapter cimport CLocalDbAdapter
 from .toolkit.algo.blast.api.blast_results cimport CSearchResultSet, CSearchResults, size_type as CSearchResults_size_type
 from .toolkit.corelib.ncbiobj cimport CConstRef, CRef
-from .toolkit.objects.general.object_id cimport CObject_id
-from .toolkit.objects.general.object_id cimport E_Choice as CObject_id_choice
 from .toolkit.objects.seq.bioseq cimport CBioseq
 from .toolkit.objects.seqset.bioseq_set cimport CBioseq_set
-from .toolkit.objects.seq.seq_data cimport CSeq_data
 from .toolkit.objects.seq.seq_inst cimport ERepr as CSeq_inst_repr
 from .toolkit.objects.seqloc.seq_id cimport CSeq_id
 from .toolkit.objmgr.object_manager cimport CObjectManager

@@ -13,6 +13,7 @@ from ..toolkit.objects.seqalign.seq_align cimport CSeq_align, EScoreType, EType 
 from ..toolkit.objects.seqalign.seq_align cimport C_Segs, E_Choice as C_Segs_choice
 from ..toolkit.objects.seqalign.seq_align_set cimport CSeq_align_set
 from ..toolkit.objects.seqalign.score cimport CScore, C_Value as CScore_value, E_Choice as CScore_value_choice
+from ..toolkit.objtools.align_format.align_format_util cimport CAlignFormatUtil
 from ..toolkit.serial.serialbase cimport CSerialObject
 
 from ..serial cimport Serial
@@ -73,7 +74,7 @@ cdef class SeqAlignScore:
 
 
 cdef class AlignRow:
-    
+
     @property
     def start(self):
         cdef CSeq_align* obj = self._ref.GetNonNullPointer()
@@ -92,11 +93,11 @@ cdef class AlignRow:
 
 
 cdef class AlignSegments(Serial):
-    
+
     @staticmethod
     cdef AlignSegments _wrap(CRef[C_Segs] ref):
         cdef AlignSegments obj
-        cdef C_Segs_choice kind = ref.GetNonNullPointer().Which() 
+        cdef C_Segs_choice kind = ref.GetNonNullPointer().Which()
 
         if kind == C_Segs.E_Choice.e_Denseg:
             obj = DenseSegments.__new__(DenseSegments)
@@ -113,7 +114,7 @@ cdef class AlignSegments(Serial):
 
 
 cdef class DenseSegments(AlignSegments):
-    
+
     @property
     def data(self):
         cdef CRef[CDense_seg] ref
@@ -196,7 +197,7 @@ cdef class SeqAlign(Serial):
 
     @staticmethod
     cdef SeqAlign _wrap(CRef[CSeq_align] ref):
-        cdef SeqAlign        obj 
+        cdef SeqAlign        obj
         cdef CSeq_align_type ty  = ref.GetObject().GetType()
         if ty == CSeq_align_type.eType_not_set:
             obj = SeqAlign.__new__(SeqAlign)
@@ -239,7 +240,7 @@ cdef class SeqAlign(Serial):
         row._ref = self._ref
         row._row = index
         return row
-        
+
     @property
     def bitscore(self):
         """`float` or `None`: The BLAST-specific bit score.
@@ -253,7 +254,7 @@ cdef class SeqAlign(Serial):
     def percent_identity(self):
         r"""`float` or `None`: The percent identity of the alignment.
 
-        This refers to the BLAST-style identity, which is computed 
+        This refers to the BLAST-style identity, which is computed
         including gaps over the whole alignment:
 
         .. math::
@@ -261,14 +262,27 @@ cdef class SeqAlign(Serial):
             id = 100 \times \frac{\text{matches}}{\text{alignment length}}
 
         """
-        cdef double value = NAN
-        if not self._ref.GetObject().GetNamedScore(EScoreType.eScore_PercentIdentity, value):
+        cdef unsigned int length
+        cdef int          nident
+        cdef double       value  = 0
+
+        # return if the score is already available
+        if self._ref.GetObject().GetNamedScore(EScoreType.eScore_PercentIdentity, value):
+            return value
+
+        length = self._ref.GetObject().GetAlignLength()
+        if not self._ref.GetObject().GetNamedScore(EScoreType.eScore_IdentityCount, nident):
             return None
+
+        if length > 0:
+            value = 100.0 * (<double> nident) / (<double> length)
+
+        self._ref.GetObject().SetNamedScore(EScoreType.eScore_PercentIdentity, value)
         return value
 
     @property
     def percent_coverage(self):
-        r"""`float` or `None`: The percent query coverage, if any. 
+        r"""`float` or `None`: The percent query coverage, if any.
 
         BLAST ignores the polyA tail when computing coverage for nucleotide
         sequences:
@@ -340,8 +354,13 @@ cdef class SeqAlignSet(Serial):
 
     def __iter__(self):
         cdef CRef[CSeq_align] ref
-        for ref in self._ref.GetObject().GetMut():
+        for ref in self._ref.GetNonNullPointer().GetMut():
             yield SeqAlign._wrap(ref)
 
     def __len__(self):
-        return self._ref.GetObject().Get().size()
+        return self._ref.GetNonNullPointer().Get().size()
+
+    cpdef int master_coverage(self) except? 0:
+        """Compute the master coverage of the alignment set.
+        """
+        return CAlignFormatUtil.GetMasterCoverage(self._ref.GetObject())
