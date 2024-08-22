@@ -37,6 +37,21 @@ cdef class Serial:
     cdef CSerialObject* _serial(self):
         return NULL
 
+    def __eq__(self, object other):
+        cdef CSerialObject* left
+        cdef CSerialObject* right
+
+        if not isinstance(other, Serial):
+            return NotImplemented
+
+        left = self._serial()
+        right = (<Serial> other)._serial()
+
+        try:
+            return left.Equals(right[0])
+        except:
+            return NotImplemented
+
     cpdef string dumps(
         self,
         str format="asntext",
@@ -50,7 +65,7 @@ cdef class Serial:
                 are ``asntext``, ``asnbinary``, ``xml`` and ``json``.
             indent (`bool`): Whether to indent each line in the output.
                 Defaults to `True`.
-            eol (`bool`): Whether to add newlines in textual formats. 
+            eol (`bool`): Whether to add newlines in textual formats.
                 ``eol=False`` implies ``indent=False``.
 
         Returns:

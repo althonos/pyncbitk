@@ -1,3 +1,4 @@
+from libcpp cimport bool
 from libcpp.string cimport string
 
 from ..corelib.ncbiobj cimport CObject, CRef
@@ -13,8 +14,11 @@ cdef extern from "serial/serialbase.hpp" namespace "ncbi" nogil:
     cppclass CSerialObject(CObject):
         CSerialObject()
 
-        # void Assign(const CSerialObject& source)
-        void Assign(const CSerialObject& source, ESerialRecursionMode how)
+        void Assign(const CSerialObject& source) except +
+        void Assign(const CSerialObject& source, ESerialRecursionMode how) except +
+
+        bool Equals(const CSerialObject& object) except +
+        bool Equals(const CSerialObject& object, ESerialRecursionMode how) except +
 
         CNcbiOstream& operator<< (CNcbiOstream& str, const CSerialObject&    obj)
         CNcbiIstream& operator>> (CNcbiIstream& str, CSerialObject&          obj)
