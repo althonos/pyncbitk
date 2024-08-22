@@ -27,14 +27,23 @@ cdef class FastaReader:
 
 # --- BlastDatabase ------------------------------------------------------------
 
-cdef class DatabaseIter:
+cdef class _DatabaseIter:
     cdef CRef[CSeqDB]   _ref
     cdef DatabaseReader db
     cdef CSeqDBIter*    it
     cdef size_t         length
 
+cdef class DatabaseKeys(_DatabaseIter):
+    pass
+
+cdef class DatabaseValues(_DatabaseIter):
+    pass
+
 cdef class DatabaseReader:
     cdef CRef[CSeqDB] _ref
+
+    cpdef DatabaseKeys keys(self)
+    cpdef DatabaseValues values(self)
 
 cdef class DatabaseWriter:
     cdef          CRef[CWriteDB] _ref

@@ -17,6 +17,7 @@ from .toolkit.objtools.blast.seqdb_reader.seqdbcommon cimport EBlastDbVersion, E
 from .toolkit.objtools.blast.seqdb_writer.writedb cimport CWriteDB, EIndexType
 
 from .objects.seqset cimport Entry
+from .objects.seqloc cimport SeqId
 from .objects.seq cimport BioSeq
 
 import os
@@ -71,12 +72,9 @@ cdef class FastaReader:
 
 # --- BlastDatabase ------------------------------------------------------------
 
-cdef class DatabaseIter:
-    """An iterator over the sequences of a BLAST database.
-    """
+cdef class _DatabaseIter:
 
     def __init__(self, DatabaseReader db):
-
         if self.it is not NULL:
             del self.it
             self.it = NULL
@@ -95,6 +93,28 @@ cdef class DatabaseIter:
 
     def __len__(self):
         return self.length
+    
+    def __next__(self):
+        raise StopIteration
+    
+cdef class DatabaseKeys(_DatabaseIter):
+    """An interator over the sequence identifiers of a BLAST database.
+    """
+
+    def __next__(self):
+        cdef int           oid
+        cdef CRef[CBioseq] seq
+
+        if not self.it[0]:
+            raise StopIteration
+
+        oid = self.it.GetOID()
+        ids = self._ref.GetNonNullPointer().GetSeqIDs(oid)
+        return SeqId._wrap(ids.front())
+
+cdef class DatabaseValues(_DatabaseIter):
+    """An iterator over the sequences of a BLAST database.
+    """
 
     def __next__(self):
         cdef int           oid
@@ -126,20 +146,52 @@ cdef class DatabaseReader:
         Arguments:
             name (`str`): The name of the database, as given when the
                 database was created.
-            type (`str` or `None`): The type of sequences in the database.
-                If `None` given, the database type will be detected from
-                the metadata.
+            type (`str` or `None`): The type of sequences in the database,
+                either ``nucleotide`` or ``protein``. If `None` given,
+                the database type will be detected from the metadata.
 
         """
-        cdef bytes   _name = name.encode()  # FIXME: os.fsencode?
+        cdef bytes   _name =  os.fsencode(name)
         cdef CSeqDB* _db   = new CSeqDB(<string> _name, ESeqType.eUnknown)
         self._ref.Reset(_db)
 
     def __iter__(self):
-        return DatabaseIter(self)
+        return self.keys()
 
     def __len__(self):
         return self._ref.GetNonNullPointer().GetNumSeqs()
+
+    def __getitem__(self, object index):
+        cdef SeqId         seq_id
+        cdef CRef[CBioseq] bioseq
+
+        if not isinstance(index, SeqId):
+            return NotImplemented
+
+        seq_id = index
+        bioseq = self._ref.GetNonNullPointer().SeqidToBioseq(seq_id._ref.GetObject())
+        return BioSeq._wrap(bioseq)
+
+    @property
+    def version(self):
+        """`int`: The database format version.
+        """
+        cdef EBlastDbVersion dbver = self._ref.GetNonNullPointer().GetBlastDbVersion()
+        if dbver == EBlastDbVersion.eBDB_Version4:
+            return 4
+        elif dbver == EBlastDbVersion.eBDB_Version5:
+            return 5
+        raise RuntimeError()
+
+    cpdef DatabaseKeys keys(self):
+        """Iterate over the keys of the database.
+        """
+        return DatabaseKeys(self)
+
+    cpdef DatabaseValues values(self):
+        """Iterate over the values of the database.
+        """
+        return DatabaseValues(self)
 
 
 cdef class DatabaseWriter:
@@ -153,7 +205,6 @@ cdef class DatabaseWriter:
         *,
         object title = None,
         int version = 4,
-
     ):
         """__init__(self, name, type="nucleotide", *, title=None, version=4)\n--\n
 
@@ -165,7 +216,7 @@ cdef class DatabaseWriter:
             type (`str`): Either ``"nucleotide"`` for a nucleotide database,
                 or ``"protein"`` for a protein database.
             title (`str` or `None`): The title of the database.
-            version (`int`): The database format version, either ``4`` (the 
+            version (`int`): The database format version, either ``4`` (the
                 default) or ``5``.
 
         """
@@ -259,4 +310,3 @@ cdef class DatabaseWriter:
             self._ref.GetNonNullPointer().Close()
             self.closed = True
 
-    

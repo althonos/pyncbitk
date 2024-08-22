@@ -7,9 +7,10 @@ from libcpp.vector cimport vector
 
 from ....corelib.ncbiobj cimport CObject, CRef
 from ....corelib.ncbimisc cimport TGi
-from ....corelib.ncbitype cimport Uint8
+from ....corelib.ncbitype cimport Int8, Uint8
 from ....objects.seq.bioseq cimport CBioseq
 from ....objects.seqloc.seq_id cimport CSeq_id
+from .seqdbcommon cimport EBlastDbVersion
 
 cdef extern from "objtools/blast/seqdb_reader/seqdb.hpp" namespace "ncbi::CSeqDB" nogil:
 
@@ -97,7 +98,7 @@ cdef extern from "objtools/blast/seqdb_reader/seqdb.hpp" namespace "ncbi" nogil:
         # int GetAmbigPartialSeq(int oid, char** buffer, int nucl_code, ESeqDBAllocType strategy, TSequenceRanges* partial_ranges, TSequenceRanges* masks = NULL) const
         # void RetSequence(const char** buffer) const
         # void RetSequence(const char** buffer) const
-        # list[CRef[CSeq_id]] GetSeqIDs(int oid) const
+        list[CRef[CSeq_id]] GetSeqIDs(int oid) const
         # void GetGis(int oid, vector[TGi] & gis, bool append = false) const
 
         ESeqType GetSequenceType() const
@@ -157,4 +158,76 @@ cdef extern from "objtools/blast/seqdb_reader/seqdb.hpp" namespace "ncbi" nogil:
         # int GetOidAtOffset(int first_seq, Uint8 residue) const
         # CRef[CBioseq] GiToBioseq(TGi gi) const
         # CRef[CBioseq] PigToBioseq(int pig) const
-        # CRef[CBioseq] SeqidToBioseq(const CSeq_id & seqid) const
+        CRef[CBioseq] SeqidToBioseq(const CSeq_id & seqid) const
+
+        # @staticmethod
+        # FindVolumePaths(const string   & dbname,
+        #                 ESeqType         seqtype,
+        #                 vector<string> & paths,
+        #                 vector<string> * alias_paths = NULL,
+        #                 bool             recursive = true,
+        #                 bool             expand_links = true);
+
+        # void FindVolumePaths(vector<string> & paths, bool recursive=true) const
+
+        # void SetIterationRange(int oid_begin, int oid_end)
+        # void GetAliasFileValues(TAliasFileValues & afv)
+
+        # @staticmethod
+        # void GetTaxInfo(TTaxId taxid, SSeqDBTaxInfo & info)
+
+        # CRef<CSeq_data> GetSeqData(int oid, TSeqPos begin, TSeqPos end) except +
+        # void GetSequenceAsString(int oid, CSeqUtil::ECoding coding, string& output, TSeqRange range = TSeqRange())
+        # void GetSequenceAsString(int oid, string& output, TSeqRange range = TSeqRange()) const
+
+        void ListColumns(vector[string] & titles)
+        int GetColumnId(const string & title)
+        const map[string,string] & GetColumnMetaData(int column_id)
+        const string & GetColumnValue(int column_id, const string & key)
+        const map[string,string] & GetColumnMetaData(int column_id, const string & volname)
+        # void GetColumnBlob(int col_id, int oid, CBlastDbBlob & blob)
+        void GetAvailableMaskAlgorithms(vector[int] & algorithms)
+        int GetMaskAlgorithmId(const string &algo_name) const
+        string GetAvailableMaskAlgorithmDescriptions()
+        vector[int] ValidateMaskAlgorithms(const vector[int]& algorithm_ids)
+
+        # void GetMaskAlgorithmDetails(int algorithm_id, 
+        #     objects::EBlast_filter_program & program,
+        #     string& program_name,
+        #     string& algo_opts
+        # )
+        # void GetMaskAlgorithmDetails(
+        #     int algorithm_id,
+        #     string& program,
+        #     string& program_name,
+        #     string& algo_opts
+        # )
+        # void GetMaskData(
+        #     int oid,
+        #     const vector<int> & algo_ids,
+        #     TSequenceRanges   & ranges
+        # )
+        # void GetMaskData(
+        #     int              oid,
+        #     int              algo_id,
+        #     TSequenceRanges &ranges
+        # )
+
+        # void SetOffsetRanges(int oid, const TRangeList & offset_ranges, bool append_ranges, bool cache_data)
+        void RemoveOffsetRanges(int oid)
+        void FlushOffsetRangeCache()
+
+        void SetNumberOfThreads(int num_threads, bool force_mt = false)
+        Int8 GetDiskUsage() const
+        void SetVolsMemBit(int mbit)
+        # void DebugDump(CDebugDumpContext ddc, unsigned int depth) const
+        EBlastDbVersion GetBlastDbVersion() const
+
+        # void TaxIdsToOids(set<TTaxId>& tax_ids, vector<blastdb::TOid>& rv) const
+        # void GetDBTaxIds(set<TTaxId> & tax_ids) const
+        # void GetTaxIdsForOids(const vector<blastdb::TOid> & oids, set<TTaxId> & tax_ids) const
+
+        # CRef<CBlast_db_metadata> GetDBMetaData(string user_path = kEmptyStr)
+
+        # void GetTaxIdsForAccession(const string & accs, vector<TTaxId> & taxids)
+        # void GetTaxIdsForSeqId(const CSeq_id & seq_id, vector<TTaxId> & taxids)
