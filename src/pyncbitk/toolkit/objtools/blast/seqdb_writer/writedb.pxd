@@ -34,7 +34,7 @@ cdef extern from "objtools/blast/seqdb_writer/writedb.hpp" namespace "ncbi" nogi
             const string & dbname,
             ESeqType seqtype,
             const string & title
-        )
+        ) except +
 
         CWriteDB(
             const string& dbname,
@@ -48,10 +48,10 @@ cdef extern from "objtools/blast/seqdb_writer/writedb.hpp" namespace "ncbi" nogi
             bool limit_defline, # = False,
             Uint8 oid_masks, # = EOidMaskType.fNone,
             bool scan_bioseq_4_cfastareader_usrobj, # = False
-        )
+        ) except +
 
-        void AddSequence(const CBioseq & bs)
-        void AddSequence(const CBioseq & bs, CSeqVector & sv)
+        void AddSequence(const CBioseq & bs) except +
+        void AddSequence(const CBioseq & bs, CSeqVector & sv) except +
         # void AddSequence(const CBioseq_Handle & bsh)
         # void AddSequence(const CTempString & sequence, const CTempString & ambiguities = "")
         void SetPig(int pig)
@@ -67,23 +67,23 @@ cdef extern from "objtools/blast/seqdb_writer/writedb.hpp" namespace "ncbi" nogi
         #              const vector<TGi>         & gis)
 
 
-        void ListVolumes(vector[string]& vols)
-        void ListFiles(vector[string]& files)
+        void ListVolumes(vector[string]& vols) except +
+        void ListFiles(vector[string]& files) except +
 
-        void Close()
+        void Close() except +
 
-        void SetMaxFileSize(Uint8 sz)
-        void SetMaxVolumeLetters(Uint8 letters)
+        void SetMaxFileSize(Uint8 sz) except +
+        void SetMaxVolumeLetters(Uint8 letters) except +
 
         # @staticmethod
         # CRef[CBlast_def_line_set] ExtractBioseqDeflines(const CBioseq & bs, bool parse_ids=true,
         #                     bool long_ids=false,
         #                     bool scan_bioseq_4_cfastareader_usrobj=false)
 
-        void SetMaskedLetters(const string & masked)
+        void SetMaskedLetters(const string & masked) except +
 
-        int FindColumn(const string & title) const
-        int CreateUserColumn(const string & title)
+        int FindColumn(const string & title) except +
+        int CreateUserColumn(const string & title) except +
 
         # void AddColumnMetaData(int            col_id,
         #                    const string & key,

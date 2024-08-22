@@ -4,6 +4,7 @@ from cython.operator cimport preincrement
 
 from libcpp cimport bool
 from libcpp.list cimport list as cpplist
+from libcpp.vector cimport vector
 from libcpp.string cimport string
 from libcpp.utility cimport move
 
@@ -149,6 +150,20 @@ cdef class DatabaseWriter:
         int version = 4,
 
     ):
+        """__init__(self, name, type="nucleotide", *, title=None, version=4)\n--\n
+
+        Create a new database writer.
+
+        Arguments:
+            name (`str`): The name of the database, which is used as a path
+                prefix to create the database files.
+            type (`str`): Either ``nucleotide`` for a nucleotide database,
+                or ``"protein"`` for a protein database.
+            title (`str` or `None`): The title of the database.
+            version (`int`): The database format version, either ``4`` (the 
+                default) or ``5``.
+
+        """
         cdef bytes           _path
         cdef bytes           _title
         cdef ESeqType        dbtype
@@ -156,6 +171,9 @@ cdef class DatabaseWriter:
         cdef CWriteDB*       writer
 
         _path = os.fsencode(name)
+        _parent = os.path.dirname(_path)
+        if _parent and not os.path.exists(_parent):
+            raise FileNotFoundError(os.fsdecode(_parent))
 
         if type == "nucleotide":
             dbtype = ESeqType.eNucleotide
@@ -202,11 +220,38 @@ cdef class DatabaseWriter:
         self.close()
         return None
 
+    @property
+    def volumes(self):
+        """`list` or `str`: The list of volumes written by the writer.
+        """
+        cdef vector[string] volumes
+        self._ref.GetNonNullPointer().ListVolumes(volumes)
+        return [os.fsdecode(v) for v in volumes]
+
+    @property
+    def files(self):
+        """`list` or `str`: The list of files written by the writer.
+        """
+        cdef vector[string] files
+        self._ref.GetNonNullPointer().ListFiles(files)
+        return [os.fsdecode(f) for f in files]
+
     def append(self, BioSeq sequence):
+        """Add a sequence to the database.
+
+        Arguments:
+            sequence (`~pyncbitk.objects.seq.BioSeq`): The sequence to add
+                to the database.
+
+        """
         cdef CWriteDB* writer = self._ref.GetNonNullPointer()
         writer.AddSequence(sequence._ref.GetObject())
 
     def close(self):
+        """Close the database and write the remaining buffered sequences.
+        """
         if not self.closed:
             self._ref.GetNonNullPointer().Close()
             self.closed = True
+
+    

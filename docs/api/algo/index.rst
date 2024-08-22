@@ -6,8 +6,8 @@ Algorithms (``pyncbitk.algo``)
 .. automodule:: pyncbitk.algo
 
 
-BLAST (Basic Local Alignment Search Tool)
------------------------------------------
+BLAST
+-----
 
 .. autosummary::
 
