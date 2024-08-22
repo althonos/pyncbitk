@@ -324,7 +324,7 @@ cdef class Ncbi2NaData(SeqNaData):
 
     """
 
-    def __init__(self, object data):
+    def __init__(self, object data not None):
         cdef CNCBI2na        raw
         cdef const char[::1] view = data
         cdef size_t          l    = view.shape[0]
@@ -378,7 +378,7 @@ cdef class Ncbi4NaData(SeqNaData):
     """Nucleotide sequence data stored with 4-bit encoding.
     """
 
-    def __init__(self, object data):
+    def __init__(self, object data not None):
         cdef CNCBI4na        raw
         cdef const char[::1] view = data
         cdef size_t          l    = view.shape[0]
@@ -429,7 +429,7 @@ cdef class Ncbi4NaData(SeqNaData):
 
 
 cdef class Ncbi8NaData(SeqNaData):
-    def __init__(self, object data):
+    def __init__(self, object data not None):
         cdef CNCBI8na        raw
         cdef const char[::1] view = data
         cdef size_t          l    = view.shape[0]
@@ -501,7 +501,7 @@ cdef class NcbiEAaData(IupacAaData):
     def encode(str data):
         return NcbiEAaData(data)
 
-    def __init__(self, object data):
+    def __init__(self, object data not None):
         cdef bytes                    _data
         cdef const unsigned char[::1] _view
         cdef string                   s

@@ -155,7 +155,7 @@ cdef class SeqId(Serial):
             return False
 
     @staticmethod
-    def parse(str text):
+    def parse(str text not None):
         """Parse an identifier from an arbitrary string.
 
         Returns:
@@ -175,7 +175,7 @@ cdef class LocalId(SeqId):
     """A local identifier for naming privately maintained data.
     """
 
-    def __init__(self, ObjectId id):
+    def __init__(self, ObjectId id not None):
         """__init__(self, id)\n--\n
 
         Create a new local identifier.
@@ -225,6 +225,8 @@ cdef class ProteinDataBankId(SeqId):
 cdef class GeneralId(SeqId):
     """A sequence identifier from a local database.
     """
+
+# --- TextSeqId ----------------------------------------------------------------
 
 cdef class TextSeqId(Serial):
     # FIXME: Consider removing this data class and using instead an abstract
