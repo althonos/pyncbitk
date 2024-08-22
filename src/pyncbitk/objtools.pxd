@@ -31,6 +31,7 @@ cdef class DatabaseIter:
     cdef CRef[CSeqDB]   _ref
     cdef DatabaseReader db
     cdef CSeqDBIter*    it
+    cdef size_t         length
 
 cdef class DatabaseReader:
     cdef CRef[CSeqDB] _ref

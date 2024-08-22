@@ -83,7 +83,8 @@ cdef class DatabaseIter:
 
         self.db = db
         self._ref = db._ref
-        self.it = new CSeqDBIter(db._ref.GetObject().Begin())
+        self.it = new CSeqDBIter(db._ref.GetNonNullPointer().Begin())
+        self.length = self._ref.GetNonNullPointer().GetNumSeqs()
 
     def __dealloc__(self):
         del self.it
@@ -91,6 +92,9 @@ cdef class DatabaseIter:
 
     def __iter__(self):
         return self
+
+    def __len__(self):
+        return self.length
 
     def __next__(self):
         cdef int           oid
@@ -100,8 +104,9 @@ cdef class DatabaseIter:
             raise StopIteration
 
         oid = self.it.GetOID()
-        seq = self._ref.GetObject().GetBioseq(oid)
+        seq = self._ref.GetNonNullPointer().GetBioseq(oid)
         preincrement(self.it[0])
+        self.length -= 1
         return BioSeq._wrap(seq)
 
 
@@ -134,7 +139,7 @@ cdef class DatabaseReader:
         return DatabaseIter(self)
 
     def __len__(self):
-        return self._ref.GetObject().GetNumSeqs()
+        return self._ref.GetNonNullPointer().GetNumSeqs()
 
 
 cdef class DatabaseWriter:
