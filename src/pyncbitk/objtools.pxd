@@ -33,11 +33,19 @@ cdef class _DatabaseIter:
     cdef CSeqDBIter*    it
     cdef size_t         length
 
-cdef class DatabaseKeys(_DatabaseIter):
+cdef class DatabaseKeysIter(_DatabaseIter):
     pass
 
-cdef class DatabaseValues(_DatabaseIter):
+cdef class DatabaseValuesIter(_DatabaseIter):
     pass
+
+cdef class DatabaseKeys:
+    cdef DatabaseReader db
+    cdef CRef[CSeqDB]   _ref
+
+cdef class DatabaseValues:
+    cdef DatabaseReader db
+    cdef CRef[CSeqDB]   _ref
 
 cdef class DatabaseReader:
     cdef CRef[CSeqDB] _ref

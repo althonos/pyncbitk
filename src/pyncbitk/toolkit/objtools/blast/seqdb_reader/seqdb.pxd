@@ -152,8 +152,8 @@ cdef extern from "objtools/blast/seqdb_reader/seqdb.hpp" namespace "ncbi" nogil:
         # bool PigToGi(int pig, TGi & gi) const
         # void AccessionToOids(const string & acc, vector<int> & oids) const
         # void AccessionsToOids(const vector<string>& accs, vector<blastdb::TOid>& oids) const
-        # void SeqidToOids(const CSeq_id & seqid, vector<int> & oids) const
-        # bool SeqidToOid(const CSeq_id & seqid, int & oid) const
+        void SeqidToOids(const CSeq_id& seqid, vector[int]& oids) const
+        bool SeqidToOid(const CSeq_id& seqid, int& oid) const
 
         # int GetOidAtOffset(int first_seq, Uint8 residue) const
         # CRef[CBioseq] GiToBioseq(TGi gi) const

@@ -78,7 +78,6 @@ cdef class _DatabaseIter:
         if self.it is not NULL:
             del self.it
             self.it = NULL
-
         self.db = db
         self._ref = db._ref
         self.it = new CSeqDBIter(db._ref.GetNonNullPointer().Begin())
@@ -93,11 +92,11 @@ cdef class _DatabaseIter:
 
     def __len__(self):
         return self.length
-    
+
     def __next__(self):
         raise StopIteration
-    
-cdef class DatabaseKeys(_DatabaseIter):
+
+cdef class DatabaseKeysIter(_DatabaseIter):
     """An interator over the sequence identifiers of a BLAST database.
     """
 
@@ -110,9 +109,10 @@ cdef class DatabaseKeys(_DatabaseIter):
 
         oid = self.it.GetOID()
         ids = self._ref.GetNonNullPointer().GetSeqIDs(oid)
+        self.length -= 1
         return SeqId._wrap(ids.front())
 
-cdef class DatabaseValues(_DatabaseIter):
+cdef class DatabaseValuesIter(_DatabaseIter):
     """An iterator over the sequences of a BLAST database.
     """
 
@@ -128,6 +128,51 @@ cdef class DatabaseValues(_DatabaseIter):
         preincrement(self.it[0])
         self.length -= 1
         return BioSeq._wrap(seq)
+
+cdef class DatabaseKeys:
+
+    def __init__(self, DatabaseReader db not None):
+        self.db = db
+        self._ref = db._ref
+
+    def __iter__(self):
+        return DatabaseKeysIter(self.db)
+
+    def __len__(self):
+        return len(self.db)
+
+    def __contains__(self, object item):
+        cdef SeqId sid
+        cdef int   oid
+        if not isinstance(item, SeqId):
+            return NotImplemented
+        sid = item
+        return self._ref.GetObject().SeqidToOid(sid._ref.GetObject(), oid)
+
+
+cdef class DatabaseValues:
+
+    def __init__(self, DatabaseReader db not None):
+        self.db = db
+        self._ref = db._ref
+
+    def __iter__(self):
+        return DatabaseValuesIter(self.db)
+
+    def __len__(self):
+        return len(self.db)
+
+    def __contains__(self, object item):
+        cdef SeqId         sid
+        cdef int           oid
+        cdef CRef[CBioseq] seq
+        if not isinstance(item, BioSeq):
+            return NotImplemented
+        sid = item.id
+        if not self._ref.GetObject().SeqidToOid(sid._ref.GetObject(), oid):
+            return False
+        seq = self._ref.GetNonNullPointer().GetBioseq(oid)
+        return BioSeq._wrap(seq) == item
 
 
 cdef class DatabaseReader:
@@ -156,7 +201,7 @@ cdef class DatabaseReader:
         self._ref.Reset(_db)
 
     def __iter__(self):
-        return self.keys()
+        return DatabaseKeysIter(self)
 
     def __len__(self):
         return self._ref.GetNonNullPointer().GetNumSeqs()
@@ -292,7 +337,7 @@ cdef class DatabaseWriter:
         self._ref.GetNonNullPointer().ListFiles(files)
         return [os.fsdecode(f) for f in files]
 
-    def append(self, BioSeq sequence):
+    def append(self, BioSeq sequence not None):
         """Add a sequence to the database.
 
         Arguments:
