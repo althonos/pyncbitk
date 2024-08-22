@@ -42,7 +42,7 @@ class peekable(typing.Iterator[_T], typing.Generic[_T]):
 
 def is_iterable(obj: object) -> bool:
     try:
-        iter(obj)
+        iter(obj)  # type: ignore
     except TypeError:
         return False
     else:
