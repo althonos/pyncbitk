@@ -9,10 +9,6 @@ Sequence Instance (``pyncbitk.objects.seqinst``)
    :special-members: __init__
    :members:
 
-.. autoclass:: EmptyInst(SeqInst)
-   :special-members: __init__
-   :members:
-
 .. autoclass:: VirtualInst(SeqInst)
    :special-members: __init__
    :members:

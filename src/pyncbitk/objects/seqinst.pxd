@@ -15,9 +15,6 @@ cdef class SeqInst(Serial):
     @staticmethod
     cdef SeqInst _wrap(CRef[CSeq_inst] ref)
 
-cdef class EmptyInst(SeqInst):
-    pass
-
 cdef class VirtualInst(SeqInst):
     pass
 

@@ -62,7 +62,7 @@ cdef class SeqInst(Serial):
         cdef CSeq_inst_repr kind = ref.GetNonNullPointer().GetRepr()
 
         if kind == CSeq_inst_repr.eRepr_not_set:
-            obj = EmptyInst.__new__(EmptyInst)
+            obj = SeqInst.__new__(SeqInst)
         elif kind == CSeq_inst_repr.eRepr_virtual:
             obj = VirtualInst.__new__(VirtualInst)
         elif kind == CSeq_inst_repr.eRepr_raw:
@@ -115,6 +115,7 @@ cdef class SeqInst(Serial):
 
         # set data
         cdef CSeq_inst* obj = new CSeq_inst()
+        obj.SetRepr(CSeq_inst_repr.eRepr_not_set)
         obj.SetMol(_SEQINST_MOLECULE_ENUM[molecule])
         obj.SetStrand(_SEQINST_STRANDEDNESS_ENUM[strandedness])
         obj.SetTopology(_SEQINST_TOPOLOGY_ENUM[topology])
@@ -174,10 +175,6 @@ cdef class SeqInst(Serial):
             return None
         return SeqData._wrap(CRef[CSeq_data](&self._ref.GetNonNullPointer().GetSeq_dataMut()))
 
-
-cdef class EmptyInst(SeqInst):
-    """An instance corresponding to an empty sequence.
-    """
 
 cdef class VirtualInst(SeqInst):
     """An instance corresponding to a sequence with no data.
@@ -259,6 +256,7 @@ cdef class DeltaInst(SeqInst):
         Returns:
             `ContinuousInst`: The equivalent instance as a single
             continuous sequence instance.
+
         """
         cdef CSeq_inst* copy = new CSeq_inst()
         copy.Assign(self._ref.GetNonNullPointer()[0], ESerialRecursionMode.eRecursive)

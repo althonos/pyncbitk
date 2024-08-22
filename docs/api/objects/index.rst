@@ -48,7 +48,6 @@ Sequence Instance (``pyncbitk.objects.seqinst``)
 .. autosummary::
 
     SeqInst
-    EmptyInst
     VirtualInst
     ContinuousInst
     SegmentedInst
