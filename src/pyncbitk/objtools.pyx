@@ -140,12 +140,36 @@ cdef class DatabaseWriter:
     """A handle allowing to write sequences to a BLAST database.
     """
 
-    def __init__(self, name, type, *, title = None):
-        cdef bytes     _path
-        cdef bytes     _title
-        # cdef CWriteDB* writer
+    def __init__(
+        self,
+        name,
+        str type not None = "nucleotide",
+        *,
+        object title = None,
+        int version = 4,
+
+    ):
+        cdef bytes           _path
+        cdef bytes           _title
+        cdef ESeqType        dbtype
+        cdef EBlastDbVersion dbver
+        cdef CWriteDB*       writer
 
         _path = os.fsencode(name)
+
+        if type == "nucleotide":
+            dbtype = ESeqType.eNucleotide
+        elif type == "protein":
+            dbtype = ESeqType.eProtein
+        else:
+            raise ValueError(f"type must be either 'nucleotide' or 'protein', got {type!r}")
+
+        if version == 4:
+            dbver = EBlastDbVersion.eBDB_Version4
+        elif version == 5:
+            dbver = EBlastDbVersion.eBDB_Version5
+        else:
+            raise ValueError(f"version must be either 4 or 5, got {version!r}")
 
         if title is None:
             _title = _path
@@ -156,17 +180,18 @@ cdef class DatabaseWriter:
 
         writer = new CWriteDB(
             _path,
-            ESeqType.eNucleotide,
+            dbtype,
             _title,
-            # itype = EIndexType.eDefault,
-            # parse_ids = True,
-            # long_ids = False,
-            # use_gi_mask = False,
-            # dbver = EBlastDbVersion.eBDB_Version4,
-            # limit_defline = False,
-            # oid_masks = EOidMaskType.fNone,
-            # scan_bioseq_4_cfastareader_usrobj = False,
+            EIndexType.eDefault,
+            True,
+            False,
+            False,
+            dbver,
+            False,
+            EOidMaskType.fNone,
+            False,
         )
+
         self._ref.Reset(writer)
         self.closed = False
 

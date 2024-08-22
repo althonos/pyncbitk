@@ -30,19 +30,25 @@ cdef extern from "objtools/blast/seqdb_writer/writedb.hpp" namespace "ncbi" nogi
 
     cppclass CWriteDB(CObject):
 
-        CWriteDB(const string & dbname, ESeqType seqtype,
-             const string & title)
+        CWriteDB(
+            const string & dbname,
+            ESeqType seqtype,
+            const string & title
+        )
 
-        # CWriteDB(const string & dbname, ESeqType seqtype,
-        #      const string & title,
-        #      int            itype = EIndexType.eDefault,
-        #      bool           parse_ids = True,
-        #      bool           long_ids = False,
-        #      bool           use_gi_mask = False,
-        #      EBlastDbVersion    dbver = EBlastDbVersion.eBDB_Version4,
-        #      bool			limit_defline = False,
-        #      Uint8          oid_masks = EOidMaskType.fNone,
-        #      bool           scan_bioseq_4_cfastareader_usrobj = False)
+        CWriteDB(
+            const string& dbname,
+            ESeqType seqtype,
+            const string& title,
+            int itype, # = EIndexType.eDefault,
+            bool parse_ids, # = True,
+            bool long_ids, # = False,
+            bool use_gi_mask, # = False,
+            EBlastDbVersion dbver, # = EBlastDbVersion.eBDB_Version4,
+            bool limit_defline, # = False,
+            Uint8 oid_masks, # = EOidMaskType.fNone,
+            bool scan_bioseq_4_cfastareader_usrobj, # = False
+        )
 
         void AddSequence(const CBioseq & bs)
         void AddSequence(const CBioseq & bs, CSeqVector & sv)
@@ -50,7 +56,7 @@ cdef extern from "objtools/blast/seqdb_writer/writedb.hpp" namespace "ncbi" nogi
         # void AddSequence(const CTempString & sequence, const CTempString & ambiguities = "")
         void SetPig(int pig)
         # void SetDeflines(const CBlast_def_line_set & deflines)
-        
+
         # int RegisterMaskAlgorithm(EBlast_filter_program program,
         #                       const string & options = string(),
         #                       const string & name = string())
