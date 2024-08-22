@@ -3,10 +3,10 @@ Installation
 
 .. note::
 
-    Wheels are provided for Linux x86-64 platforms, as well as 
-    Linux and MacOS Aarch64 platforms. Other machines will have to build the wheel 
-    from the source distribution. Building ``pyncbitk`` involves compiling the 
-    NCBI C++ Toolkit, which requires a C++ compiler to be available.
+    Wheels are provided for Linux x86-64 platforms. Other machines will have
+    to build the wheel from the source distribution. Building ``pyncbitk``
+    involves compiling the NCBI C++ Toolkit, which requires a C++ compiler
+    to be available.
 
 
 .. PyPi
@@ -70,15 +70,15 @@ Installation
 .. Piwheels
 .. ^^^^^^^^
 
-.. ``pyncbitk`` works on Raspberry Pi computers, and pre-built wheels are compiled 
-.. for `armv7l` platforms on piwheels. Run the following command to install these 
+.. ``pyncbitk`` works on Raspberry Pi computers, and pre-built wheels are compiled
+.. for `armv7l` platforms on piwheels. Run the following command to install these
 .. instead of compiling from source:
 
 .. .. code:: console
 
 ..    $ pip3 install pyncbitk --extra-index-url https://www.piwheels.org/simple
 
-.. Check the `piwheels documentation <https://www.piwheels.org/faq.html>`_ for 
+.. Check the `piwheels documentation <https://www.piwheels.org/faq.html>`_ for
 .. more information.
 
 
@@ -99,19 +99,19 @@ the repository and install the repository by running (with the admin rights):
     which may not even build, so consider using a versioned release instead.
 
 
-GitHub + ``setuptools``
-^^^^^^^^^^^^^^^^^^^^^^^
+GitHub + ``build``
+^^^^^^^^^^^^^^^^^^
 
 If you do not want to use ``pip``, you can still clone the repository and
-run the ``setup.py`` file manually, although you will need to install the
-build dependencies (mainly `Cython <https://pypi.org/project/cython>`_):
+compile manually, although you will need to install the ``build`` package
+first:
 
 .. code:: console
 
    $ git clone --recursive https://github.com/althonos/pyncbitk
-   $ cd pyjess
-   $ python setup.py build_ext
-   # python setup.py install
+   $ cd pyncbitk
+   $ python -m build . --wheel
+   # python -m installer pyncbitk*.whl
 
 .. Danger::
 

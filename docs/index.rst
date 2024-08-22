@@ -5,7 +5,7 @@ PyNCBItk |Stars|
    :target: https://github.com/althonos/pyncbitk/stargazers
    :class: dark-light
 
-*A Python interface to Jess, a 3D template matching software.*
+*Cython bindings and Python interface to the NCBI C++ Toolkit.*
 
 |Actions| |Coverage| |PyPI| |Bioconda| |AUR| |Wheel| |Versions| |Implementations| |License| |Source| |Mirror| |Issues| |Docs| |Changelog| |Downloads|
 
@@ -106,7 +106,7 @@ data model and BLAST+ interface using `Cython <https://cython.org>`_:
 Setup
 -----
 
-PyNCBItk is available for all modern Python versions (3.6+).
+PyNCBItk is available for all modern Python versions (3.7+).
 
 Run ``pip install pyncbitk`` in a shell to download the latest release from PyPI,
 or have a look at the :doc:`Installation page <guide/install>` to find other ways 

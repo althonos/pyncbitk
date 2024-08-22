@@ -21,16 +21,16 @@
 ## 🗺️ Overview
 
 The NCBI C++ Toolkit is a framework of C++ libraries to work with biological
-sequence data developed at the 
-[National Center for Biotechnology Information](https://www.ncbi.nlm.nih.gov/). 
-It features a flexible object model for representing sequences of various 
+sequence data developed at the
+[National Center for Biotechnology Information](https://www.ncbi.nlm.nih.gov/).
+It features a flexible object model for representing sequences of various
 origin, including composite or virtual sequences; a resource manager
 to easily manipulate heterogeneous data sources; and a comprehensive API to the
 various BLAST algorithms developed at the NBCI.
 
-PyNCBItk is a Python library that provides bindings to the NCBI C++ Toolkit 
+PyNCBItk is a Python library that provides bindings to the NCBI C++ Toolkit
 data model and BLAST+ interface using [Cython](https://cython.org). It exposes
-the internals of the C++ Toolkit, allowing BLAST queries to be run directly 
+the internals of the C++ Toolkit, allowing BLAST queries to be run directly
 from the Python interpreter without external I/O.
 
 ## 📋 Roadmap
@@ -50,7 +50,7 @@ supported at the moment:
 
 ## 🔧 Installing
 
-PyNCBItk is available for all modern Python (3.7+). Compilation is done 
+PyNCBItk is available for all modern Python (3.7+). Compilation is done
 through [CMake](https://cmake.org) using [Scikit-build-core](https://scikit-build-core.readthedocs.io).
 
 To install the project locally, clone the repository and run:
@@ -76,15 +76,16 @@ blastn = BlastN()
 results = blastn.run(queries, db)
 ```
 
-The result is a `SearchResultsSet` which contains one `SearchResults` object 
-per query. The `SearchResults` object summarizes the result and contains
-the hit alignments in a `SeqAlignSet`.
+The result is a `SearchResultsSet` which contains one `SearchResults` object
+per query/subject pair. The `SearchResults` object summarizes the result
+and contains the hit alignments in a `SeqAlignSet`.
 
 ## 💭 Feedback
 
 ### ⚠️ Issue Tracker
 
-Found a bug ? Have an enhancement request ? Head over to the [GitHub issue tracker](https://github.com/althonos/pyncbitk/issues)
+Found a bug ? Have an enhancement request ? Head over to the
+[GitHub issue tracker](https://github.com/althonos/pyncbitk/issues)
 if you need to report or ask something. If you are filing in on a bug,
 please include as much information as you can about the issue, and try to
 recreate the same bug in a simple, easily reproducible situation.
@@ -107,7 +108,7 @@ in the [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) format.
 ## ⚖️ License
 
 This library is provided under the [MIT License](https://choosealicense.com/licenses/mit/).
-The NCBI C++ Toolkit is a "United States Government Work" and therefore lies in 
+The NCBI C++ Toolkit is a "United States Government Work" and therefore lies in
 the public domain. Some restrictions apply, see `vendor/ncbi-cxx-toolkit-public/doc/public/LICENSE`.
 
 *This project is in no way not affiliated, sponsored, or otherwise endorsed

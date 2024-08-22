@@ -157,7 +157,7 @@ cdef class DatabaseWriter:
         Arguments:
             name (`str`): The name of the database, which is used as a path
                 prefix to create the database files.
-            type (`str`): Either ``nucleotide`` for a nucleotide database,
+            type (`str`): Either ``"nucleotide"`` for a nucleotide database,
                 or ``"protein"`` for a protein database.
             title (`str` or `None`): The title of the database.
             version (`int`): The database format version, either ``4`` (the 
