@@ -22,11 +22,15 @@ Runners
    :special-members: __init__
    :members:
 
+.. autoclass:: BlastN(NucleotideBlast)
+   :special-members: __init__
+   :members:
+
 .. autoclass:: BlastP(ProteinBlast)
    :special-members: __init__
    :members:
 
-.. autoclass:: BlastN(NucleotideBlast)
+.. autoclass:: BlastX(NucleotideBlast)
    :special-members: __init__
    :members:
 

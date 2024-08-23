@@ -10,6 +10,8 @@ from .toolkit.algo.blast.api.local_blast cimport CLocalBlast
 from .toolkit.algo.blast.api.blast_options_handle cimport CBlastOptionsHandle, CBlastOptionsFactory
 from .toolkit.algo.blast.api.blast_nucl_options cimport CBlastNucleotideOptionsHandle
 from .toolkit.algo.blast.api.blast_prot_options cimport CBlastProteinOptionsHandle
+from .toolkit.algo.blast.api.blastx_options cimport CBlastxOptionsHandle
+from .toolkit.algo.blast.api.blast_advprot_options cimport CBlastAdvancedProteinOptionsHandle
 from .toolkit.algo.blast.api.tblastn_options cimport CTBlastnOptionsHandle
 from .toolkit.algo.blast.api.query_data cimport IQueryFactory
 from .toolkit.algo.blast.api.objmgr_query_data cimport CObjMgr_QueryFactory
@@ -120,6 +122,8 @@ cdef class SearchResults:
 # --- BLAST --------------------------------------------------------------------
 
 cdef class Blast:
+    """A base command object for running a BLAST search.
+    """
     cdef CRef[CBlastOptionsHandle] _opt
 
     @staticmethod
@@ -129,6 +133,7 @@ cdef class Blast:
     def __init__(
         self,
         *,
+        bool gapped = True,
         int window_size = 40,
         double evalue = 10.0,
         int max_target_sequences = 500,
@@ -138,6 +143,7 @@ cdef class Blast:
         self.window_size = window_size
         self.evalue = evalue
         self.max_target_sequences = max_target_sequences
+        self.gapped = gapped
 
     def __repr__(self):
         cdef str ty = self.__class__.__name__
@@ -182,12 +188,6 @@ cdef class Blast:
         """
         return self._opt.GetNonNullPointer().GetGapXDropoffFinal()
 
-    # @property
-    # def max_hsps(self):
-    #     """`int`: Maximum number of HSPs per subject to save for each query.
-    #     """
-    #     return self._opt.GetNonNullPointer().GetMaxHspsPerSubject()
-
     @property
     def evalue(self):
         """`float`: Expectation value (E) threshold for saving hits.
@@ -217,6 +217,10 @@ cdef class Blast:
         """`bool`: `False` if alignments are performed in ungapped mode only.
         """
         return self._opt.GetNonNullPointer().GetGappedMode()
+
+    @gapped.setter
+    def gapped(self, bool gapped):
+        self._opt.GetNonNullPointer().SetGappedMode(gapped)
 
     @property
     def culling_limit(self):
@@ -354,30 +358,37 @@ cdef class Blast:
 
 
 cdef class NucleotideBlast(Blast):
-    pass
+    """A base command object for running a nucleotide BLAST search.
+    """
 
 
 cdef class ProteinBlast(Blast):
-    pass
+    """A base command object for running a protein BLAST search.
+    """
 
 
 cdef class MappingBlast(Blast):
-    pass
+    """A base command object for running a mapping BLAST search.
+    """
 
 
 cdef class BlastP(ProteinBlast):
+    """A command object for running ``blastn`` searches.
+    """
 
     def __init__(
         self,
         *,
         **kwargs,
     ):
-        cdef CBlastProteinOptionsHandle* handle = new CBlastProteinOptionsHandle()
+        cdef CBlastAdvancedProteinOptionsHandle* handle = new CBlastAdvancedProteinOptionsHandle()
         self._opt.Reset(<CBlastOptionsHandle*> handle)
         super().__init__(**kwargs)
 
 
 cdef class BlastN(NucleotideBlast):
+    """A command object for running ``blastn`` searches.
+    """
 
     def __init__(
         self,
@@ -389,20 +400,22 @@ cdef class BlastN(NucleotideBlast):
         self._opt.Reset(<CBlastOptionsHandle*> handle)
         super().__init__(**kwargs)
 
-
-cdef class TBlastN(ProteinBlast):
+cdef class BlastX(NucleotideBlast):
+    """A command object for running ``blastx`` searches.
+    """
 
     def __init__(
         self,
         *,
-        int genetic_code = 1,
+        int query_genetic_code = 1,
         int max_intron_length = 0,
         **kwargs,
     ):
-        cdef CTBlastnOptionsHandle* handle = new CTBlastnOptionsHandle()
+        cdef CBlastxOptionsHandle* handle = new CBlastxOptionsHandle()
         self._opt.Reset(<CBlastOptionsHandle*> handle)
         super().__init__(**kwargs)
-        self.genetic_code = genetic_code
+        self.query_genetic_code = query_genetic_code
+        self.max_intron_length = max_intron_length
 
     @property
     def max_intron_length(self):
@@ -419,13 +432,57 @@ cdef class TBlastN(ProteinBlast):
         handle.SetLongestIntronLength(max_intron_length)
 
     @property
-    def genetic_code(self):
+    def query_genetic_code(self):
+        """`int`: Genetic code to use for translating the query sequences.
+        """
+        cdef CBlastxOptionsHandle* handle = <CBlastxOptionsHandle*> self._opt.GetNonNullPointer()
+        return handle.GetQueryGeneticCode()
+
+    @query_genetic_code.setter
+    def query_genetic_code(self, int query_genetic_code):
+        cdef CBlastxOptionsHandle* handle = <CBlastxOptionsHandle*> self._opt.GetNonNullPointer()
+        handle.SetQueryGeneticCode(query_genetic_code)
+
+
+cdef class TBlastN(ProteinBlast):
+    """A command object for running ``tblastn`` searches.
+    """
+
+    def __init__(
+        self,
+        *,
+        int database_genetic_code = 1,
+        int max_intron_length = 0,
+        **kwargs,
+    ):
+        cdef CTBlastnOptionsHandle* handle = new CTBlastnOptionsHandle()
+        self._opt.Reset(<CBlastOptionsHandle*> handle)
+        super().__init__(**kwargs)
+        self.database_genetic_code = database_genetic_code
+        self.max_intron_length = max_intron_length
+
+    @property
+    def max_intron_length(self):
+        """`int`: Largest allowed intron in a translated nucleotide sequence.
+        """
+        cdef CTBlastnOptionsHandle* handle = <CTBlastnOptionsHandle*> self._opt.GetNonNullPointer()
+        return handle.GetLongestIntronLength()
+
+    @max_intron_length.setter
+    def max_intron_length(self, int max_intron_length):
+        cdef CTBlastnOptionsHandle* handle = <CTBlastnOptionsHandle*> self._opt.GetNonNullPointer()
+        if max_intron_length < 0:
+            raise ValueError(f"`max_target_sequences` must be a positive integer, got {max_intron_length!r}")
+        handle.SetLongestIntronLength(max_intron_length)
+
+    @property
+    def database_genetic_code(self):
         """`int`: Genetic code to use for translating the database sequences.
         """
         cdef CTBlastnOptionsHandle* handle = <CTBlastnOptionsHandle*> self._opt.GetNonNullPointer()
         return handle.GetDbGeneticCode()
 
-    @genetic_code.setter
-    def genetic_code(self, int genetic_code):
+    @database_genetic_code.setter
+    def database_genetic_code(self, int database_genetic_code):
         cdef CTBlastnOptionsHandle* handle = <CTBlastnOptionsHandle*> self._opt.GetNonNullPointer()
-        handle.SetDbGeneticCode(genetic_code)
+        handle.SetDbGeneticCode(database_genetic_code)

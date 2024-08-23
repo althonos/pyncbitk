@@ -15,8 +15,9 @@ BLAST
     NucleotideBlast
     ProteinBlast
     MappingBlast
-    BlastP
     BlastN
+    BlastP
+    BlastX
     TBlastN
 
 .. toctree::
