@@ -130,6 +130,8 @@ cdef class DatabaseValuesIter(_DatabaseIter):
         return BioSeq._wrap(seq)
 
 cdef class DatabaseKeys:
+    """A set-like view over the keys of a BLAST database.
+    """
 
     def __init__(self, DatabaseReader db not None):
         self.db = db
@@ -151,6 +153,8 @@ cdef class DatabaseKeys:
 
 
 cdef class DatabaseValues:
+    """A set-like view over the values of a BLAST database.
+    """
 
     def __init__(self, DatabaseReader db not None):
         self.db = db
@@ -176,7 +180,12 @@ cdef class DatabaseValues:
 
 
 cdef class DatabaseReader:
-    """A handle allowing to read the contents of a BLAST database.
+    """A reader over the contents of a BLAST database.
+
+    This class implements access to the BLAST database as a
+    `~collections.abc.Mapping` of `~pyncbitk.objects.seqloc.SeqId` objects
+    to `~pyncbitk.objects.seq.BioSeq` objects.
+
     """
 
     @staticmethod
@@ -229,12 +238,12 @@ cdef class DatabaseReader:
         raise RuntimeError()
 
     cpdef DatabaseKeys keys(self):
-        """Iterate over the keys of the database.
+        """Get a set-like view over the keys of the database.
         """
         return DatabaseKeys(self)
 
     cpdef DatabaseValues values(self):
-        """Iterate over the values of the database.
+        """Get a set-like view over the values of the database.
         """
         return DatabaseValues(self)
 

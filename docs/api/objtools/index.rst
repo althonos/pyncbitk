@@ -27,7 +27,8 @@ BLAST Database
 .. autosummary::
 
     DatabaseReader
-    DatabaseIter
+    DatabaseKeys
+    DatabaseValues
     DatabaseWriter
 
 .. toctree::
