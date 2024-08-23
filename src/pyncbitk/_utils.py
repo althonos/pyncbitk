@@ -3,6 +3,7 @@ import functools
 
 _T = typing.TypeVar("_T")
 
+
 class peekable(typing.Iterator[_T], typing.Generic[_T]):
     """Turn an iterable into a peekable iterable.
 
@@ -39,6 +40,7 @@ class peekable(typing.Iterator[_T], typing.Generic[_T]):
         if self.peeked is self._sentinel:
             self.peeked = next(self.it)
         return self.peeked  # type: ignore
+
 
 def is_iterable(obj: object) -> bool:
     try:

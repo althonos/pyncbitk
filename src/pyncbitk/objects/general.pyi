@@ -1,0 +1,9 @@
+from typing import Union
+
+from ..serial import Serial
+
+class ObjectId(Serial):
+    def __init__(self, value: Union[str, int]) -> None: ...
+    def __repr__(self) -> str: ...
+    @property
+    def value(self) -> Union[str, int]: ...
