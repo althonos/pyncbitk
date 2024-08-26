@@ -119,6 +119,9 @@ endif()
 include(${CMAKE_CURRENT_LIST_DIR}/vendor/ncbi-cxx-toolkit-public/src/build-system/cmake/CMake.NCBItoolkit.cmake)
 include(${CMAKE_CURRENT_LIST_DIR}/src/scripts/cmake/CythonExtension.cmake)
 
+# Set Cython header paths
+set(CYTHON_HEADERS_DIR ${CMAKE_CURRENT_LIST_DIR}/include/cython)
+
 # Build project targets
 NCBI_add_subdirectory(src)
 

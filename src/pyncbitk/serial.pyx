@@ -1,8 +1,9 @@
 # cython: language_level=3, linetrace=True, binding=True
 
 from libcpp.string cimport string
+from iostream cimport ostream, stringbuf
 
-from .toolkit.corelib.ncbistre cimport ostream, stringbuf, CNcbiOstream
+from .toolkit.corelib.ncbistre cimport CNcbiOstream
 from .toolkit.serial.serialbase cimport CSerialObject, MSerial_Format, MSerial_Flags, TSerial_Format_Flags
 from .toolkit.serial.serialdef cimport ESerialRecursionMode, ESerialDataFormat, ESerial_Xml_Flags
 

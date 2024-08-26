@@ -44,6 +44,7 @@ macro(cython_extension _name)
             "${CMAKE_CURRENT_SOURCE_DIR}/${_name}.pyx"
             --output-file ${_name}.cpp
             --cplus
+            -I "${CYTHON_HEADERS_DIR}"
             ${CYTHON_DIRECTIVES}
     MAIN_DEPENDENCY
       ${_name}.pyx
