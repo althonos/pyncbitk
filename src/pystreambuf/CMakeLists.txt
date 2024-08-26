@@ -1,0 +1,8 @@
+function(pystreambuf_definition)
+    add_library(pystreambuf STATIC pyreadbuf.cpp pyreadintobuf.cpp pywritebuf.cpp)
+    target_include_directories(pystreambuf PUBLIC ${Python_INCLUDE_DIRS})
+endfunction()
+NCBI_begin_custom_target(pystreambuf)
+    NCBI_project_tags(python)
+    NCBI_custom_target_definition(pystreambuf_definition)
+NCBI_end_custom_target()

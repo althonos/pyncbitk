@@ -2,6 +2,7 @@ from libcpp cimport bool
 from libcpp.string cimport string
 
 from ...corelib.ncbiobj cimport CRef
+from ...corelib.ncbistre cimport CNcbiIstream
 from ...objects.seqset.seq_entry cimport CSeq_entry
 from .reader_base cimport CReaderBase
 
@@ -45,10 +46,12 @@ cdef extern from "objtools/readers/fasta.hpp" namespace "ncbi::objects" nogil:
 
     cppclass CFastaReader(CReaderBase):
         # CFastaReader(ILineReader& reader, TFlags flags = 0, FIdCheck f_idcheck = CSeqIdCheck());
-        # CFastaReader(CNcbiIstream& in,    TFlags flags = 0, FIdCheck f_idcheck = CSeqIdCheck());
-        # CFastaReader(const string& path,  TFlags flags = 0, FIdCheck f_idcheck = CSeqIdCheck());
-        CFastaReader(const string& path)
-        CFastaReader(const string& path, TFlags flags)
+        CFastaReader(CNcbiIstream& in_) except +
+        CFastaReader(CNcbiIstream& in_, TFlags flags) except +
+        # CFastaReader(CNcbiIstream& in_, TFlags flags, FIdCheck f_idcheck) except +
+        CFastaReader(const string& path) except +
+        CFastaReader(const string& path, TFlags flags) except +
+        # CFastaReader(const string& path,  TFlags flags, FIdCheck f_idcheck) except +
         # CFastaReader(const string& path, TFlags flags)
         # CFastaReader(CReaderBase::TReaderFlags fBaseFlags,
         #             TFlags flags = 0,
