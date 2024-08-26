@@ -1,18 +1,18 @@
 from iostream cimport streambuf
 
-cdef extern from "fileobj/pywritebuf.h" nogil:
+cdef extern from "pywritebuf.h" nogil:
 
     cdef cppclass pywritebuf(streambuf):
-        pywritebuf(object)
+        pywritebuf(object) except *
 
 
-cdef extern from "fileobj/pyreadbuf.h" nogil:
+cdef extern from "pyreadbuf.h" nogil:
 
     cdef cppclass pyreadbuf(streambuf):
-        pyreadbuf(object)
+        pyreadbuf(object) except *
 
 
-cdef extern from "fileobj/pyreadintobuf.h" nogil:
+cdef extern from "pyreadintobuf.h" nogil:
 
     cdef cppclass pyreadintobuf(streambuf):
-        pyreadintobuf(object)
+        pyreadintobuf(object) except *

@@ -63,6 +63,7 @@ macro(cython_extension _name)
     # Link required NCBI dependencies
     foreach(_lib IN LISTS NCBI_${NCBI_PROJECT}_NCBILIB)
       target_link_libraries(${_target} PUBLIC $<TARGET_LINKER_FILE:${_lib}>)
+      target_include_directories(${_target} PUBLIC $<TARGET_PROPERTY:${_lib},INCLUDE_DIRECTORIES>)
     endforeach()
 
     # Preserve the relative project structure in the install directory

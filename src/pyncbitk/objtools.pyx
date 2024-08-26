@@ -8,13 +8,18 @@ from libcpp.vector cimport vector
 from libcpp.string cimport string
 from libcpp.utility cimport move
 
+from iostream cimport istream
+
 from .toolkit.corelib.ncbiobj cimport CRef
+from .toolkit.corelib.ncbistre cimport CNcbiIstream
 from .toolkit.objects.seq.bioseq cimport CBioseq
 from .toolkit.objects.seqset.seq_entry cimport CSeq_entry
 from .toolkit.objtools.readers.fasta cimport CFastaReader, EFlags as CFastaReader_Flags
 from .toolkit.objtools.blast.seqdb_reader.seqdb cimport CSeqDB, CSeqDBIter, ESeqType
 from .toolkit.objtools.blast.seqdb_reader.seqdbcommon cimport EBlastDbVersion, EOidMaskType
 from .toolkit.objtools.blast.seqdb_writer.writedb cimport CWriteDB, EIndexType
+
+from pystreambuf cimport pyreadbuf
 
 from .objects.seqset cimport Entry
 from .objects.seqloc cimport SeqId
@@ -30,23 +35,38 @@ cdef class FastaReader:
 
     def __cinit__(self):
         self._reader = NULL
+        self._buffer = NULL
+        self._stream = NULL
 
     def __dealloc__(self):
         del self._reader
+        if self._stream is not NULL:
+            del self._stream
+            self._stream = NULL
+        if self._buffer is not NULL:
+            del self._buffer
+            self._buffer = NULL
 
     def __init__(
         self,
-        object path,
+        object file,
         *,
         bool split = True,
     ):
-        cdef bytes _path = os.fsencode(path)
-        cdef int   flags = 0
+        cdef bytes      path
+        cdef int        flags = 0
 
         if not split:
             flags |= CFastaReader_Flags.fNoSplit
 
-        self._reader = new CFastaReader(_path, flags)
+        if hasattr(file, "read"):
+            self._buffer = new pyreadbuf(file)
+            self._stream = new istream(self._buffer)
+            self._reader = new CFastaReader(self._stream[0], flags)
+        else:
+            path = os.fsencode(file)
+            self._reader = new CFastaReader(path, flags)
+
 
     def __iter__(self):
         return self

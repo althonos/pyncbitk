@@ -7,6 +7,8 @@ from libcpp.list cimport list as cpplist
 from libcpp.string cimport string
 from libcpp.utility cimport move
 
+from iostream cimport istream, streambuf
+
 from .toolkit.corelib.ncbiobj cimport CRef
 from .toolkit.objects.seq.bioseq cimport CBioseq
 from .toolkit.objtools.readers.fasta cimport CFastaReader
@@ -22,6 +24,8 @@ import os
 
 cdef class FastaReader:
     cdef CFastaReader* _reader
+    cdef streambuf*    _buffer
+    cdef istream*      _stream
 
     cpdef BioSeq read(self)
 
