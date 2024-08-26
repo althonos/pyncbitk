@@ -19,13 +19,14 @@ from .toolkit.objtools.blast.seqdb_reader.seqdb cimport CSeqDB, CSeqDBIter, ESeq
 from .toolkit.objtools.blast.seqdb_reader.seqdbcommon cimport EBlastDbVersion, EOidMaskType
 from .toolkit.objtools.blast.seqdb_writer.writedb cimport CWriteDB, EIndexType
 
-from pystreambuf cimport pyreadbuf
+from pystreambuf cimport pyreadbuf, pyreadintobuf
 
 from .objects.seqset cimport Entry
 from .objects.seqloc cimport SeqId
 from .objects.seq cimport BioSeq
 
 import os
+import sys
 
 # --- FastaReader --------------------------------------------------------------
 
@@ -59,7 +60,11 @@ cdef class FastaReader:
         if not split:
             flags |= CFastaReader_Flags.fNoSplit
 
-        if hasattr(file, "read"):
+        if hasattr(file, "readinto") and sys.implementation.name == "cpython":
+            self._buffer = new pyreadintobuf(file)
+            self._stream = new istream(self._buffer)
+            self._reader = new CFastaReader(self._stream[0], flags)
+        elif hasattr(file, "read"):
             self._buffer = new pyreadbuf(file)
             self._stream = new istream(self._buffer)
             self._reader = new CFastaReader(self._stream[0], flags)
