@@ -50,10 +50,23 @@ cdef class FastaReader:
 
     def __init__(
         self,
-        object file,
+        object file not None,
         *,
         bool split = True,
     ):
+        """__init__(self, file, *, split=True)\n--\n
+
+        Create a new FASTA reader from a file or a file-like object.
+
+        Arguments:
+            file (`os.PathLike` or file-like object): Either the path to
+                a file to be open, or a Python file-like object open in
+                binary mode.
+            split (`bool`): Set to `False` to force the reader to produce
+                `~pyncbitk.objects.seq.BioSeq` objects where the instance
+                is a `~pyncbitk.objects.seqinst.ContinuousInst` object.
+
+        """
         cdef bytes      path
         cdef int        flags = 0
 
@@ -72,7 +85,6 @@ cdef class FastaReader:
             path = os.fsencode(file)
             self._reader = new CFastaReader(path, flags)
 
-
     def __iter__(self):
         return self
 
@@ -83,6 +95,13 @@ cdef class FastaReader:
         return seq
 
     cpdef BioSeq read(self):
+        """Read a single sequence if available.
+
+        Returns:
+            `~pyncbitk.objects.seq.BioSeq`: The next sequence in the FASTA
+            file, or `None` if the reader reached the end of the file.
+
+        """
         assert self._reader != NULL
 
         cdef CRef[CSeq_entry] entry
@@ -217,7 +236,11 @@ cdef class DatabaseReader:
     def _search_path():
         return CSeqDB.GenerateSearchPath().decode()
 
-    def __init__(self, object name, str type = None):
+    def __init__(
+        self, 
+        object name not None, 
+        str type = None
+    ):
         """__init__(self, name, type=None)\n--\n
 
         Create a new reader for a database of the given name.
@@ -264,11 +287,23 @@ cdef class DatabaseReader:
 
     cpdef DatabaseKeys keys(self):
         """Get a set-like view over the keys of the database.
+
+        Returns:
+            `~pyncbitk.objtools.DatabaseKeys`: The keys of the database,
+            i.e. the `~pyncbitk.objects.seqloc.SeqId` of the sequences
+            stored in the database.
+
         """
         return DatabaseKeys(self)
 
     cpdef DatabaseValues values(self):
         """Get a set-like view over the values of the database.
+
+        Returns:
+            `~pyncbitk.objtools.DatabaseValues`: The keys of the database,
+            i.e. the `~pyncbitk.objects.seq.BioSeq` storing the sequences
+            in the database.
+
         """
         return DatabaseValues(self)
 
@@ -279,7 +314,7 @@ cdef class DatabaseWriter:
 
     def __init__(
         self,
-        name,
+        object name not None,
         str type not None = "nucleotide",
         *,
         object title = None,
