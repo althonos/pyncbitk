@@ -1,6 +1,24 @@
 find_package(Python COMPONENTS Interpreter Development.Module REQUIRED)
 set(PYTHON_EXTENSIONS_SOURCE_DIR ${PROJECT_SOURCE_DIR}/src)
 
+# --- Detect PyInterpreterState_GetID ------------------------------------------
+
+include(CheckSymbolExists)
+
+set(SAFE_CMAKE_REQUIRED_INCLUDES "${CMAKE_REQUIRED_INCLUDES}")
+set(SAFE_CMAKE_REQUIRED_LIBRARIES "${CMAKE_REQUIRED_LIBRARIES}")
+set(SAFE_CMAKE_REQUIRED_LINK_DIRECTORIES "${CMAKE_REQUIRED_LINK_DIRECTORIES}")
+set(CMAKE_REQUIRED_INCLUDES ${CMAKE_REQUIRED_INCLUDES} ${Python_INCLUDE_DIRS})
+set(CMAKE_REQUIRED_LIBRARIES ${CMAKE_REQUIRED_LIBRARIES} ${Python_LIBRARIES})
+set(CMAKE_REQUIRED_LINK_DIRECTORIES ${CMAKE_REQUIRED_LINK_DIRECTORIES} ${Python_LIBRARY_DIRS})
+check_symbol_exists(PyInterpreterState_GetID "stdint.h;stdlib.h;Python.h" HAVE_PYINTERPRETERSTATE_GETID)
+set(CMAKE_REQUIRED_INCLUDES "${SAFE_CMAKE_REQUIRED_INCLUDES}")
+set(CMAKE_REQUIRED_LIBRARIES "${SAFE_CMAKE_REQUIRED_LIBRARIES}")
+set(CMAKE_REQUIRED_LINK_DIRECTORIES "${SAFE_CMAKE_REQUIRED_LINK_DIRECTORIES}")
+set(PYSTATE_PATCH_H ${CMAKE_CURRENT_LIST_DIR}/pystate_patch.h)
+
+# --- Prepare Cython directives and constants ----------------------------------
+
 set(CYTHON_DIRECTIVES
     -X cdivision=True
     -X nonecheck=False
@@ -21,8 +39,8 @@ if(${CMAKE_BUILD_TYPE} STREQUAL Debug)
 else()
   set(CYTHON_DIRECTIVES
     ${CYTHON_DIRECTIVES}
-    -X boundscheck=True
-    -X wraparound=True
+    -X boundscheck=False
+    -X wraparound=False
   )
 endif()
 
@@ -59,6 +77,18 @@ macro(cython_extension _name)
     # Add Python library target
     python_add_library(${_target} MODULE WITH_SOABI ${_name}.pyx ${_name}.cpp)
     set_target_properties(${_target} PROPERTIES OUTPUT_NAME ${_name} )
+
+    # Add debug flags
+    if(CMAKE_BUILD_TYPE STREQUAL Debug)
+      if(NOT Python_INTERPRETER_ID STREQUAL PyPy)
+        target_compile_definitions(${_target} PUBLIC CYTHON_TRACE_NOGIL=1)
+      endif()
+    else()
+      target_compile_definitions(${_target} PUBLIC CYTHON_WITHOUT_ASSERTIONS=1)
+    endif()
+
+    # Include patch for `PyInterpreterState_GetID` to all Python extensions
+    target_precompile_headers(${_target} PRIVATE ${PYSTATE_PATCH_H})
 
     # Link required NCBI dependencies
     foreach(_lib IN LISTS NCBI_${NCBI_PROJECT}_NCBILIB)
