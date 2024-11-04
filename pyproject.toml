@@ -7,9 +7,6 @@ name = "pyncbitk"
 version = "0.0.1"
 requires-python = ">=3.7"
 
-[tool.cibuildwheel]
-build-verbosity = 1
-
 [tool.scikit-build]
 build-dir = "build/{build_type}/build"
 cmake.build-type = "Release"
@@ -28,3 +25,17 @@ cmake.build-type = "Debug"
 if.env.SCCACHE = true
 cmake.define.CMAKE_C_COMPILER_LAUNCHER = "sccache"
 cmake.define.CMAKE_CXX_COMPILER_LAUNCHER = "sccache"
+
+[[tool.scikit-build-overrides]]
+if.env.MOLD = true
+cmake.define.CMAKE_LINKER_TYPE = "mold"
+
+[tool.cibuildwheel]
+before-build = "pip install scikit-build-core cython"
+build-frontend = { name = "pip", args = ["--no-build-isolation"] }
+build-verbosity = 1
+free-threaded-support = false
+
+[tool.cibuildwheel.macos]
+environment = { MACOSX_DEPLOYMENT_TARGET = "10.12" }
+archs = ["x86_64", "arm64"]
