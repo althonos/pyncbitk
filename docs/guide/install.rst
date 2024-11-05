@@ -25,7 +25,7 @@ Installation
 .. Conda
 .. ^^^^^
 
-.. Pronto is also available as a `recipe <https://anaconda.org/bioconda/pyncbitk>`_
+.. PyNCBItk is also available as a `recipe <https://anaconda.org/bioconda/pyncbitk>`_
 .. in the `bioconda <https://bioconda.github.io/>`_ channel. To install, simply
 .. use the ``conda`` installer:
 
