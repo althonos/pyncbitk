@@ -92,10 +92,9 @@ macro(cython_extension _name)
     target_precompile_headers(${_target} PRIVATE ${PYSTATE_PATCH_H})
 
     # Link to NCBI 
-    message("LINKING ${_target} WITH ${CYTHON_EXTENSION_LINKS}")
-    foreach(_dep IN LISTS CYTHON_EXTENSION_LINKS)
-      # NCBI_uses_toolkit_libraries(${_dep})
-      target_link_libraries(${_target} PUBLIC ${_dep})
+    foreach(_dep IN LISTS CYTHON_EXTENSION_DEPENDS)
+      NCBI_internal_identify_libs(_link _dep)
+      target_link_libraries(${_target} PUBLIC ${_link})
     endforeach()
 
     # Preserve the relative project structure in the install directory
