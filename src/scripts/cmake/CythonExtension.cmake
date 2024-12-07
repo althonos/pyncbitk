@@ -91,10 +91,12 @@ macro(cython_extension _name)
     # Include patch for `PyInterpreterState_GetID` to all Python extensions
     target_precompile_headers(${_target} PRIVATE ${PYSTATE_PATCH_H})
 
-    # Link to NCBI 
+    # Link to NCBI libraries and add include directories if needed
+    target_link_libraries(${_target} PUBLIC ${NCBITMP_NCBILIB} ${NCBITMP_EXTLIB})
     foreach(_dep IN LISTS CYTHON_EXTENSION_DEPENDS)
-      NCBI_internal_identify_libs(_link _dep)
-      target_link_libraries(${_target} PUBLIC ${_link})
+      if(TARGET ${_dep})
+        target_include_directories(${_target} PUBLIC $<TARGET_PROPERTY:${_dep},INCLUDE_DIRECTORIES>)
+      endif()
     endforeach()
 
     # Preserve the relative project structure in the install directory
