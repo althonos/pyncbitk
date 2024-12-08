@@ -38,18 +38,12 @@ cmake.define.CMAKE_CXX_COMPILER_LAUNCHER = "sccache"
 if.env.MOLD = true
 cmake.define.CMAKE_LINKER_TYPE = "mold"
 
-[[tool.scikit-build-overrides]]
-if.env.CIBUILDWHEEL = true
-cmake.define.PYNCBITK_INSTALL_LIBS = false
-
 [tool.cibuildwheel]
 before-build = ["pip install scikit-build-core-conan cython"]
-build-frontend = { name = "pip", args = ["--no-build-isolation"] }
+build-frontend = { name = "pip", args = ["--no-build-isolation", "--config-settings=cmake.define.PYNCBITK_INSTALL_LIBS=OFF"] }
 build-verbosity = 1
 free-threaded-support = false
-#manylinux-x86_64-image = "quay.io/pypa/manylinux_2_34_x86_64"
 manylinux-x86_64-image = "pyncbitk-manylinux_2_34"
-repair-wheel-command = "auditwheel repair -w {dest_dir} {wheel}"
 
 [tool.cibuildwheel.macos]
 environment = { MACOSX_DEPLOYMENT_TARGET = "10.12" }
