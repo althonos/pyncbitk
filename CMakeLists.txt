@@ -9,7 +9,7 @@ endif()
 enable_language(C)
 enable_language(CXX)
 
-set(BUILD_SHARED_LIBS ON)
+set(BUILD_SHARED_LIBS OFF)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 # Symlink to the C++ Toolkit sources so that NCBIptb is happy with the project structure
@@ -102,6 +102,7 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 # Detect required NCBI C++ Toolkit libraries
 find_package(PCRE REQUIRED)
 find_package(lzo REQUIRED)
+find_package(libunwind REQUIRED)
 find_package(ncbi-cxx-toolkit-public COMPONENTS core seqext REQUIRED)
 NCBIptb_setup()
 
@@ -119,6 +120,10 @@ set(NCBI_PTBCFG_PROJECT_LIST pyncbitk)
 # Install shared library objects to `pyncbitk.libs` (like cibuildwheel)
 if(PYNCBITK_INSTALL_LIBS)
     set(PYTHON_LIBS_INSTALL_DIR "${CMAKE_PROJECT_NAME}.libs")
+    message(STATUS "SKBUILD_PLATLIB_DIR: ${SKBUILD_PLATLIB_DIR}")
+    if("${SKBUILD_STATE}" STREQUAL "wheel")
+        execute_process(COMMAND conan install ${CMAKE_SOURCE_DIR} -nr --deployer runtime_deploy --deployer-folder "${SKBUILD_PLATLIB_DIR}/${PYTHON_LIBS_INSTALL_DIR}")
+    endif()
 endif()
 
 # Run NCBI C++ Toolkit configuration

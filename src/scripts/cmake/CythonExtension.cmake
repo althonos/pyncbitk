@@ -115,6 +115,8 @@ macro(cython_extension _name)
       string(APPEND _rpath "${PYTHON_LIBS_INSTALL_DIR}")
       set_target_properties(${_target} PROPERTIES INSTALL_RPATH ${_rpath})
       message(DEBUG "RPATH for extension ${_name}: ${_rpath}")
+    else()
+      set_target_properties(${_target} PROPERTIES INSTALL_RPATH_USE_LINK_PATH TRUE)
     endif()
 
   endfunction()
