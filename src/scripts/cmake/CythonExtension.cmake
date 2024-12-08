@@ -36,6 +36,12 @@ if(${CMAKE_BUILD_TYPE} STREQUAL Debug)
     -X warn.unused_result=True
     -X warn.multiple_declarators=True
   )
+  if(NOT Python_INTERPRETER_ID STREQUAL PyPy)
+    set(CYTHON_DIRECTIVES
+      ${CYTHON_DIRECTIVES}
+      -X linetrace=true
+    )
+  endif()
 else()
   set(CYTHON_DIRECTIVES
     ${CYTHON_DIRECTIVES}

@@ -1,11 +1,14 @@
-# cython: language_level=3, linetrace=True, binding=True
+# coding: utf-8
+# cython: language_level=3
 
 from libcpp cimport bool
 from libcpp.string cimport string
+from iostream cimport istream, ostream, filebuf
 
+from .toolkit.algo.blast.core.blast_options cimport BLAST_DEFAULT_MATRIX, BLAST_GENETIC_CODE
 from .toolkit.algo.blast.api.bl2seq cimport CBl2Seq
 from .toolkit.algo.blast.api.blast_types cimport EProgram, ProgramNameToEnum, TSeqAlignVector, EProgramToTaskName, TSearchMessages
-from .toolkit.algo.blast.api.sseqloc cimport SSeqLoc, TSeqLocVector
+from .toolkit.algo.blast.api.sseqloc cimport SSeqLoc, TSeqLocVector, CBlastSearchQuery, CBlastQueryVector
 from .toolkit.algo.blast.api.local_blast cimport CLocalBlast
 from .toolkit.algo.blast.api.blast_options_handle cimport CBlastOptionsHandle, CBlastOptionsFactory
 from .toolkit.algo.blast.api.blast_nucl_options cimport CBlastNucleotideOptionsHandle
@@ -18,13 +21,19 @@ from .toolkit.algo.blast.api.objmgr_query_data cimport CObjMgr_QueryFactory
 from .toolkit.algo.blast.api.objmgrfree_query_data cimport CObjMgrFree_QueryFactory
 from .toolkit.algo.blast.api.local_db_adapter cimport CLocalDbAdapter
 from .toolkit.algo.blast.api.blast_results cimport CSearchResultSet, CSearchResults, size_type as CSearchResults_size_type
+from .toolkit.algo.blast.format.blast_format cimport CBlastFormat
+from .toolkit.algo.blast.blastinput.blast_args cimport EOutputFormat
 from .toolkit.corelib.ncbiobj cimport CConstRef, CRef
+from .toolkit.corelib.ncbistre cimport CNcbiOstream
+from .toolkit.corelib.ncbistr cimport kEmptyStr
 from .toolkit.objects.seq.bioseq cimport CBioseq
 from .toolkit.objects.seqset.bioseq_set cimport CBioseq_set
 from .toolkit.objects.seq.seq_inst cimport ERepr as CSeq_inst_repr
 from .toolkit.objects.seqloc.seq_id cimport CSeq_id
+from .toolkit.objects.seqloc.seq_loc cimport CSeq_loc
 from .toolkit.objmgr.object_manager cimport CObjectManager
 from .toolkit.objmgr.scope cimport CScope
+from .toolkit.objtools.align_format.format_flags cimport kDfltArgNumAlignments, kDfltArgNumDescriptions
 from .toolkit.objtools.readers.fasta cimport CFastaReader
 from .toolkit.serial.serialbase cimport CSerialObject, MSerial_Format_AsnText
 from .toolkit.serial.serialdef cimport ESerialRecursionMode
@@ -39,37 +48,66 @@ from .objects.seqset cimport BioSeqSet
 from .objmgr cimport Scope
 from .objtools cimport DatabaseReader
 
+from pystreambuf cimport pywritebuf
+
 import os
 from ._utils import peekable, is_iterable
 
 
 # --- BLAST input --------------------------------------------------------------
 
-# cdef class BlastDbLoc:
-#     cdef CRef[CSearchDatabase] _ref
+cdef class SearchQuery:
+    cdef CRef[CBlastSearchQuery] _query
 
-#     def __init__(self, str name not None, protein=False):
-#         cdef bytes            _name = name.encode() # FIXME: os.fsencode?
-#         cdef CSearchDatabase* _db   = new CSearchDatabase(_name, EMoleculeType.eBlastDbIsNucleotide)
-#         self._ref.Reset(_db)
+    def __init__(self, SeqLoc seqloc not None, Scope scope not None):
+        cdef CBlastSearchQuery* _query = new CBlastSearchQuery(seqloc._loc.GetObject(), scope._scope.GetObject())
+        self._query.Reset(_query)
+
+    @property
+    def seqloc(self):
+        assert self._query.NotNull()
+        cdef CConstRef[CSeq_loc] cref = self._query.GetObject().GetQuerySeqLoc()
+        cdef CRef[CSeq_loc] ref = CRef[CSeq_loc](&cref.GetObject())
+        return SeqLoc._wrap(ref)
+
+    @property
+    def length(self):
+        assert self._query.NotNull()
+        return self._query.GetObject().GetLength()
+
+    @property
+    def scope(self):
+        assert self._query.NotNull()
+        cdef Scope scope = Scope.__new__(Scope)
+        scope._scope = self._query.GetObject().GetScope()
+        return scope
 
 
-cdef class BlastSeqLoc:
-    cdef SSeqLoc _seqloc
+cdef class SearchQueryVector:
+    cdef CRef[CBlastQueryVector] _qv
 
-    def __init__(self, SeqLoc loc, Scope scope, SeqLoc mask = None):
-        self._seqloc = SSeqLoc(loc._loc.GetObject(), scope._scope.GetObject())
+    def __init__(self, queries = ()):
+        cdef SearchQuery         query
+        cdef CBlastQueryVector*  qv    = new CBlastQueryVector()
+        for query in queries:
+            qv.AddQuery(query._query)
+        self._qv.Reset(qv)
+
+    def __len__(self):
+        return self._qv.GetObject().Size()
 
 
 ctypedef fused BlastQueries:
     BioSeq
     BioSeqSet
+    SearchQueryVector
     object
 
 ctypedef fused BlastSubjects:
     BioSeq
     BioSeqSet
     DatabaseReader
+    SearchQueryVector
     object
 
 # --- BLAST results ------------------------------------------------------------
@@ -138,6 +176,8 @@ cdef class Blast:
         double evalue = 10.0,
         int max_target_sequences = 500,
     ):
+        """__init__(self, *, gapped=True, window_size=40, evalue=10.0, max_target_sequences=500)\n--\n
+        """
         if self._opt.Empty():
             raise TypeError("Cannot instantiate abstract class Blast")
         self.window_size = window_size
@@ -264,7 +304,9 @@ cdef class Blast:
         BlastSubjects subjects,
         bool scan_mode = False
     ):
-        """Run a BLAST query with the given sequences.
+        """run(self, queries, subjects, scan_mode=False)\n--\n
+        
+        Run a BLAST query with the given sequences.
 
         Arguments:
             queries (`BioSeq` or `BioSeqSet`): The queries to use on the
@@ -281,15 +323,15 @@ cdef class Blast:
             with one `~pyncbitk.algo.SearchResults` item per query.
 
         """
-        cdef TSeqLocVector         _queries_loc
-        cdef TSeqLocVector         _subjects_loc
-        cdef BlastSeqLoc           seqloc
+        cdef CBlastQueryVector     _queries_loc
+        cdef CBlastQueryVector     _subjects_loc
+        cdef SearchQuery           query
         cdef CRef[IQueryFactory]   query_factory
         cdef CRef[IQueryFactory]   subject_factory
         cdef CRef[CLocalDbAdapter] db
         cdef CRef[CLocalBlast]     blast
 
-        # prepare queries: a list of `BlastSeqLoc` objects
+        # prepare queries: a list of `SearchQuery` objects
         if BlastQueries is BioSeq:
             if queries._ref.GetNonNullPointer().GetInst().GetRepr() != CSeq_inst_repr.eRepr_raw:
                 ty = queries.instance.__class__.__name__
@@ -297,14 +339,16 @@ cdef class Blast:
             query_factory.Reset(<IQueryFactory*> new CObjMgrFree_QueryFactory(CConstRef[CBioseq](queries._ref)))
         elif BlastQueries is BioSeqSet:
             query_factory.Reset(<IQueryFactory*> new CObjMgrFree_QueryFactory(CConstRef[CBioseq_set](queries._ref)))
+        elif BlastQueries is SearchQueryVector:
+            query_factory.Reset(<IQueryFactory*> new CObjMgr_QueryFactory(queries._qv.GetObject()))
         else:
             if not is_iterable(queries):
                 queries = (queries, )
-            for seqloc in queries:
-                _queries_loc.push_back(seqloc._seqloc)
+            for query in queries:
+                _subjects_loc.AddQuery(query._query)
             query_factory.Reset(<IQueryFactory*> new CObjMgr_QueryFactory(_queries_loc))
 
-        # prepare subjects: either a list of `BlastSeqLoc` objects, or a `DatabaseReader`
+        # prepare subjects: either a list of `SearchQuery` objects, or a `DatabaseReader`
         if BlastSubjects is DatabaseReader:
             _ty = subjects._ref.GetNonNullPointer().GetSequenceType()
             if _ty == ESeqType.eProtein:
@@ -324,11 +368,14 @@ cdef class Blast:
         elif BlastSubjects is BioSeqSet:
             subject_factory.Reset(<IQueryFactory*> new CObjMgrFree_QueryFactory(CConstRef[CBioseq_set](subjects._ref)))
             db.Reset(new CLocalDbAdapter(subject_factory, self._opt, scan_mode))
+        elif BlastSubjects is SearchQueryVector:
+            subject_factory.Reset(<IQueryFactory*> new CObjMgr_QueryFactory(subjects._qv.GetObject()))
+            db.Reset(new CLocalDbAdapter(subject_factory, self._opt, scan_mode))
         else:
             if not is_iterable(subjects):
                 subjects = (subjects, )
-            for seqloc in subjects:
-                _subjects_loc.push_back(seqloc._seqloc)
+            for query in subjects:
+                _subjects_loc.AddQuery(query._query)
             subject_factory.Reset(<IQueryFactory*> new CObjMgr_QueryFactory(_subjects_loc))
             db.Reset(new CLocalDbAdapter(subject_factory, self._opt, scan_mode))
 
@@ -486,3 +533,95 @@ cdef class TBlastN(ProteinBlast):
     def database_genetic_code(self, int database_genetic_code):
         cdef CTBlastnOptionsHandle* handle = <CTBlastnOptionsHandle*> self._opt.GetNonNullPointer()
         handle.SetDbGeneticCode(database_genetic_code)
+
+
+# --- Formatter ----------------------------------------------------------------
+
+cdef class _BlastFormatter:  # WIP
+    cdef CRef[CBlastFormat] _fmt
+    cdef object             _file
+    cdef CNcbiOstream*      _outfile
+
+    def __init__(
+        self,
+        Blast blast,
+        object subjects,
+        Scope scope,
+    ):
+        cdef SeqLoc                seqloc
+        cdef CRef[CLocalDbAdapter] db
+        cdef CBlastFormat*         fmt
+        cdef CRef[IQueryFactory]   subject_factory
+        cdef CBlastQueryVector     _subjects_loc
+        cdef bool                  scan_mode       = False
+        
+        self._file = open("/tmp/out.tsv", "wb")
+        self._outfile = new ostream(new pywritebuf(self._file))
+
+        # prepare subjects: either a list of `SearchQuery` objects, or a `DatabaseReader`
+        if isinstance(subjects, DatabaseReader):
+            _ty = (<DatabaseReader> subjects)._ref.GetNonNullPointer().GetSequenceType()
+            if _ty == ESeqType.eProtein:
+                search_database = new CSearchDatabase(string(), EMoleculeType.eBlastDbIsProtein)
+            elif _ty == ESeqType.eNucleotide:
+                search_database = new CSearchDatabase(string(), EMoleculeType.eBlastDbIsNucleotide)
+            else:
+                raise ValueError(f"invalid sequence type: {_ty!r}")
+            search_database.SetSeqDb((<DatabaseReader> subjects)._ref)
+            db.Reset(new CLocalDbAdapter(search_database[0]))
+        elif isinstance(subjects, BioSeq):
+            if (<BioSeq> subjects)._ref.GetNonNullPointer().GetInst().GetRepr() != CSeq_inst_repr.eRepr_raw:
+                ty = subjects.instance.__class__.__name__
+                raise ValueError(f"Unsupported instance type: {ty}")
+            subject_factory.Reset(<IQueryFactory*> new CObjMgrFree_QueryFactory(CConstRef[CBioseq]((<BioSeq> subjects)._ref)))
+            db.Reset(new CLocalDbAdapter(subject_factory, blast._opt, scan_mode))
+        elif isinstance(subjects, BioSeqSet):
+            subject_factory.Reset(<IQueryFactory*> new CObjMgrFree_QueryFactory(CConstRef[CBioseq_set]((<BioSeqSet> subjects)._ref)))
+            db.Reset(new CLocalDbAdapter(subject_factory, blast._opt, scan_mode))
+        else:
+            # if not is_iterable(subjects):
+            #     subjects = (subjects, )
+            # for seqloc in subjects:
+            #     _subjects_loc.push_back(seqloc._seqloc)
+            # subject_factory.Reset(<IQueryFactory*> new CObjMgr_QueryFactory(_subjects_loc))
+            # db.Reset(new CLocalDbAdapter(subject_factory, blast._opt, scan_mode))
+            raise NotImplemented
+
+
+        # make formatter
+        self._fmt.Reset(
+            new CBlastFormat(
+                blast._opt.GetObject().GetOptions(),
+                db.GetObject(),
+                EOutputFormat.eTabularWithComments,
+                True, # believe_query
+                self._outfile[0],
+                kDfltArgNumDescriptions, # num_summary
+                kDfltArgNumAlignments, # num_alignment,
+                scope._scope.GetObject(),
+
+                "",
+                False, # show_gi,
+                False, # is_html
+                BLAST_GENETIC_CODE, # qgencode
+                BLAST_GENETIC_CODE, # dbgencode
+                False, # use_sum_statistics
+                False, # is_remote_search
+                -1, # dbfilt_algorithm,
+                b"qacc sacc pident qcovs qstart qend sstart send", # custom_output_format,
+                False, # is_megablast
+                False, # is_indexed
+                NULL, # ig_opts,
+                NULL, # domain_db_adapter
+                kEmptyStr, # cmdline
+                kEmptyStr, # subjectTag
+
+                
+            )
+        )
+        
+    def print(self, SearchResults results, SearchQueryVector queries):
+        self._fmt.GetObject().PrintOneResultSet(
+            results._ref.GetObject(),
+            CConstRef[CBlastQueryVector](queries._qv),
+        )
