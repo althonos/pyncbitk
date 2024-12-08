@@ -20,6 +20,24 @@ cdef class SeqLoc(Serial):
     cdef CSerialObject* _serial(self):
         return <CSerialObject*> self._loc.GetNonNullPointer()
 
+    @staticmethod
+    cdef SeqLoc _wrap(CRef[CSeq_loc] ref):
+        cdef SeqLoc obj
+        cdef CSeq_loc_choice kind = ref.GetPointer().Which()
+
+        if kind == CSeq_loc_choice.e_Null:
+            obj = NullLoc.__new__(NullLoc)
+        elif kind == CSeq_loc_choice.e_Empty:
+            obj = EmptySeqLoc.__new__(EmptySeqLoc)
+        elif kind == CSeq_loc_choice.e_Whole:
+            obj = WholeSeqLoc.__new__(WholeSeqLoc)
+        else:
+            raise NotImplementedError(f"{kind!r}")
+
+        obj._loc = ref
+        return obj
+
+
 cdef class NullLoc(SeqLoc):
     """A gap of unknown size.
     """
@@ -44,8 +62,12 @@ cdef class WholeSeqLoc(SeqLoc):
         """
         cdef CSeq_loc* loc = new CSeq_loc()
         loc.Select(CSeq_loc_choice.e_Whole)
-        loc.SetWhole(sequence_id._ref.GetNonNullPointer()[0] )
+        loc.SetWhole(sequence_id._ref.GetObject())
         self._loc.Reset(loc)
+
+    def __repr__(self):
+        cdef str ty = type(self).__name__
+        return f"{ty}({self.sequence_id!r})"
 
     @property
     def sequence_id(self):

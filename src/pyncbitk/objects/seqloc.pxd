@@ -15,6 +15,9 @@ from ..serial cimport Serial
 cdef class SeqLoc(Serial):
     cdef CRef[CSeq_loc] _loc
 
+    @staticmethod
+    cdef SeqLoc _wrap(CRef[CSeq_loc] ref)
+
 cdef class NullLoc(SeqLoc):
     pass
 
