@@ -103,7 +103,7 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 find_package(PCRE REQUIRED)
 find_package(lzo REQUIRED)
 find_package(libunwind REQUIRED)
-find_package(ncbi-cxx-toolkit-public COMPONENTS core seqext REQUIRED)
+find_package(ncbi-cxx-toolkit-public COMPONENTS algo core seqext REQUIRED)
 NCBIptb_setup()
 
 # Disable SSE4 (only if requested)
