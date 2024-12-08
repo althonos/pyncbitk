@@ -63,10 +63,13 @@ macro(cython_extension _name)
             "${CMAKE_CURRENT_SOURCE_DIR}/${_name}.pyx"
             --output-file ${_name}.cpp
             --cplus
+            --depfile
             -I "${CYTHON_HEADERS_DIR}"
             ${CYTHON_DIRECTIVES}
     MAIN_DEPENDENCY
       ${_name}.pyx
+    DEPFILE
+      ${_name}.cpp.dep
     VERBATIM)
 
   # Build fully-qualified module name as the target name
