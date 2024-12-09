@@ -4,8 +4,10 @@ from ..toolkit.serial.serialbase cimport CSerialObject
 from ..toolkit.objects.general.object_id cimport CObject_id
 from ..toolkit.objects.seqloc.textseq_id cimport CTextseq_id
 from ..toolkit.objects.seqloc.seq_loc cimport CSeq_loc, E_Choice as CSeq_loc_choice
+from ..toolkit.objects.seqloc.seq_interval cimport CSeq_interval
 from ..toolkit.objects.seqloc.seq_id cimport CSeq_id, E_Choice as CSeq_id_choice, E_SIC as CSeq_id_SIC
 from ..toolkit.corelib.ncbiobj cimport CRef
+from ..toolkit.corelib.ncbimisc cimport TSeqPos
 from ..toolkit.corelib.tempstr cimport CTempString
 
 from ..serial cimport Serial
@@ -61,9 +63,9 @@ cdef class WholeSeqLoc(SeqLoc):
 
         """
         cdef CSeq_loc* loc = new CSeq_loc()
+        self._loc.Reset(loc)
         loc.Select(CSeq_loc_choice.e_Whole)
         loc.SetWhole(sequence_id._ref.GetObject())
-        self._loc.Reset(loc)
 
     def __repr__(self):
         cdef str ty = type(self).__name__
@@ -80,6 +82,18 @@ cdef class SeqIntervalLoc(SeqLoc):
     """A reference to an interval on a `BioSeq`.
     """
     
+    # FIXME: Handle strand.
+    def __init__(self, SeqId sequence_id, TSeqPos start, TSeqPos stop, object strand = None):
+        cdef CSeq_interval* inter = new CSeq_interval(sequence_id._ref.GetObject(), start, stop)
+        cdef CSeq_loc* loc = new CSeq_loc()
+        loc.Select(CSeq_loc_choice.e_Int)
+        loc.SetInt(inter[0])
+        self._loc.Reset(loc)
+
+    def __repr__(self):
+        cdef str ty = type(self).__name__
+        return f"{ty}({self.sequence_id!r}, {self.start!r}, {self.stop!r})"
+
     @property
     def sequence_id(self):
         """`~pyncbitk.objects.seqloc.SeqId`: The identifier of the sequence.
@@ -148,6 +162,8 @@ cdef class SeqId(Serial):
             obj = GenBankId.__new__(GenBankId)
         elif kind == CSeq_id_choice.e_General:
             obj = GeneralId.__new__(GeneralId)
+        elif kind == CSeq_id_choice.e_Other:
+            obj = OtherId.__new__(OtherId)
         else:
             raise NotImplementedError(f"{kind!r}")
 
@@ -247,6 +263,19 @@ cdef class ProteinDataBankId(SeqId):
 cdef class GeneralId(SeqId):
     """A sequence identifier from a local database.
     """
+
+cdef class OtherId(SeqId):
+    """A sequence identifier for other databases.
+    """
+
+    def __repr__(self):
+        cdef str ty = type(self).__name__
+        return f"{ty}({self.id!r})"
+
+    @property
+    def id(self):
+        cdef CTextseq_id* id = &self._ref.GetNonNullPointer().GetOtherMut()
+        return TextSeqId._wrap(CRef[CTextseq_id](id))
 
 # --- TextSeqId ----------------------------------------------------------------
 

@@ -112,10 +112,10 @@ cdef extern from "objects/seqloc/Seq_id_.hpp" namespace "ncbi::objects" nogil:
         # TPatent& SetPatent(void);
         # void SetPatent(TPatent& value);
 
-        # bool IsOther(void) const;
-        # const TOther& GetOther(void) const;
-        # TOther& SetOther(void);
-        # void SetOther(TOther& value);
+        bool IsOther() const
+        const TOther& GetOther() const
+        TOther& GetOtherMut "SetOther"()
+        void SetOther(TOther& value)
 
         # bool IsGeneral(void) const;
         # const TGeneral& GetGeneral(void) const;

@@ -73,6 +73,9 @@ cdef class ProteinDataBankId(SeqId):
 cdef class GeneralId(SeqId):
     pass
 
+cdef class OtherId(SeqId):
+    pass
+
 cdef class TextSeqId(Serial):
     cdef CRef[CTextseq_id] _ref
 
