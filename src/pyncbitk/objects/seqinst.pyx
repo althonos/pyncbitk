@@ -4,13 +4,14 @@ from ..toolkit.corelib.ncbiobj cimport CRef
 from ..toolkit.objects.seq.seq_inst cimport CSeq_inst, ETopology, EStrand
 from ..toolkit.objects.seq.seq_inst cimport EMol as CSeq_inst_mol
 from ..toolkit.objects.seq.seq_inst cimport ERepr as CSeq_inst_repr
+from ..toolkit.objects.seq.seq_ext cimport CSeq_ext
+from ..toolkit.objects.seq.ref_ext cimport CRef_ext
 from ..toolkit.objects.seq.seq_data cimport CSeq_data
 from ..toolkit.serial.serialdef cimport ESerialRecursionMode, ESerialDataFormat, ESerial_Xml_Flags
 
 from ..serial cimport Serial
+from .seqloc cimport SeqLoc
 from .seqdata cimport SeqData, SeqNaData, SeqAaData
-
-from .seqdata import SeqData
 
 
 # --- SeqInst ------------------------------------------------------------------
@@ -237,6 +238,33 @@ cdef class ConstructedInst(SeqInst):
 cdef class RefInst(SeqInst):
     """An instance corresponding to a reference to another sequence.
     """
+
+    def __init__(
+        self,
+        SeqLoc loc,
+        *,
+        topology="linear",
+        strandedness=None,
+        molecule=None,
+        length=None,
+    ):
+        super().__init__(
+            topology=topology,
+            strandedness=strandedness,
+            molecule=molecule,
+            length=length
+        )
+        # copy the seqloc into the object
+        cdef CRef_ext* ref = new CRef_ext()
+        ref.Assign(loc._loc.GetObject(), ESerialRecursionMode.eRecursive)
+        # add the seqloc into the sequence external data
+        cdef CSeq_ext* ext = new CSeq_ext()
+        ext.SetRef(ref[0])
+        # create the sequence instance
+        cdef CSeq_inst* obj = self._ref.GetNonNullPointer()
+        obj.SetRepr(CSeq_inst_repr.eRepr_ref)
+        obj.SetExt(ext[0])
+
 
 cdef class ConsensusInst(SeqInst):
     """An instance corresponding to a consensus sequence.
