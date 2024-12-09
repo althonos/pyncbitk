@@ -171,19 +171,27 @@ cdef class Blast:
     def __init__(
         self,
         *,
-        bool gapped = True,
-        int window_size = 40,
-        double evalue = 10.0,
-        int max_target_sequences = 500,
+        object evalue = None,
+        object gapped = None,
+        object window_size = None,
+        object max_target_sequences = None,
+        object xdrop_gap = None,
     ):
-        """__init__(self, *, gapped=True, window_size=40, evalue=10.0, max_target_sequences=500)\n--\n
+        """__init__(self, *, gapped=None, window_size=None, evalue=None, max_target_sequences=None)\n--\n
         """
         if self._opt.Empty():
             raise TypeError("Cannot instantiate abstract class Blast")
-        self.window_size = window_size
-        self.evalue = evalue
-        self.max_target_sequences = max_target_sequences
-        self.gapped = gapped
+
+        if evalue is not None:
+            self.evalue = evalue
+        if max_target_sequences is not None:
+            self.max_target_sequences = max_target_sequences
+        if window_size is not None:
+            self.window_size = window_size
+        if gapped is not None:
+            self.gapped = gapped
+        if xdrop_gap is not None:
+            self.xdrop_gap = xdrop_gap
 
     def __repr__(self):
         cdef str ty = self.__class__.__name__
@@ -221,6 +229,10 @@ cdef class Blast:
         """`float`: X-dropoff value (in bits) for preliminary gapped extensions.
         """
         return self._opt.GetNonNullPointer().GetGapXDropoff()
+
+    @xdrop_gap.setter
+    def xdrop_gap(self, double xdrop_gap):
+        self._opt.GetNonNullPointer().SetGapXDropoff(xdrop_gap)
 
     @property
     def xdrop_gap_final(self):
@@ -352,9 +364,9 @@ cdef class Blast:
         if BlastSubjects is DatabaseReader:
             _ty = subjects._ref.GetNonNullPointer().GetSequenceType()
             if _ty == ESeqType.eProtein:
-                search_database = new CSearchDatabase(string(), EMoleculeType.eBlastDbIsProtein)
+                search_database = new CSearchDatabase(string(b"FUCK YOU"), EMoleculeType.eBlastDbIsProtein)
             elif _ty == ESeqType.eNucleotide:
-                search_database = new CSearchDatabase(string(), EMoleculeType.eBlastDbIsNucleotide)
+                search_database = new CSearchDatabase(string(b"FUCK YOU"), EMoleculeType.eBlastDbIsNucleotide)
             else:
                 raise ValueError(f"invalid sequence type: {_ty!r}")
             search_database.SetSeqDb(subjects._ref)
@@ -440,12 +452,58 @@ cdef class BlastN(NucleotideBlast):
     def __init__(
         self,
         *,
+        object dust_filtering = None,
+        object penalty = None,
+        object reward = None,
         **kwargs,
     ):
         cdef CBlastNucleotideOptionsHandle* handle = new CBlastNucleotideOptionsHandle()
         handle.SetTraditionalBlastnDefaults()
         self._opt.Reset(<CBlastOptionsHandle*> handle)
         super().__init__(**kwargs)
+        if dust_filtering is not None:
+            self.dust_filtering = dust_filtering
+        if penalty is not None:
+            self.penalty = penalty
+        if reward is not None:
+            self.reward = reward
+
+    @property
+    def dust_filtering(self):
+        """`bool`: Whether DUST filtering is enabled or not.
+        """
+        cdef CBlastNucleotideOptionsHandle* handle = <CBlastNucleotideOptionsHandle*> self._opt.GetNonNullPointer()
+        return handle.GetDustFiltering()
+
+    @dust_filtering.setter
+    def dust_filtering(self, bint dust_filtering):
+        cdef CBlastNucleotideOptionsHandle* handle = <CBlastNucleotideOptionsHandle*> self._opt.GetNonNullPointer()
+        handle.SetDustFiltering(dust_filtering)
+
+    @property
+    def penalty(self):
+        """`int`: The (negative) score penalty for a nucleotide mismatch.
+        """
+        cdef CBlastNucleotideOptionsHandle* handle = <CBlastNucleotideOptionsHandle*> self._opt.GetNonNullPointer()
+        return handle.GetMismatchPenalty()
+    
+    @penalty.setter
+    def penalty(self, int penalty):
+        cdef CBlastNucleotideOptionsHandle* handle = <CBlastNucleotideOptionsHandle*> self._opt.GetNonNullPointer()
+        handle.SetMismatchPenalty(penalty)
+
+    @property
+    def reward(self):
+        """`int`: The (positive) score reward for a nucleotide match.
+        """
+        cdef CBlastNucleotideOptionsHandle* handle = <CBlastNucleotideOptionsHandle*> self._opt.GetNonNullPointer()
+        return handle.GetMatchReward()
+
+    @reward.setter
+    def reward(self, int reward):
+        cdef CBlastNucleotideOptionsHandle* handle = <CBlastNucleotideOptionsHandle*> self._opt.GetNonNullPointer()
+        handle.SetMatchReward(reward)
+
 
 cdef class BlastX(NucleotideBlast):
     """A command object for running ``blastx`` searches.
@@ -608,7 +666,7 @@ cdef class _BlastFormatter:  # WIP
                 False, # use_sum_statistics
                 False, # is_remote_search
                 -1, # dbfilt_algorithm,
-                b"qacc sacc pident qcovs qstart qend sstart send", # custom_output_format,
+                kEmptyStr, # b"qacc sacc pident qcovs qstart qend sstart send", # custom_output_format,
                 False, # is_megablast
                 False, # is_indexed
                 NULL, # ig_opts,
