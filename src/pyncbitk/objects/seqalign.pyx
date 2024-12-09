@@ -5,6 +5,7 @@ from libcpp cimport bool
 from libcpp.string cimport string
 
 from ..toolkit.corelib.ncbiobj cimport CRef
+from ..toolkit.corelib.ncbimisc cimport TSeqPos
 from ..toolkit.objects.general.object_id cimport CObject_id
 from ..toolkit.objects.seqloc.seq_id cimport CSeq_id
 from ..toolkit.objects.seqloc.na_strand cimport ENa_strand
@@ -324,10 +325,30 @@ cdef class SeqAlign(Serial):
 
     @property
     def segments(self):
-        cdef CSeq_align*  obj = &self._ref.GetObject()
+        cdef CSeq_align*  obj = self._ref.GetNonNullPointer()
         cdef CRef[C_Segs] ref = CRef[C_Segs](&obj.GetSegsMut())
         return AlignSegments._wrap(ref)
 
+    @property
+    def alignment_length(self):
+        """`int`: The gapped alignment length.
+        """
+        cdef CSeq_align*  obj = self._ref.GetNonNullPointer()
+        return obj.GetAlignLength()
+
+    @property
+    def matches(self):
+        cdef int nident
+        if not self._ref.GetObject().GetNamedScore(EScoreType.eScore_IdentityCount, nident):
+            return None
+        return nident
+
+    @property
+    def mismatches(self):
+        cdef int mm
+        if not self._ref.GetObject().GetNamedScore(EScoreType.eScore_MismatchCount, mm):
+            return None
+        return mm
 
 cdef class GlobalSeqAlign(SeqAlign):
     """A global alignment over the complete lengths of several `BioSeq`.
