@@ -317,7 +317,7 @@ cdef class Blast:
         bool scan_mode = False
     ):
         """run(self, queries, subjects, scan_mode=False)\n--\n
-        
+
         Run a BLAST query with the given sequences.
 
         Arguments:
@@ -393,7 +393,8 @@ cdef class Blast:
 
         # prepare the BLAST program
         try:
-            blast.Reset(new CLocalBlast(query_factory, self._opt, db))
+            with nogil:
+                blast.Reset(new CLocalBlast(query_factory, self._opt, db))
         except RuntimeError as err:
             raise ValueError("Failed initializing BLAST") from err
         # if (m_InterruptFnx != NULL) {
@@ -403,17 +404,15 @@ cdef class Blast:
         # // make sure that no hits are discarded (ported from CBl2Seq::SetupSearch
         # m_OptsHandle.SetHitlistSize((int) m_tSubjects.size());
 
-        # run BLAST and get results
         with nogil:
             results = blast.GetNonNullPointer().Run()
 
         # check for warnings or errors
         messages = blast.GetNonNullPointer().GetSearchMessages()
         if messages.HasMessages():
-            print(messages.ToString().decode())
+            print(messages.ToString().decode()) # FIXME
 
         return SearchResultsSet._wrap(results)
-        # messages = blast.GetSearchMessages() # TODO
 
 
 cdef class NucleotideBlast(Blast):
@@ -486,7 +485,7 @@ cdef class BlastN(NucleotideBlast):
         """
         cdef CBlastNucleotideOptionsHandle* handle = <CBlastNucleotideOptionsHandle*> self._opt.GetNonNullPointer()
         return handle.GetMismatchPenalty()
-    
+
     @penalty.setter
     def penalty(self, int penalty):
         cdef CBlastNucleotideOptionsHandle* handle = <CBlastNucleotideOptionsHandle*> self._opt.GetNonNullPointer()
@@ -612,7 +611,7 @@ cdef class _BlastFormatter:  # WIP
         cdef CRef[IQueryFactory]   subject_factory
         cdef CBlastQueryVector     _subjects_loc
         cdef bool                  scan_mode       = False
-        
+
         self._file = open("/tmp/out.tsv", "wb")
         self._outfile = new ostream(new pywritebuf(self._file))
 
@@ -674,10 +673,10 @@ cdef class _BlastFormatter:  # WIP
                 kEmptyStr, # cmdline
                 kEmptyStr, # subjectTag
 
-                
+
             )
         )
-        
+
     def print(self, SearchResults results, SearchQueryVector queries):
         self._fmt.GetObject().PrintOneResultSet(
             results._ref.GetObject(),
