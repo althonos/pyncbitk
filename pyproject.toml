@@ -15,7 +15,7 @@ output_folder = "build/Conan"
 [tool.scikit-build]
 build-dir = "build/{build_type}"
 cmake.build-type = "Release"
-editable.rebuild = true
+editable.rebuild = false
 editable.verbose = false
 
 [tool.scikit-build.cmake.define]
