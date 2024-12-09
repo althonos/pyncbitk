@@ -4,6 +4,7 @@ from libcpp.vector cimport vector
 
 from ..corelib.ncbiobj cimport CObject, CRef
 from ..objects.seqloc.seq_id cimport CSeq_id
+from ..objects.seqloc.seq_loc cimport CSeq_loc
 from ..objects.seq.bioseq cimport CBioseq
 from .object_manager cimport CObjectManager
 from .bioseq_handle cimport CBioseq_Handle
@@ -61,11 +62,11 @@ cdef extern from "objmgr/scope.hpp" namespace "ncbi::objects" nogil:
     cppclass CScope(CObject):
         CScope(CObjectManager& objmgr)
 
-        CObjectManager& GetObjectManager()
+        CObjectManager& GetObjectManager() except +
 
-        # CBioseq_Handle GetBioseqHandle(const CSeq_id& id)
-        # CBioseq_Handle GetBioseqHandle(const CSeq_id_Handle& id)
-        # CBioseq_Handle GetBioseqHandle(const CSeq_loc& loc)
+        CBioseq_Handle GetBioseqHandle(const CSeq_id& id) except +
+        # CBioseq_Handle GetBioseqHandle(const CSeq_id_Handle& id) except +
+        CBioseq_Handle GetBioseqHandle(const CSeq_loc& loc) except +
         
         # CBioseq_Handle GetBioseqHandle(const CSeq_id& id, EGetBioseqFlag get_flag)
         # CBioseq_Handle GetBioseqHandle(const CSeq_id_Handle& id, EGetBioseqFlag get_flag)
@@ -115,3 +116,7 @@ cdef extern from "objmgr/scope.hpp" namespace "ncbi::objects" nogil:
         # CBioseq_Handle AddBioseq(const CBioseq& bioseq, TPriority pri)
         # CBioseq_Handle AddBioseq(const CBioseq& bioseq, TPriority pri, EExist action)
 
+
+        # Check existence of sequence with this id
+        bool Exists(const CSeq_id&        id)
+        # bool Exists(const CSeq_id_Handle& id)
