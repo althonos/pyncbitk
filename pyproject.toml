@@ -41,7 +41,7 @@ build-frontend = { name = "pip", args = ["--no-build-isolation", "--config-setti
 build-verbosity = 1
 free-threaded-support = false
 test-command = "cd {project} && python -m unittest tests -v"
-manylinux-x86_64-image = "althonos/pyncbitk-manylinux_2_34:release"
+manylinux-x86_64-image = "althonos/pyncbitk-manylinux_2_28:release"
 
 [tool.cibuildwheel.macos]
 environment = { MACOSX_DEPLOYMENT_TARGET = "10.12" }
