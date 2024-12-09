@@ -1,3 +1,0 @@
-[submodule "vendor/ncbi-cxx-toolkit-public"]
-	path = vendor/ncbi-cxx-toolkit-public
-	url = https://github.com/ncbi/ncbi-cxx-toolkit-public
