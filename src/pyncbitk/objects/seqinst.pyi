@@ -2,6 +2,7 @@ from typing import Optional
 
 from ..serial import Serial
 from .seqdata import SeqData
+from .seqloc import SeqLoc
 
 try:
     from typing import Literal
@@ -56,7 +57,17 @@ class ConstructedInst(SeqInst):
     pass
 
 class RefInst(SeqInst):
-    pass
+    def __init__(
+        self,
+        loc: SeqLoc,
+        *,
+        topology: Topology = "linear",
+        strandedness: Optional[Strandedness] = None,
+        molecule: Optional[Molecule] = None,
+        length: Optional[int] = None,
+    ) -> None: ...
+    @property
+    def seqloc(self) -> SeqLoc: ...
 
 class ConsensusInst(SeqInst):
     pass

@@ -7,6 +7,7 @@ from ..toolkit.objects.seq.seq_inst cimport ERepr as CSeq_inst_repr
 from ..toolkit.objects.seq.seq_ext cimport CSeq_ext
 from ..toolkit.objects.seq.ref_ext cimport CRef_ext
 from ..toolkit.objects.seq.seq_data cimport CSeq_data
+from ..toolkit.objects.seqloc.seq_loc cimport CSeq_loc
 from ..toolkit.serial.serialdef cimport ESerialRecursionMode, ESerialDataFormat, ESerial_Xml_Flags
 
 from ..serial cimport Serial
@@ -134,6 +135,8 @@ cdef class SeqInst(Serial):
             args.append(f"strand={self.strandedness!r}")
         if self.molecule is not None:
             args.append(f"molecule={self.molecule!r}")
+        if self.length is not None:
+            args.append(f"length={self.length!r}")
 
         return f"{ty}({', '.join(args)})"
 
@@ -224,6 +227,8 @@ cdef class ContinuousInst(SeqInst):
             args.append(f"strandedness={self.strandedness!r}")
         if self.molecule is not None:
             args.append(f"molecule={self.molecule!r}")
+        if self.length is not None:
+            args.append(f"length={self.length!r}")
 
         return f"{ty}({', '.join(args)})"
 
@@ -265,6 +270,28 @@ cdef class RefInst(SeqInst):
         obj.SetRepr(CSeq_inst_repr.eRepr_ref)
         obj.SetExt(ext[0])
 
+    def __repr__(self):
+        cdef str ty    = self.__class__.__name__
+        cdef list args = [repr(self.seqloc)]
+
+        if self.topology != "linear":
+            args.append(f"topology={self.topology!r}")
+        if self.strandedness is not None:
+            args.append(f"strandedness={self.strandedness!r}")
+        if self.molecule is not None:
+            args.append(f"molecule={self.molecule!r}")
+        if self.length is not None:
+            args.append(f"length={self.length!r}")
+
+        return f"{ty}({', '.join(args)})"
+
+    @property
+    def seqloc(self):
+        """`~pyncbitk.objects.seqloc.SeqLoc`: The reference sequence location.
+        """
+        cdef CRef_ext* ext = &self._ref.GetObject().GetExtMut().GetRefMut()
+        cdef CRef[CSeq_loc] ref = CRef[CSeq_loc](&ext.GetMut())
+        return SeqLoc._wrap(ref)
 
 cdef class ConsensusInst(SeqInst):
     """An instance corresponding to a consensus sequence.
