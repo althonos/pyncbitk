@@ -8,7 +8,7 @@ jobs:
 
   wheel-linux-x86_64:
     name: Build Linux wheels (x86-64)
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
       with:
@@ -17,7 +17,8 @@ jobs:
       uses: pypa/cibuildwheel@v2.21.3
       env:
         CIBW_ARCHS: x86_64
-        CIBW_BUILD: '*-manylinux_x86_64'
+        # CIBW_BUILD: '*-manylinux_x86_64'
+        CIBW_BUILD: 'cp312-manylinux_x86_64'  # FIXME: for test only
         CIBW_BUILD_VERBOSITY: 2
       with:
         output-dir: dist
