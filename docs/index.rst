@@ -119,6 +119,7 @@ Library
    :maxdepth: 2
 
    User Guide <guide/index>
+   Examples <examples/index>
    API Reference <api/index>
 
 
