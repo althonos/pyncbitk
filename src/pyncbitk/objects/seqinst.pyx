@@ -3,14 +3,14 @@
 
 The `BioSeq` model of the NCBI C++ Toolkit requires two components: one
 or more sequence identifiers, which are used to name a sequence *instance*.
-A sequence instance represents concrete properties of a biological 
+A sequence instance represents concrete properties of a biological
 sequence, such as its molecule type (DNA, RNA, protein) or its strandedness
 if applicable.
 
 Note:
-    In the original C++ code, sequence instances follow two parallel class 
-    hierarchies for representation: the molecule type branch, and the 
-    representation branch. Because Cython does not support multiple 
+    In the original C++ code, sequence instances follow two parallel class
+    hierarchies for representation: the molecule type branch, and the
+    representation branch. Because Cython does not support multiple
     inheritance, the classes in this module follow only the representation
     branch of the hierarchy. The molecule type, if known, can be accessed
     with the `~SeqInst.molecule` property.
@@ -29,8 +29,9 @@ from ..toolkit.corelib.ncbimisc cimport TSeqPos
 from ..toolkit.objects.seq.seq_inst cimport CSeq_inst, ETopology, EStrand
 from ..toolkit.objects.seq.seq_inst cimport EMol as CSeq_inst_mol
 from ..toolkit.objects.seq.seq_inst cimport ERepr as CSeq_inst_repr
-from ..toolkit.objects.seq.seq_ext cimport CSeq_ext
+from ..toolkit.objects.seq.seq_ext cimport CSeq_ext, E_Choice as CSeq_ext_choice
 from ..toolkit.objects.seq.ref_ext cimport CRef_ext
+from ..toolkit.objects.seq.delta_ext cimport CDelta_ext
 from ..toolkit.objects.seq.seq_data cimport CSeq_data
 from ..toolkit.objects.seq.seq_literal cimport CSeq_literal
 from ..toolkit.objects.seq.delta_seq cimport E_Choice as CDelta_seq_choice
@@ -211,7 +212,7 @@ cdef class VirtualInst(SeqInst):
 cdef class ContinuousInst(SeqInst):
     """An instance corresponding to a single continuous sequence.
 
-    This class describes the most simple sequence kind, where we actually know 
+    This class describes the most simple sequence kind, where we actually know
     the sequence data, which can be reached with the `~SeqInst.data`
     property.
 
@@ -231,16 +232,16 @@ cdef class ContinuousInst(SeqInst):
         Create a new continuous instance from the given sequence data.
 
         Arguments:
-            data (`~pyncbitk.objects.seqdata.SeqData`): The concrete sequence 
+            data (`~pyncbitk.objects.seqdata.SeqData`): The concrete sequence
                 data.
             topology (`str`): The topology of the sequence; either ``linear``,
-                ``circular``, ``tandem``, ``other``, or `None` for unknown 
+                ``circular``, ``tandem``, ``other``, or `None` for unknown
                 sequence topologies.
             strandedness (`str`): The strandedness of the sequence; either
                 ``single``, ``double``, ``mixed``, ``other``, or `None` for
                 unknown strandedness.
             molecule (`str`): The type of molecule described by the data;
-                either ``dna``, ``rna``, ``protein``, ``nucleotide``, 
+                either ``dna``, ``rna``, ``protein``, ``nucleotide``,
                 ``other`` or `None` for unknown molecule types.
             length (`int`): The length of the sequence, if known.
 
@@ -312,7 +313,7 @@ cdef class RefInst(SeqInst):
 
     This class allows to describe the sequence data in terms of a location
     in another sequence, described with a `~pyncbitk.objects.seqloc.SeqLoc`.
-    This can be used to alias certain regions of a sequence, such as creating 
+    This can be used to alias certain regions of a sequence, such as creating
     references to the genes of contig without having to copy the sequence
     data.
 
@@ -332,16 +333,16 @@ cdef class RefInst(SeqInst):
         Create a new instance referencing the given location.
 
         Arguments:
-            seqloc (`~pyncbitk.objects.seqloc.SeqLoc`): The location of 
+            seqloc (`~pyncbitk.objects.seqloc.SeqLoc`): The location of
                 the actual sequence data.
             topology (`str`): The topology of the sequence; either ``linear``,
-                ``circular``, ``tandem``, ``other``, or `None` for unknown 
+                ``circular``, ``tandem``, ``other``, or `None` for unknown
                 sequence topologies.
             strandedness (`str`): The strandedness of the sequence; either
                 ``single``, ``double``, ``mixed``, ``other``, or `None` for
                 unknown strandedness.
             molecule (`str`): The type of molecule described by the data;
-                either ``dna``, ``rna``, ``protein``, ``nucleotide``, 
+                either ``dna``, ``rna``, ``protein``, ``nucleotide``,
                 ``other`` or `None` for unknown molecule types.
             length (`int`): The length of the sequence, if known.
 
@@ -408,6 +409,38 @@ cdef class DeltaInst(SeqInst):
     """An instance corresponding to changed applied to other sequences.
     """
 
+    def __init__(
+        self,
+        object deltas = (),
+        *,
+        topology="linear",
+        strandedness=None,
+        molecule=None,
+        length=None
+    ):
+        cdef Delta       delta
+        cdef CDelta_ext* delta_ext = new CDelta_ext()
+
+        for delta in deltas:
+            delta_ext.GetMut().push_back(delta._ref)
+
+        super().__init__(
+            topology=topology,
+            strandedness=strandedness,
+            molecule=molecule,
+            length=length
+        )
+
+        # create the sequence extension to store the delta
+        cdef CSeq_ext* ext = new CSeq_ext()
+        ext.Select(CSeq_ext_choice.e_Delta)
+        ext.SetDelta(delta_ext[0])
+
+        # create the sequence instance
+        cdef CSeq_inst* obj = self._ref.GetNonNullPointer()
+        obj.SetRepr(CSeq_inst_repr.eRepr_delta)
+        obj.SetExt(ext[0])
+
     def __bool__(self):
         return not self._ref.GetObject().GetExt().GetDelta().Get().empty()
 
@@ -422,6 +455,31 @@ cdef class DeltaInst(SeqInst):
         while it != deltas.const_end():
             yield Delta._wrap(dereference(it))
             preincrement(it)
+
+    def __reduce__(self):
+        return functools.partial(
+            type(self),
+            list(self),
+            topology=self.topology,
+            strandedness=self.strandedness,
+            molecule=self.molecule,
+            length=self.length
+        ), ()
+
+    def __repr__(self):
+        cdef str ty    = self.__class__.__name__
+        cdef list args = [repr([delta for delta in self])]
+
+        if self.topology != "linear":
+            args.append(f"topology={self.topology!r}")
+        if self.strandedness is not None:
+            args.append(f"strandedness={self.strandedness!r}")
+        if self.molecule is not None:
+            args.append(f"molecule={self.molecule!r}")
+        if self.length is not None:
+            args.append(f"length={self.length!r}")
+
+        return f"{ty}({', '.join(args)})"
 
     cpdef ContinuousInst to_continuous(self):
         """Transform this instance to a continuous sequence instance.
@@ -485,7 +543,7 @@ cdef class LiteralDelta(Delta):
         if data is not None:
             args.append(repr(data))
         return f"{type(self).__name__}({', '.join(args)})"
-    
+
     def __reduce__(self):
         return type(self), (self.length, self.data)
 
@@ -516,12 +574,11 @@ cdef class LocDelta(Delta):
         delta.Select(CDelta_seq_choice.e_Loc)
         delta.SetLoc(seqloc._loc.GetObject())
         self._ref.Reset(delta)
-    
+
     def __reduce__(self):
         return type(self), (self.seqloc,)
 
     def __repr__(self):
-        cdef SeqData data   = self.seqloc
         return f"{type(self).__name__}({self.seqloc!r})"
 
     @property

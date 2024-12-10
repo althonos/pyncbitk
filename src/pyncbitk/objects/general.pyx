@@ -26,7 +26,11 @@ cdef class ObjectId(Serial):
 
     def __init__(self, object value):
         cdef bytes       _b
-        cdef CObject_id* obj = new CObject_id()
+        cdef CObject_id* obj
+
+        self._ref.Reset(new CObject_id())
+        obj = self._ref.GetNonNullPointer()
+
         if isinstance(value, int):
             obj.Select(CObject_id_choice.e_Id)
             obj.SetId(value)
@@ -38,7 +42,6 @@ cdef class ObjectId(Serial):
             _b = value
             obj.Select(CObject_id_choice.e_Str)
             obj.SetStr(_b)
-        self._ref.Reset(obj)
 
     def __repr__(self):
         cdef str ty = self.__class__.__name__
