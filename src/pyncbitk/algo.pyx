@@ -98,6 +98,7 @@ cdef class SearchQueryVector:
 ctypedef fused BlastQueries:
     BioSeq
     BioSeqSet
+    SearchQuery
     SearchQueryVector
     object
 
@@ -105,12 +106,13 @@ ctypedef fused BlastSubjects:
     BioSeq
     BioSeqSet
     DatabaseReader
+    SearchQuery
     SearchQueryVector
     object
 
 # --- BLAST results ------------------------------------------------------------
 
-cdef class SearchResultsSet:
+cdef class SearchResultsSet:  # TODO: change name to SearchResultsList?
     cdef CRef[CSearchResultSet] _ref
 
     @staticmethod
@@ -347,6 +349,8 @@ cdef class Blast:
             query_factory.Reset(<IQueryFactory*> new CObjMgrFree_QueryFactory(CConstRef[CBioseq](queries._ref)))
         elif BlastQueries is BioSeqSet:
             query_factory.Reset(<IQueryFactory*> new CObjMgrFree_QueryFactory(CConstRef[CBioseq_set](queries._ref)))
+        elif BlastQueries is SearchQuery:
+            return self.run(SearchQueryVector((queries,)), subjects)
         elif BlastQueries is SearchQueryVector:
             query_factory.Reset(<IQueryFactory*> new CObjMgr_QueryFactory(queries._qv.GetObject()))
         else:
@@ -376,6 +380,8 @@ cdef class Blast:
         elif BlastSubjects is BioSeqSet:
             subject_factory.Reset(<IQueryFactory*> new CObjMgrFree_QueryFactory(CConstRef[CBioseq_set](subjects._ref)))
             db.Reset(new CLocalDbAdapter(subject_factory, self._opt, scan_mode))
+        elif BlastSubjects is SearchQuery:
+            return self.run(queries, SearchQueryVector((subjects,)))
         elif BlastSubjects is SearchQueryVector:
             subject_factory.Reset(<IQueryFactory*> new CObjMgr_QueryFactory(subjects._qv.GetObject()))
             db.Reset(new CLocalDbAdapter(subject_factory, self._opt, scan_mode))
