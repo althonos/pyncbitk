@@ -5,6 +5,9 @@ Sequence Instance (``pyncbitk.objects.seqinst``)
 
 .. automodule:: pyncbitk.objects.seqinst
 
+Instances
+---------
+
 .. autoclass:: SeqInst(Serial)
    :special-members:
    :members:
@@ -38,5 +41,21 @@ Sequence Instance (``pyncbitk.objects.seqinst``)
    :members:
 
 .. autoclass:: DeltaInst(SeqInst)
+   :special-members:
+   :members:
+
+
+Delta Segments
+--------------
+
+.. autoclass:: Delta(Serial)
+   :special-members:
+   :members:
+
+.. autoclass:: LiteralDelta(Delta)
+   :special-members:
+   :members:
+
+.. autoclass:: LocDelta(Delta)
    :special-members:
    :members:

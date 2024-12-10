@@ -3,6 +3,7 @@
 from ..toolkit.serial.serialbase cimport CSerialObject
 from ..toolkit.corelib.ncbiobj cimport CRef
 from ..toolkit.objects.seq.seq_inst cimport CSeq_inst
+from ..toolkit.objects.seq.delta_seq cimport CDelta_seq
 
 from ..serial cimport Serial
 
@@ -40,3 +41,19 @@ cdef class DeltaInst(SeqInst):
     
     cpdef ContinuousInst to_continuous(self)
 
+
+# --- Delta --------------------------------------------------------------------
+
+cdef class Delta(Serial):
+    cdef CRef[CDelta_seq] _ref
+
+    @staticmethod
+    cdef Delta _wrap(CRef[CDelta_seq] ref)
+
+
+cdef class LiteralDelta(Delta):
+    pass
+
+
+cdef class LocDelta(Delta):
+    pass

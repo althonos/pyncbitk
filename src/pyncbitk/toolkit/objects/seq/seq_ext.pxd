@@ -4,6 +4,7 @@ from libcpp.string cimport string
 from ..seqloc.seq_loc cimport CSeq_loc
 from ...serial.serialbase cimport CSerialObject
 from .ref_ext cimport CRef_ext
+from .delta_ext cimport CDelta_ext
 
 
 cdef extern from "objects/seq/Seq_ext_.hpp" namespace "ncbi::objects::CSeq_ext_Base" nogil:
@@ -21,7 +22,7 @@ cdef extern from "objects/seq/Seq_ext_.hpp" namespace "ncbi::objects::CSeq_ext_B
     # ctypedef CSeg_ext TSeg
     ctypedef CRef_ext TRef
     # ctypedef CMap_ext TMap
-    # ctypedef CDelta_ext TDelta
+    ctypedef CDelta_ext TDelta
 
 
 cdef extern from "objects/seq/Seq_ext_.hpp" namespace "ncbi::objects" nogil:
@@ -49,19 +50,19 @@ cdef extern from "objects/seq/Seq_ext_.hpp" namespace "ncbi::objects" nogil:
         # void SetSeg(TSeg& value)
 
         bool IsRef() const
-        const TRef& GetRef() const
-        TRef& GetRefMut "SetRef"()
-        void SetRef(TRef& value)
+        const TRef& GetRef() except +
+        TRef& GetRefMut "SetRef"() except +
+        void SetRef(TRef& value) except +
 
         # bool IsMap() const
         # const TMap& GetMap() const
         # TMap& SetMap()
         # void SetMap(TMap& value)
 
-        # bool IsDelta() const
-        # const TDelta& GetDelta() const
-        # TDelta& SetDelta()
-        # void SetDelta(TDelta& value)
+        bool IsDelta() const
+        const TDelta& GetDelta() except +
+        TDelta& GetDeltaMut "SetDelta"() except +
+        void SetDelta(TDelta& value) except +
      
 cdef extern from "objects/seq/Seq_ext.hpp" namespace "ncbi::objects" nogil:
 

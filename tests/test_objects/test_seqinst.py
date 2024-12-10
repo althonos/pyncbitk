@@ -53,3 +53,7 @@ class TestRefInst(unittest.TestCase, TestSeqInst):
         seqloc = WholeSeqLoc(LocalId(ObjectId(1)))
         i1 = RefInst(seqloc)
         self.assertEqual(repr(i1), f"RefInst({seqloc!r})")
+
+
+class TestDeltaInst(unittest.TestCase, TestSeqInst):
+    pass

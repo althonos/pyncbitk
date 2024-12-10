@@ -11,6 +11,7 @@ examples, and running with the latest version of the PyHMMER interface.
    :maxdepth: 2
 
    first_blast
+   object_manager
 
 External resources
 ------------------

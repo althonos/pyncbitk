@@ -21,13 +21,19 @@ See Also:
 
 """
 
+from cython.operator cimport dereference, preincrement
+from libcpp.list cimport list as cpplist
+
 from ..toolkit.corelib.ncbiobj cimport CRef
+from ..toolkit.corelib.ncbimisc cimport TSeqPos
 from ..toolkit.objects.seq.seq_inst cimport CSeq_inst, ETopology, EStrand
 from ..toolkit.objects.seq.seq_inst cimport EMol as CSeq_inst_mol
 from ..toolkit.objects.seq.seq_inst cimport ERepr as CSeq_inst_repr
 from ..toolkit.objects.seq.seq_ext cimport CSeq_ext
 from ..toolkit.objects.seq.ref_ext cimport CRef_ext
 from ..toolkit.objects.seq.seq_data cimport CSeq_data
+from ..toolkit.objects.seq.seq_literal cimport CSeq_literal
+from ..toolkit.objects.seq.delta_seq cimport E_Choice as CDelta_seq_choice
 from ..toolkit.objects.seqloc.seq_loc cimport CSeq_loc
 from ..toolkit.serial.serialdef cimport ESerialRecursionMode, ESerialDataFormat, ESerial_Xml_Flags
 
@@ -402,6 +408,21 @@ cdef class DeltaInst(SeqInst):
     """An instance corresponding to changed applied to other sequences.
     """
 
+    def __bool__(self):
+        return not self._ref.GetObject().GetExt().GetDelta().Get().empty()
+
+    def __len__(self):
+        return self._ref.GetObject().GetExt().GetDelta().Get().size()
+
+    def __iter__(self):
+        cdef CRef[CDelta_seq]                         delta
+        cdef const cpplist[CRef[CDelta_seq]]*         deltas = &self._ref.GetObject().GetExt().GetDelta().Get()
+        cdef cpplist[CRef[CDelta_seq]].const_iterator it     = deltas.const_begin()
+
+        while it != deltas.const_end():
+            yield Delta._wrap(dereference(it))
+            preincrement(it)
+
     cpdef ContinuousInst to_continuous(self):
         """Transform this instance to a continuous sequence instance.
 
@@ -415,3 +436,97 @@ cdef class DeltaInst(SeqInst):
         if not copy.ConvertDeltaToRaw():
             raise ValueError("Could not convert delta instance to continuous")
         return SeqInst._wrap(CRef[CSeq_inst](copy))
+
+
+cdef class Delta(Serial):
+    """A single delta segment in a `DeltaInst` object.
+    """
+
+    @staticmethod
+    cdef Delta _wrap(CRef[CDelta_seq] ref):
+        cdef Delta                    obj
+        cdef CDelta_seq_choice kind = ref.GetNonNullPointer().Which()
+
+        if kind == CDelta_seq_choice.e_not_set:
+            obj = Delta.__new__(Delta)
+        elif kind == CDelta_seq_choice.e_Loc:
+            obj = LocDelta.__new__(LocDelta)
+        elif kind == CDelta_seq_choice.e_Literal:
+            obj = LiteralDelta.__new__(LiteralDelta)
+        else:
+            raise RuntimeError("Unsupported `Delta` type")
+
+        obj._ref = ref
+        return obj
+
+    cdef CSerialObject* _serial(self):
+        return <CSerialObject*> self._ref.GetNonNullPointer()
+
+
+cdef class LiteralDelta(Delta):
+    """A literal delta segment.
+    """
+
+    # TODO: handle int fuzz
+
+    def __init__(self, TSeqPos length, SeqData data = None):
+        cdef CSeq_literal* lit = new CSeq_literal()
+        lit.SetLength(length)
+        lit.SetSeq_data(data._ref.GetObject())
+        cdef CDelta_seq* delta = new CDelta_seq()
+        delta.Select(CDelta_seq_choice.e_Literal)
+        delta.SetLiteral(lit[0])
+        self._ref.Reset(delta)
+
+    def __repr__(self):
+        cdef TSeqPos length = self._ref.GetObject().GetLiteral().GetLength()
+        cdef SeqData data   = self.data
+        cdef list    args   = [repr(length)]
+        if data is not None:
+            args.append(repr(data))
+        return f"{type(self).__name__}({', '.join(args)})"
+    
+    def __reduce__(self):
+        return type(self), (self.length, self.data)
+
+    @property
+    def length(self):
+        """`int`: The length of the literal delta.
+        """
+        cdef const CSeq_literal* lit = &self._ref.GetObject().GetLiteral()
+        return lit.GetLength()
+
+    @property
+    def data(self):
+        """`SeqData` or `None`: The concrete sequence data, if set.
+        """
+        cdef const CSeq_literal* lit = &self._ref.GetObject().GetLiteral()
+        if not lit.IsSetSeq_data():
+            return None
+        cdef const CSeq_data* data = &lit.GetSeq_data()
+        return SeqData._wrap(CRef[CSeq_data](<CSeq_data*> data))
+
+
+cdef class LocDelta(Delta):
+    """A sequence location delta segment.
+    """
+
+    def __init__(self, SeqLoc seqloc not None):
+        cdef CDelta_seq* delta = new CDelta_seq()
+        delta.Select(CDelta_seq_choice.e_Loc)
+        delta.SetLoc(seqloc._loc.GetObject())
+        self._ref.Reset(delta)
+    
+    def __reduce__(self):
+        return type(self), (self.seqloc,)
+
+    def __repr__(self):
+        cdef SeqData data   = self.seqloc
+        return f"{type(self).__name__}({self.seqloc!r})"
+
+    @property
+    def seqloc(self):
+        """`SeqLoc`: The sequence location for this delta.
+        """
+        cdef CRef[CSeq_loc] loc = CRef[CSeq_loc](&self._ref.GetObject().GetLocMut())
+        return SeqLoc._wrap(loc)
