@@ -109,7 +109,7 @@ cdef extern from "objmgr/scope.hpp" namespace "ncbi::objects" nogil:
         #     EExist action,
         # )
 
-        CBioseq_Handle AddBioseq(CBioseq& bioseq)
+        CBioseq_Handle AddBioseq(CBioseq& bioseq) except +
         # CBioseq_Handle AddBioseq(CBioseq& bioseq, TPriority pri)
         # CBioseq_Handle AddBioseq(CBioseq& bioseq, TPriority pri, EExist action)
         # CBioseq_Handle AddBioseq(const CBioseq& bioseq)
@@ -118,5 +118,5 @@ cdef extern from "objmgr/scope.hpp" namespace "ncbi::objects" nogil:
 
 
         # Check existence of sequence with this id
-        bool Exists(const CSeq_id&        id)
+        bool Exists(const CSeq_id&        id) except +
         # bool Exists(const CSeq_id_Handle& id)
