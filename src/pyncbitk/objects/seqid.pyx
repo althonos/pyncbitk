@@ -99,6 +99,9 @@ cdef class LocalId(SeqId):
         cdef str ty = type(self).__name__
         return f"{ty}({self.object_id!r})"
 
+    def __str__(self):
+        return str(self.object_id)
+
     def __reduce__(self):
         return type(self), (self.object_id,)
 

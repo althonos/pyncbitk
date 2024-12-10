@@ -47,6 +47,9 @@ cdef class ObjectId(Serial):
     def __reduce__(self):
         return type(self), (self.value,)
 
+    def __str__(self):
+        return str(self.value)
+
     @property
     def value(self):
         """`str` or `int`: The actual value of the object identifier.
