@@ -145,3 +145,30 @@ Sequence Location (``pyncbitk.objects.seqloc``)
    :hidden:
 
    seqloc
+
+
+Sequence Alignments (``pyncbitk.objects.seqalign``)
+---------------------------------------------------
+
+.. currentmodule:: pyncbitk.objects.seqalign
+
+.. autosummary::
+
+    SeqAlign
+    GlobalSeqAlign
+    DiagonalSeqAlign
+    PartialSeqAlign
+    DiscontinuousSeqAlign
+    AlignSegments
+    DenseSegments
+    DenseSegmentsData
+    SeqAlignSet
+    AlignRow
+    SeqAlignScore
+
+.. toctree::
+   :caption: Sequence Location
+   :maxdepth: 1
+   :hidden:
+
+   seqalign

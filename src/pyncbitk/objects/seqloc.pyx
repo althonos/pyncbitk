@@ -1,4 +1,10 @@
 # cython: language_level=3
+"""Locations on a biological sequence.
+
+This module contains classes that are used to describe a location on a
+`BioSeq`. 
+
+"""
 
 from ..toolkit.serial.serialbase cimport CSerialObject
 from ..toolkit.objects.general.object_id cimport CObject_id
@@ -42,7 +48,7 @@ cdef class SeqLoc(Serial):
 
 
 cdef class NullLoc(SeqLoc):
-    """A gap of unknown size.
+    """A region of unknown length for which no data exists.
     """
 
 cdef class EmptySeqLoc(SeqLoc):
@@ -81,10 +87,15 @@ cdef class WholeSeqLoc(SeqLoc):
 
 cdef class SeqIntervalLoc(SeqLoc):
     """A reference to an interval on a `BioSeq`.
+
+    An interval is a single continuous region of defined length on a `BioSeq`.
+
     """
     
     # FIXME: Handle strand.
     def __init__(self, SeqId sequence_id, TSeqPos start, TSeqPos stop, object strand = None):
+        if start > stop:
+            raise ValueError(f"interval limits in invalid order: {start} > {stop}")
         cdef CSeq_interval* inter = new CSeq_interval(sequence_id._ref.GetObject(), start, stop)
         cdef CSeq_loc* loc = new CSeq_loc()
         loc.Select(CSeq_loc_choice.e_Int)

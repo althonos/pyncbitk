@@ -1,4 +1,25 @@
 # cython: language_level=3
+"""Instantiation of biological sequences.
+
+The `BioSeq` model of the NCBI C++ Toolkit requires two components: one
+or more sequence identifiers, which are used to name a sequence *instance*.
+A sequence instance represents concrete properties of a biological 
+sequence, such as its molecule type (DNA, RNA, protein) or its strandedness
+if applicable.
+
+Note:
+    In the original C++ code, sequence instances follow two parallel class 
+    hierarchies for representation: the molecule type branch, and the 
+    representation branch. Because Cython does not support multiple 
+    inheritance, the classes in this module follow only the representation
+    branch of the hierarchy. The molecule type, if known, can be accessed
+    with the `~SeqInst.molecule` property.
+
+See Also:
+    The `Data mode <https://ncbi.github.io/cxx-toolkit/pages/ch_datamod#ch_datamod.Classes_of_Biologica>`_
+    chapter of the NCBI C++ Toolkit documentation.
+
+"""
 
 from ..toolkit.corelib.ncbiobj cimport CRef
 from ..toolkit.objects.seq.seq_inst cimport CSeq_inst, ETopology, EStrand
@@ -182,10 +203,19 @@ cdef class SeqInst(Serial):
 
 cdef class VirtualInst(SeqInst):
     """An instance corresponding to a sequence with no data.
+
+    This class allows to describe the properties of a sequence, such as its
+    length or its molecule type, without actually knowing the sequence data.
+
     """
 
 cdef class ContinuousInst(SeqInst):
     """An instance corresponding to a single continuous sequence.
+
+    This class describes the most simple sequence kind, where we actually know 
+    the sequence data, which can be reached with the `~SeqInst.data`
+    property.
+
     """
 
     def __init__(
@@ -261,6 +291,13 @@ cdef class ConstructedInst(SeqInst):
 
 cdef class RefInst(SeqInst):
     """An instance corresponding to a reference to another sequence.
+
+    This class allows to describe the sequence data in terms of a location
+    in another sequence, described with a `~pyncbitk.objects.seqloc.SeqLoc`.
+    This can be used to alias certain regions of a sequence, such as creating 
+    references to the genes of contig without having to copy the sequence
+    data.
+
     """
 
     def __init__(

@@ -1,4 +1,17 @@
-# cython: language_level=3, linetrace=True, binding=True
+# cython: language_level=3
+"""Biological sequences.
+
+The NCBI C++ Toolkit defines a data model which allows to define biological
+sequences as a combination of identifiers that apply to an instance. 
+Identifiers are used to identify each sequence uniquely, while the sequence
+instance describes the knowledge about that sequence: its molecule type,
+length, or actual contents.
+
+See Also:
+    The `Biological Sequences <https://ncbi.github.io/cxx-toolkit/pages/ch_datamod#ch_datamod._Biological_Sequences>`_
+    section of the NCBI C++ Toolkit documentation.
+
+"""
 
 from libcpp.list cimport list as cpplist
 
