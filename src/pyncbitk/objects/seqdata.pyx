@@ -1,4 +1,16 @@
-# cython: language_level=3, linetrace=True, binding=True
+# cython: language_level=3
+"""Actual sequence data of biological sequences.
+
+The NCBI C++ Toolkit provides a unified API for encoding the actual data of
+protein and nucleotide sequences. It supports textual representation,
+ordinal encoding (replacing *A*, *C*, *G*, *T* with *1*, *2*, *3*, *4*), as
+well as compressed bitmap representations.
+
+See Also:
+    The `Data Model <https://ncbi.github.io/cxx-toolkit/pages/ch_datamod#ch_datamod.Seqdata_Encoding_the>`_
+    chapter of the NCBI C++ Toolkit documentation.
+
+"""
 
 from libcpp.algorithm cimport swap
 from libcpp.string cimport string
@@ -110,6 +122,13 @@ cdef class SeqAaData(SeqData):
     """
 
     cpdef str decode(self):
+        """Decode the contents of the sequence data.
+
+        Returns:
+            `str`: The decoded sequence data, as a Python string of
+            NCBI-extended amino-acid symbols.
+
+        """
         cdef CSeq_data*       out
         cdef CSeq_data*       data = self._ref.GetNonNullPointer()
         cdef CSeq_data_choice kind = data.Which()
@@ -128,6 +147,13 @@ cdef class SeqNaData(SeqData):
     """
 
     cpdef str decode(self):
+        """Decode the contents of the sequence data.
+
+        Returns:
+            `str`: The decoded sequence data, as a Python string of
+            IUPAC nucleotide symbols.
+
+        """
         cdef CSeq_data*       out
         cdef CSeq_data*       data = self._ref.GetNonNullPointer()
         cdef CSeq_data_choice kind = data.Which()
@@ -245,6 +271,12 @@ cdef class IupacAaData(SeqAaData):
     The IUPAC-IUB Commission on Biochemical Nomenclature defined a code
     of one-letter abbreviations for the 20 standard amino-acids, as well
     as undeterminate and unknown symbols.
+
+    References:
+        * IUPAC-IUB Commission on Biochemical Nomenclature.
+          "A One-Letter Notation for Amino Acid Sequences" 1–3. (1968).
+          *Journal of Biological Chemistry*, 243(13), 3557–3559.
+          :doi:`10.1016/S0021-9258(19)34176-6`.
 
     """
 
@@ -542,6 +574,10 @@ cdef class NcbiPAaData(SeqAaData):
 
 cdef class NcbiStdAa(SeqAaData):
     """Amino-acid sequence data stored as ordinal encoding.
+
+    This encoding represents the NCBI-extended amino-acids as consecutive
+    integer values, starting with *0* for the gap character.
+
     """
 
 

@@ -22,7 +22,7 @@ from .toolkit.objtools.blast.seqdb_writer.writedb cimport CWriteDB, EIndexType
 from pystreambuf cimport pyreadbuf, pyreadintobuf
 
 from .objects.seqset cimport Entry
-from .objects.seqloc cimport SeqId
+from .objects.seqid cimport SeqId
 from .objects.seq cimport BioSeq
 
 import os
@@ -59,8 +59,8 @@ cdef class FastaReader:
         Create a new FASTA reader from a file or a file-like object.
 
         Arguments:
-            file (`os.PathLike` or file-like object): Either the path to
-                a file to be open, or a Python file-like object open in
+            file (`str`, `os.PathLike` or file-like object): Either the path 
+                to a file to be open, or a Python file-like object open in
                 binary mode.
             split (`bool`): Set to `False` to force the reader to produce
                 `~pyncbitk.objects.seq.BioSeq` objects where the instance
@@ -191,7 +191,7 @@ cdef class DatabaseKeys:
         cdef SeqId sid
         cdef int   oid
         if not isinstance(item, SeqId):
-            return NotImplemented
+            return False
         sid = item
         return self._ref.GetObject().SeqidToOid(sid._ref.GetObject(), oid)
 
@@ -215,7 +215,7 @@ cdef class DatabaseValues:
         cdef int           oid
         cdef CRef[CBioseq] seq
         if not isinstance(item, BioSeq):
-            return NotImplemented
+            return False
         sid = item.id
         if not self._ref.GetObject().SeqidToOid(sid._ref.GetObject(), oid):
             return False
@@ -246,13 +246,14 @@ cdef class DatabaseReader:
         Create a new reader for a database of the given name.
 
         Arguments:
-            name (`str`): The name of the database, as given when the
-                database was created.
+            name (`str` or `os.PathLike`): The name of the database, as given 
+                when the database was created.
             type (`str` or `None`): The type of sequences in the database,
                 either ``nucleotide`` or ``protein``. If `None` given,
                 the database type will be detected from the metadata.
 
         """
+        # TODO: handle type given in argument
         cdef bytes   _name =  os.fsencode(name)
         cdef CSeqDB* _db   = new CSeqDB(<string> _name, ESeqType.eUnknown)
         self._ref.Reset(_db)
@@ -268,7 +269,8 @@ cdef class DatabaseReader:
         cdef CRef[CBioseq] bioseq
 
         if not isinstance(index, SeqId):
-            return NotImplemented
+            ty = type(index).__name__
+            raise TypeError("database keys must be SeqId, not {ty!r}")
 
         seq_id = index
         bioseq = self._ref.GetNonNullPointer().SeqidToBioseq(seq_id._ref.GetObject())

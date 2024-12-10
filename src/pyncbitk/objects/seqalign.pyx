@@ -5,6 +5,7 @@ from libcpp cimport bool
 from libcpp.string cimport string
 
 from ..toolkit.corelib.ncbiobj cimport CRef
+from ..toolkit.corelib.ncbimisc cimport TSeqPos
 from ..toolkit.objects.general.object_id cimport CObject_id
 from ..toolkit.objects.seqloc.seq_id cimport CSeq_id
 from ..toolkit.objects.seqloc.na_strand cimport ENa_strand
@@ -18,7 +19,7 @@ from ..toolkit.serial.serialbase cimport CSerialObject
 
 from ..serial cimport Serial
 from .general cimport ObjectId
-from .seqloc cimport SeqId
+from .seqid cimport SeqId
 
 # --- Constants ----------------------------------------------------------------
 
@@ -153,7 +154,7 @@ cdef class DenseSegmentsData(Serial):
         """`list` of `int`: The lengths of each segment.
         """
         # FIXME: make zero-copy
-        cdef CDense_seg* obj  = &self._ref.GetObject()
+        cdef CDense_seg* obj  = self._ref.GetNonNullPointer()
         cdef list        lens = []
 
         for length in obj.GetLensMut(): # FIXME: const iteration
@@ -165,7 +166,7 @@ cdef class DenseSegmentsData(Serial):
         """`list` of `int`: The start offsets for the sequences in each segment.
         """
         # FIXME: make zero-copy
-        cdef CDense_seg* obj    = &self._ref.GetObject()
+        cdef CDense_seg* obj    = self._ref.GetNonNullPointer()
         cdef list        starts = []
 
         for start in obj.GetStartsMut(): # FIXME: const iteration
@@ -177,7 +178,7 @@ cdef class DenseSegmentsData(Serial):
         """`list` of `str`, or `None`: The strand for each sequence, if any.
         """
         cdef ENa_strand  strand
-        cdef CDense_seg* obj     = &self._ref.GetObject()
+        cdef CDense_seg* obj     = self._ref.GetNonNullPointer()
         cdef list        strands = []
 
         for strand in obj.GetStrandsMut():
@@ -262,17 +263,22 @@ cdef class SeqAlign(Serial):
             id = 100 \times \frac{\text{matches}}{\text{alignment length}}
 
         """
-        cdef unsigned int length
         cdef int          nident
+        cdef unsigned int length = 0
         cdef double       value  = 0
 
         # return if the score is already available
         if self._ref.GetObject().GetNamedScore(EScoreType.eScore_PercentIdentity, value):
             return value
 
-        length = self._ref.GetObject().GetAlignLength()
+        # can't compute percent identity if identity is unknown by now
         if not self._ref.GetObject().GetNamedScore(EScoreType.eScore_IdentityCount, nident):
             return None
+
+        # NOTE: compute the length from the segments, otherwise the alignment length
+        # seeems to be inaccurate (see `CAlignFormatUtil::GetPercentIdentity`)
+        for l in self._ref.GetObject().GetSegsMut().GetDensegMut().GetLensMut():
+            length += l
 
         if length > 0:
             value = 100.0 * (<double> nident) / (<double> length)
@@ -324,10 +330,38 @@ cdef class SeqAlign(Serial):
 
     @property
     def segments(self):
-        cdef CSeq_align*  obj = &self._ref.GetObject()
+        cdef CSeq_align*  obj = self._ref.GetNonNullPointer()
         cdef CRef[C_Segs] ref = CRef[C_Segs](&obj.GetSegsMut())
         return AlignSegments._wrap(ref)
 
+    @property
+    def alignment_length(self):
+        """`int`: The gapped alignment length.
+        """
+        cdef size_t       length = 0
+        cdef CSeq_align*  obj = self._ref.GetNonNullPointer()
+        # cdef int alignment_length = obj.GetAlignLength()
+        # NOTE: compute the length from the segments, otherwise the alignment length
+        # seeems to be inaccurate (see `CAlignFormatUtil::GetPercentIdentity`)
+        for l in obj.GetSegsMut().GetDensegMut().GetLensMut():
+            length += l
+        return length
+
+        return sum(self.segments.data.lengths)
+
+    @property
+    def matches(self):
+        cdef int nident
+        if not self._ref.GetObject().GetNamedScore(EScoreType.eScore_IdentityCount, nident):
+            return None
+        return nident
+
+    @property
+    def mismatches(self):
+        cdef int mm
+        if not self._ref.GetObject().GetNamedScore(EScoreType.eScore_MismatchCount, mm):
+            return None
+        return mm
 
 cdef class GlobalSeqAlign(SeqAlign):
     """A global alignment over the complete lengths of several `BioSeq`.

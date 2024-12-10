@@ -1,4 +1,6 @@
-# cython: language_level=3, linetrace=True, binding=True
+# cython: language_level=3
+"""General objects for the NCBI C++ object model.
+"""
 
 from ..toolkit.corelib.ncbiobj cimport CRef
 from ..toolkit.objects.general.object_id cimport CObject_id, E_Choice as CObject_id_choice

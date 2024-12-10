@@ -1,4 +1,4 @@
-# cython: language_level=3, linetrace=True, binding=True
+# cython: language_level=3
 
 from libcpp.list cimport list as cpplist
 

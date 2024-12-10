@@ -1,20 +1,25 @@
 [build-system]
-requires = ["scikit-build-core", "cython >= 3.0"]
-build-backend = "scikit_build_core.build"
+requires = ["scikit-build-core-conan", "cython >=3.0"]
+build-backend = "scikit_build_core_conan.build"
 
 [project]
 name = "pyncbitk"
 version = "0.0.1"
 requires-python = ">=3.7"
 
+[tool.scikit-build-core-conan]
+path = "."
+build = "missing"
+output_folder = "build/Conan"
+
 [tool.scikit-build]
-build-dir = "build/{build_type}/build"
+build-dir = "build/{build_type}"
 cmake.build-type = "Release"
-editable.rebuild = true
+editable.rebuild = false
 editable.verbose = false
 
 [tool.scikit-build.cmake.define]
-PYNCBITK_INSTALL_LIBS = { env = "PYNCBITK_INSTALL_LIBS", default = true }
+PYNCBITK_INSTALL_LIBS = { env = "PYNCBITK_INSTALL_LIBS", default = false }
 PYNCBITK_DISABLE_SSE4 = { env = "PYNCBITK_DISABLE_SSE4", default = false }
 
 [[tool.scikit-build.overrides]]
@@ -31,10 +36,12 @@ if.env.MOLD = true
 cmake.define.CMAKE_LINKER_TYPE = "mold"
 
 [tool.cibuildwheel]
-before-build = "pip install scikit-build-core cython"
-build-frontend = { name = "pip", args = ["--no-build-isolation"] }
+before-build = ["pip install scikit-build-core-conan cython"]
+build-frontend = { name = "pip", args = ["--no-build-isolation", "--config-settings=cmake.define.PYNCBITK_INSTALL_LIBS=OFF"] }
 build-verbosity = 1
 free-threaded-support = false
+test-command = "cd {project} && python -m unittest tests -v"
+manylinux-x86_64-image = "althonos/pyncbitk-manylinux_2_28:release"
 
 [tool.cibuildwheel.macos]
 environment = { MACOSX_DEPLOYMENT_TARGET = "10.12" }

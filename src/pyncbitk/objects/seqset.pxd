@@ -1,4 +1,4 @@
-# cython: language_level=3, linetrace=True, binding=True
+# cython: language_level=3
 
 from ..toolkit.corelib.ncbiobj cimport CRef
 from ..toolkit.objects.seqset.bioseq_set cimport CBioseq_set

@@ -36,6 +36,12 @@ if(${CMAKE_BUILD_TYPE} STREQUAL Debug)
     -X warn.unused_result=True
     -X warn.multiple_declarators=True
   )
+  if(NOT Python_INTERPRETER_ID STREQUAL PyPy)
+    set(CYTHON_DIRECTIVES
+      ${CYTHON_DIRECTIVES}
+      -X linetrace=true
+    )
+  endif()
 else()
   set(CYTHON_DIRECTIVES
     ${CYTHON_DIRECTIVES}
@@ -45,7 +51,8 @@ else()
 endif()
 
 macro(cython_extension _name)
-  cmake_parse_arguments(CYTHON_EXTENSION "" "" "DEPENDS" ${ARGN} )
+  set(multiValueArgs DEPENDS LINKS)
+  cmake_parse_arguments(CYTHON_EXTENSION "" "" "${multiValueArgs}" ${ARGN} )
 
   # Make sure that the source directory is known
   if(NOT DEFINED PYTHON_EXTENSIONS_SOURCE_DIR)
@@ -62,10 +69,13 @@ macro(cython_extension _name)
             "${CMAKE_CURRENT_SOURCE_DIR}/${_name}.pyx"
             --output-file ${_name}.cpp
             --cplus
+            --depfile
             -I "${CYTHON_HEADERS_DIR}"
             ${CYTHON_DIRECTIVES}
     MAIN_DEPENDENCY
       ${_name}.pyx
+    DEPFILE
+      ${_name}.cpp.dep
     VERBATIM)
 
   # Build fully-qualified module name as the target name
@@ -90,10 +100,12 @@ macro(cython_extension _name)
     # Include patch for `PyInterpreterState_GetID` to all Python extensions
     target_precompile_headers(${_target} PRIVATE ${PYSTATE_PATCH_H})
 
-    # Link required NCBI dependencies
-    foreach(_lib IN LISTS NCBI_${NCBI_PROJECT}_NCBILIB)
-      target_link_libraries(${_target} PUBLIC $<TARGET_LINKER_FILE:${_lib}>)
-      target_include_directories(${_target} PUBLIC $<TARGET_PROPERTY:${_lib},INCLUDE_DIRECTORIES>)
+    # Link to NCBI libraries and add include directories if needed
+    target_link_libraries(${_target} PUBLIC ${NCBITMP_NCBILIB} ${NCBITMP_EXTLIB})
+    foreach(_dep IN LISTS CYTHON_EXTENSION_DEPENDS)
+      if(TARGET ${_dep})
+        target_include_directories(${_target} PUBLIC $<TARGET_PROPERTY:${_dep},INCLUDE_DIRECTORIES>)
+      endif()
     endforeach()
 
     # Preserve the relative project structure in the install directory
@@ -102,7 +114,7 @@ macro(cython_extension _name)
     message(DEBUG "Install folder for extension ${_name}: ${_dest_folder}")
 
     # Patch the RPATH to the installed libs (only if libs are installed locally)
-    if(DEFINED PYTHON_LIBS_INSTALL_DIR)
+    if(PYNCBITK_INSTALL_LIBS AND DEFINED PYTHON_LIBS_INSTALL_DIR)
       cmake_path(SET _path NORMALIZE ${_dest_folder})
       string(REPLACE "/" ";" _components ${_path})
       set(_rpath "\$ORIGIN/")
@@ -112,6 +124,8 @@ macro(cython_extension _name)
       string(APPEND _rpath "${PYTHON_LIBS_INSTALL_DIR}")
       set_target_properties(${_target} PROPERTIES INSTALL_RPATH ${_rpath})
       message(DEBUG "RPATH for extension ${_name}: ${_rpath}")
+    else()
+      set_target_properties(${_target} PROPERTIES INSTALL_RPATH_USE_LINK_PATH TRUE)
     endif()
 
   endfunction()

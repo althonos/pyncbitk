@@ -5,6 +5,7 @@ from ...corelib.ncbimisc cimport TSeqPos
 from ...serial.serialbase cimport CSerialObject
 from ...serial.serialdef cimport ESerialRecursionMode
 from .seq_data cimport CSeq_data
+from .seq_ext cimport CSeq_ext
 
 cdef extern from "objects/seq/Seq_inst_.hpp" namespace "ncbi::objects::CSeq_inst_Base" nogil:
     
@@ -61,7 +62,7 @@ cdef extern from "objects/seq/Seq_inst_.hpp" namespace "ncbi::objects::CSeq_inst
     ctypedef ETopology TTopology
     ctypedef EStrand TStrand
     ctypedef CSeq_data TSeq_data
-    # ctypedef CSeq_ext TExt
+    ctypedef CSeq_ext TExt
     # ctypedef CSeq_hist THist
 
 cdef extern from "objects/seq/Seq_inst_.hpp" namespace "ncbi::objects" nogil:
@@ -126,13 +127,13 @@ cdef extern from "objects/seq/Seq_inst_.hpp" namespace "ncbi::objects" nogil:
         void SetSeq_data(TSeq_data& value)
         TSeq_data& GetSeq_dataMut "SetSeq_data" ()
 
-        # # optional
-        # bool IsSetExt() const
-        # bool CanGetExt() const
-        # void ResetExt()
-        # const TExt& GetExt() const
-        # void SetExt(TExt& value)
-        # TExt& SetExt()
+        # optional
+        bool IsSetExt() const
+        bool CanGetExt() const
+        void ResetExt()
+        const TExt& GetExt() const
+        void SetExt(TExt& value)
+        TExt& GetExtMut "SetExt"()
 
         # # optional
         # bool IsSetHist() const
