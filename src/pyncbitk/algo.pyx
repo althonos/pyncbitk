@@ -41,7 +41,8 @@ from .toolkit.algo.blast.api.uniform_search cimport CSearchDatabase, EMoleculeTy
 from .toolkit.objtools.blast.seqdb_reader.seqdb cimport ESeqType
 
 from .objects.general cimport ObjectId
-from .objects.seqloc cimport SeqLoc, SeqId
+from .objects.seqloc cimport SeqLoc
+from .objects.seqid cimport SeqId
 from .objects.seqalign cimport SeqAlign, SeqAlignSet
 from .objects.seq cimport BioSeq
 from .objects.seqset cimport BioSeqSet

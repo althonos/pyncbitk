@@ -13,7 +13,8 @@ from .toolkit.objects.seq.bioseq cimport CBioseq
 
 from .objects.seq cimport BioSeq
 from .objects.seqinst cimport SeqInst
-from .objects.seqloc cimport SeqLoc, SeqId
+from .objects.seqloc cimport SeqLoc
+from .objects.seqid cimport SeqId
 
 
 cdef class BioSeqHandle:

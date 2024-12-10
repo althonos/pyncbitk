@@ -22,7 +22,7 @@ from .toolkit.objtools.blast.seqdb_writer.writedb cimport CWriteDB, EIndexType
 from pystreambuf cimport pyreadbuf, pyreadintobuf
 
 from .objects.seqset cimport Entry
-from .objects.seqloc cimport SeqId
+from .objects.seqid cimport SeqId
 from .objects.seq cimport BioSeq
 
 import os

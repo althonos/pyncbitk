@@ -19,7 +19,7 @@ from ..toolkit.serial.serialbase cimport CSerialObject
 
 from ..serial cimport Serial
 from .general cimport ObjectId
-from .seqloc cimport SeqId
+from .seqid cimport SeqId
 
 # --- Constants ----------------------------------------------------------------
 

@@ -95,6 +95,30 @@ Sequence Data (``pyncbitk.objects.seqdata``)
    seqdata
 
 
+Sequence Identifier (``pyncbitk.objects.seqid``)
+------------------------------------------------
+
+.. currentmodule:: pyncbitk.objects.seqid
+
+.. autosummary::
+
+    SeqId
+    LocalId
+    RefSeqId
+    GenBankId
+    ProteinDataBankId
+    GeneralId
+    OtherId
+    TextSeqId
+
+.. toctree::
+   :caption: Sequence Identifier
+   :maxdepth: 1
+   :hidden:
+
+   seqid
+
+
 Sequence Location (``pyncbitk.objects.seqloc``)
 -----------------------------------------------
 

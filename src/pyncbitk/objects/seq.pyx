@@ -10,7 +10,7 @@ from ..toolkit.serial.serialbase cimport CSerialObject
 
 from ..serial cimport Serial
 from .seqinst cimport SeqInst
-from .seqloc cimport SeqId, LocalId
+from .seqid cimport SeqId, LocalId
 
 # --- BioSeq -------------------------------------------------------------------
 
