@@ -8,6 +8,10 @@ API Reference
 .. toctree::
    :maxdepth: 2
 
+   serial
    objects/index
+   objtools/index
+   objmgr/index    
    algo/index
-   objtools/index    
+
+A complete reference can be found at :ref:`genindex` and :ref:`modindex`.

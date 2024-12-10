@@ -65,19 +65,16 @@ cdef class SearchQuery:
 
     @property
     def seqloc(self):
-        assert self._query.NotNull()
         cdef CConstRef[CSeq_loc] cref = self._query.GetObject().GetQuerySeqLoc()
         cdef CRef[CSeq_loc] ref = CRef[CSeq_loc](&cref.GetObject())
         return SeqLoc._wrap(ref)
 
     @property
     def length(self):
-        assert self._query.NotNull()
         return self._query.GetObject().GetLength()
 
     @property
     def scope(self):
-        assert self._query.NotNull()
         cdef Scope scope = Scope.__new__(Scope)
         scope._scope = self._query.GetObject().GetScope()
         return scope
@@ -316,9 +313,7 @@ cdef class Blast:
         BlastSubjects subjects,
         bool scan_mode = False
     ):
-        """run(self, queries, subjects, scan_mode=False)\n--\n
-
-        Run a BLAST query with the given sequences.
+        """Run a BLAST query with the given sequences.
 
         Arguments:
             queries (`BioSeq` or `BioSeqSet`): The queries to use on the

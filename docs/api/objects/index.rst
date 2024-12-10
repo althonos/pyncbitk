@@ -93,3 +93,31 @@ Sequence Data (``pyncbitk.objects.seqdata``)
    :hidden:
 
    seqdata
+
+
+Sequence Location (``pyncbitk.objects.seqloc``)
+-----------------------------------------------
+
+.. currentmodule:: pyncbitk.objects.seqloc
+
+.. autosummary::
+
+    SeqLoc
+    NullLoc
+    EmptySeqLoc
+    WholeSeqLoc
+    SeqIntervalLoc
+    PackedSeqLoc
+    PointLoc
+    PackedPointsLoc
+    MixLoc
+    EquivalentLoc
+    BondLoc
+    FeatureLoc
+
+.. toctree::
+   :caption: Sequence Location
+   :maxdepth: 1
+   :hidden:
+
+   seqloc

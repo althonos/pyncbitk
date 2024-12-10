@@ -1,4 +1,4 @@
-# cython: language_level=3, linetrace=True, binding=True
+# cython: language_level=3
 
 from ..toolkit.corelib.ncbiobj cimport CRef
 from ..toolkit.objects.seq.seq_inst cimport CSeq_inst, ETopology, EStrand
@@ -197,6 +197,25 @@ cdef class ContinuousInst(SeqInst):
         molecule=None,
         length=None,
     ):
+        """__init__(self, data, *, topology="linear", strandedness=None, molecule=None, length=None)\n--\n
+
+        Create a new continuous instance from the given sequence data.
+
+        Arguments:
+            data (`~pyncbitk.objects.seqdata.SeqData`): The concrete sequence 
+                data.
+            topology (`str`): The topology of the sequence; either ``linear``,
+                ``circular``, ``tandem``, ``other``, or `None` for unknown 
+                sequence topologies.
+            strandedness (`str`): The strandedness of the sequence; either
+                ``single``, ``double``, ``mixed``, ``other``, or `None` for
+                unknown strandedness.
+            molecule (`str`): The type of molecule described by the data;
+                either ``dna``, ``rna``, ``protein``, ``nucleotide``, 
+                ``other`` or `None` for unknown molecule types.
+            length (`int`): The length of the sequence, if known.
+
+        """
         if length is None and hasattr(data, "length"):
             length = data.length
 
@@ -246,13 +265,32 @@ cdef class RefInst(SeqInst):
 
     def __init__(
         self,
-        SeqLoc loc,
+        SeqLoc seqloc,
         *,
         topology="linear",
         strandedness=None,
         molecule=None,
         length=None,
     ):
+        """__init__(self, seqloc, *, topology="linear", strandedness=None, molecule=None, length=None)\n--\n
+
+        Create a new instance referencing the given location.
+
+        Arguments:
+            seqloc (`~pyncbitk.objects.seqloc.SeqLoc`): The location of 
+                the actual sequence data.
+            topology (`str`): The topology of the sequence; either ``linear``,
+                ``circular``, ``tandem``, ``other``, or `None` for unknown 
+                sequence topologies.
+            strandedness (`str`): The strandedness of the sequence; either
+                ``single``, ``double``, ``mixed``, ``other``, or `None` for
+                unknown strandedness.
+            molecule (`str`): The type of molecule described by the data;
+                either ``dna``, ``rna``, ``protein``, ``nucleotide``, 
+                ``other`` or `None` for unknown molecule types.
+            length (`int`): The length of the sequence, if known.
+
+        """
         super().__init__(
             topology=topology,
             strandedness=strandedness,
@@ -261,7 +299,7 @@ cdef class RefInst(SeqInst):
         )
         # copy the seqloc into the object
         cdef CRef_ext* ref = new CRef_ext()
-        ref.Assign(loc._loc.GetObject(), ESerialRecursionMode.eRecursive)
+        ref.Assign(seqloc._loc.GetObject(), ESerialRecursionMode.eRecursive)
         # add the seqloc into the sequence external data
         cdef CSeq_ext* ext = new CSeq_ext()
         ext.SetRef(ref[0])

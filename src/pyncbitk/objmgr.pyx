@@ -19,6 +19,8 @@ from .objects.seqloc cimport SeqLoc, SeqId
 cdef class BioSeqHandle:
 
     def __call__(self):
+        """Resolve the handle to load the complete `BioSeq`.
+        """
         cdef CConstRef[CBioseq] ccref = self._handle.GetCompleteBioseq()
         cdef BioSeq bioseq = BioSeq.__new__(BioSeq)
         bioseq._ref.Reset(<CBioseq*> ccref.GetNonNullPointer())
@@ -55,10 +57,15 @@ cdef class BioSeqHandle:
 
 
 cdef class ObjectManager:
+    """The global object manager.
+    """
+
     def __init__(self):
         self._mgr = CObjectManager.GetInstance()
 
     cpdef Scope scope(self):
+        """Create a new scope.
+        """
         return Scope(self)
 
     def register_data_loader(self, str name not None):
@@ -72,6 +79,12 @@ cdef class ObjectManager:
 
 
 cdef class Scope:
+    """A handler for managing objects within a given scope.
+
+    This class works as a context manager to support adding data to the 
+    object manager for a given scope.
+
+    """
 
     def __init__(self, ObjectManager manager):
         self._scope.Reset(new CScope(manager._mgr.GetObject()))
@@ -95,6 +108,8 @@ cdef class Scope:
         return handle
 
     def close(self):
+        """Close the scope and release the associated data.
+        """
         self._scope.ReleaseOrNull()
 
     cpdef BioSeqHandle add_bioseq(self, BioSeq seq) except *:

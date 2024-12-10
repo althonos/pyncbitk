@@ -1,4 +1,4 @@
-# cython: language_level=3, linetrace=True, binding=True
+# cython: language_level=3
 
 from ..toolkit.serial.serialbase cimport CSerialObject
 from ..toolkit.objects.general.object_id cimport CObject_id

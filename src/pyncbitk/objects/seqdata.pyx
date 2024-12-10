@@ -110,6 +110,13 @@ cdef class SeqAaData(SeqData):
     """
 
     cpdef str decode(self):
+        """Decode the contents of the sequence data.
+
+        Returns:
+            `str`: The decoded sequence data, as a Python string of 
+            NCBI-extended amino-acid symbols.
+
+        """
         cdef CSeq_data*       out
         cdef CSeq_data*       data = self._ref.GetNonNullPointer()
         cdef CSeq_data_choice kind = data.Which()
@@ -128,6 +135,13 @@ cdef class SeqNaData(SeqData):
     """
 
     cpdef str decode(self):
+        """Decode the contents of the sequence data.
+
+        Returns:
+            `str`: The decoded sequence data, as a Python string of 
+            IUPAC nucleotide symbols.
+
+        """
         cdef CSeq_data*       out
         cdef CSeq_data*       data = self._ref.GetNonNullPointer()
         cdef CSeq_data_choice kind = data.Which()

@@ -7,21 +7,21 @@ Reader
 ------
 
 .. autoclass:: DatabaseReader
-   :special-members: __init__, __iter__
+   :special-members:
    :members:
 
 .. autoclass:: DatabaseKeys
-   :special-members: __next__
+   :special-members:
    :members:
 
 .. autoclass:: DatabaseValues
-   :special-members: __next__
+   :special-members:
    :members:
 
 Writer
 ------
 
 .. autoclass:: DatabaseWriter
-   :special-members: __init__
+   :special-members:
    :members:
 

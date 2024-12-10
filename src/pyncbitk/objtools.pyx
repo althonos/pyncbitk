@@ -59,8 +59,8 @@ cdef class FastaReader:
         Create a new FASTA reader from a file or a file-like object.
 
         Arguments:
-            file (`os.PathLike` or file-like object): Either the path to
-                a file to be open, or a Python file-like object open in
+            file (`str`, `os.PathLike` or file-like object): Either the path 
+                to a file to be open, or a Python file-like object open in
                 binary mode.
             split (`bool`): Set to `False` to force the reader to produce
                 `~pyncbitk.objects.seq.BioSeq` objects where the instance
