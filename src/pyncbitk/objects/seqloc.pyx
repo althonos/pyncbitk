@@ -59,7 +59,7 @@ cdef class WholeSeqLoc(SeqLoc):
     """A reference to an entire `BioSeq`.
     """
 
-    def __init__(self, SeqId sequence_id):
+    def __init__(self, SeqId sequence_id not None):
         """__init__(self, id)\n--\n
 
         Create a new location referencing the given sequence.
@@ -74,6 +74,9 @@ cdef class WholeSeqLoc(SeqLoc):
         loc.Select(CSeq_loc_choice.e_Whole)
         loc.SetWhole(sequence_id._ref.GetObject())
 
+    def __reduce__(self):
+        return type(self), (self.sequence_id,)
+
     def __repr__(self):
         cdef str ty = type(self).__name__
         return f"{ty}({self.sequence_id!r})"
@@ -84,6 +87,7 @@ cdef class WholeSeqLoc(SeqLoc):
         """
         id_ = CRef[CSeq_id](&self._loc.GetNonNullPointer().GetWholeMut())
         return SeqId._wrap(id_)
+
 
 cdef class SeqIntervalLoc(SeqLoc):
     """A reference to an interval on a `BioSeq`.
@@ -102,6 +106,11 @@ cdef class SeqIntervalLoc(SeqLoc):
         loc.SetInt(inter[0])
         self._loc.Reset(loc)
 
+    # FIXME: handle strand 
+    def __reduce__(self):
+        return type(self), (self.sequence_id, self.start, self.stop)
+
+    # FIXME: handle strand 
     def __repr__(self):
         cdef str ty = type(self).__name__
         return f"{ty}({self.sequence_id!r}, {self.start!r}, {self.stop!r})"

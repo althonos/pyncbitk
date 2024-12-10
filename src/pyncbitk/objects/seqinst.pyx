@@ -35,6 +35,7 @@ from ..serial cimport Serial
 from .seqloc cimport SeqLoc
 from .seqdata cimport SeqData, SeqNaData, SeqAaData
 
+import functools
 
 # --- SeqInst ------------------------------------------------------------------
 
@@ -192,14 +193,6 @@ cdef class SeqInst(Serial):
             return None
         return _SEQINST_STRANDEDNESS_STR[self._ref.GetNonNullPointer().GetStrand()]
 
-    @property
-    def data(self):
-        """`SeqData` or `None`: The concrete sequence data.
-        """
-        if not self._ref.GetObject().IsSetSeq_data():
-            return None
-        return SeqData._wrap(CRef[CSeq_data](&self._ref.GetNonNullPointer().GetSeq_dataMut()))
-
 
 cdef class VirtualInst(SeqInst):
     """An instance corresponding to a sequence with no data.
@@ -253,7 +246,7 @@ cdef class ContinuousInst(SeqInst):
             if isinstance(data, SeqNaData):
                 molecule = "dna"
             elif isinstance(data, SeqAaData):
-                molecule = "aa"
+                molecule = "protein"
 
         super().__init__(
             topology=topology,
@@ -265,6 +258,16 @@ cdef class ContinuousInst(SeqInst):
         cdef CSeq_inst* obj = self._ref.GetNonNullPointer()
         obj.SetRepr(CSeq_inst_repr.eRepr_raw)
         obj.SetSeq_data(data._ref.GetObject())
+
+    def __reduce__(self):
+        return functools.partial(
+            type(self),
+            self.data,
+            topology=self.topology,
+            strandedness=self.strandedness,
+            molecule=self.molecule,
+            length=self.length,
+        ), ()
 
     def __repr__(self):
         cdef str ty    = self.__class__.__name__
@@ -280,6 +283,15 @@ cdef class ContinuousInst(SeqInst):
             args.append(f"length={self.length!r}")
 
         return f"{ty}({', '.join(args)})"
+
+    @property
+    def data(self):
+        """`SeqData` or `None`: The concrete sequence data.
+        """
+        if not self._ref.GetObject().IsSetSeq_data():
+            return None
+        return SeqData._wrap(CRef[CSeq_data](&self._ref.GetNonNullPointer().GetSeq_dataMut()))
+
 
 cdef class SegmentedInst(SeqInst):
     """An instance corresponding to a segmented sequence.
@@ -359,6 +371,16 @@ cdef class RefInst(SeqInst):
             args.append(f"length={self.length!r}")
 
         return f"{ty}({', '.join(args)})"
+
+    def __reduce__(self):
+        return functools.partial(
+            type(self),
+            self.seqloc,
+            topology=self.topology,
+            strandedness=self.strandedness,
+            molecule=self.molecule,
+            length=self.length,
+        ), ()
 
     @property
     def seqloc(self):

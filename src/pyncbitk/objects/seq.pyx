@@ -25,6 +25,8 @@ from ..serial cimport Serial
 from .seqinst cimport SeqInst
 from .seqid cimport SeqId, LocalId
 
+import functools
+
 # --- BioSeq -------------------------------------------------------------------
 
 cdef class BioSeq(Serial):
@@ -60,6 +62,9 @@ cdef class BioSeq(Serial):
             obj.SetId().push_back(id_._ref)
 
         self._ref.Reset(obj)
+
+    def __reduce__(self):
+        return functools.partial(type(self), self.instance, *self.ids), ()
 
     def __repr__(self):
         cdef str ty = self.__class__.__name__

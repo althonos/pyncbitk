@@ -99,6 +99,9 @@ cdef class LocalId(SeqId):
         cdef str ty = type(self).__name__
         return f"{ty}({self.object_id!r})"
 
+    def __reduce__(self):
+        return type(self), (self.object_id,)
+
     @property
     def object_id(self):
         """`~pyncbitk.objects.general.ObjectId`: The object identifier.

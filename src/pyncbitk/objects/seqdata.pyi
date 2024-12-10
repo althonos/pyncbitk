@@ -1,7 +1,15 @@
+import typing
 from collections.abc import Buffer
 from typing import SupportsIndex, Tuple, Type, Union
 
+try:
+    from typing import Literal
+except ImportError:
+    from typing_extensions import Literal  # type: ignore
+
 from ..serial import Serial
+
+_S = typing.TypeVar("_S")
 
 ByteLike = Union[bytes, bytearray, memoryview]
 ByteString = Union[str, ByteLike]
@@ -11,7 +19,10 @@ class SeqData(Serial):
     def __copy__(self) -> SeqData: ...
     def complement(self, pack: bool = False) -> SeqData: ...
     def reverse_complement(self, pack: bool = False) -> SeqData: ...
-    def copy(self, pack: bool = False) -> SeqData: ...
+    @typing.overload
+    def copy(self: _S, pack: Literal[False] = False) -> _S: ...
+    @typing.overload
+    def copy(self, pack: Literal[True]) -> SeqData: ...
 
 class SeqAaData(SeqData):
     def decode(self) -> str: ...

@@ -92,7 +92,7 @@ cdef class SeqData(Serial):
     def __copy__(self):
         return self.copy()
 
-    cpdef SeqData complement(self, bool pack=False):
+    cpdef SeqData complement(self, bool pack=False):  # FIXME: move to SeqNaData?
         cdef CSeq_data* data = new CSeq_data()
         with nogil:
             CSeqportUtil.Complement(self._ref.GetObject(), data)
@@ -100,7 +100,7 @@ cdef class SeqData(Serial):
                 CSeqportUtil.Pack(data)
         return SeqData._wrap(CRef[CSeq_data](data))
 
-    cpdef SeqData reverse_complement(self, bool pack=False):
+    cpdef SeqData reverse_complement(self, bool pack=False):  # FIXME: move to SeqNaData?
         cdef CSeq_data* data = new CSeq_data()
         with nogil:
             CSeqportUtil.ReverseComplement(self._ref.GetObject(), data)
@@ -109,6 +109,15 @@ cdef class SeqData(Serial):
         return SeqData._wrap(CRef[CSeq_data](data))
 
     cpdef SeqData copy(self, bool pack=False):
+        """Create a copy of the sequence data.
+
+        Arguments
+            pack (`bool`): Whether to perform additional packing of the
+                data stored in the copy, allowing a more compact 
+                representation but potentially changing the `SeqData` 
+                subtype.
+
+        """
         cdef CSeq_data* data = new CSeq_data()
         with nogil:
             CSeqportUtil.GetCopy(self._ref.GetObject(), data)
@@ -197,8 +206,9 @@ cdef class IupacNaData(SeqNaData):
 
     def __reduce_ex__(self, protocol):
         if protocol >= 5:
-            return type(self), (pickle.PickleBuffer(self),), None
-        return type(self), (memoryview(self).tobytes(),), None
+            return type(self), (pickle.PickleBuffer(self),)
+        cdef bytes data = self._ref.GetNonNullPointer().GetIupacna().Get()
+        return type(self), (data,)
 
     def __repr__(self):
         cdef str ty = self.__class__.__name__
@@ -521,7 +531,7 @@ cdef class Ncbi8AaData(SeqAaData):
     """
 
 
-cdef class NcbiEAaData(IupacAaData):
+cdef class NcbiEAaData(SeqAaData):
     """Amino-acid sequence data storing an NCBI-extended string.
 
     This representation adds symbols for the non-standard selenocysteine

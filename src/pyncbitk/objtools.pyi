@@ -1,8 +1,8 @@
 from os import PathLike
-from typing import BinaryIO, Iterator, List, Mapping, Optional, Sized, Type, KeysView, ValuesView
+from typing import BinaryIO, Iterator, List, Mapping, Union, Optional, Sized, Type, KeysView, ValuesView
 
 from .objects.seq import BioSeq
-from .objects.seqloc import SeqId
+from .objects.seqid import SeqId
 
 try:
     from typing import Literal

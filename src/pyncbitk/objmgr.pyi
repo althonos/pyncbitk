@@ -1,7 +1,7 @@
 from typing import Optional, ContextManager
 
 from .objects.seq import BioSeq
-from .objects.seqloc import SeqId
+from .objects.seqid import SeqId
 
 class BioSeqHandle:   
     def __call__(self) -> BioSeq: ...

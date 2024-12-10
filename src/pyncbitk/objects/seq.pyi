@@ -1,5 +1,5 @@
 from ..serial import Serial
-from .seqloc import SeqId
+from .seqid import SeqId
 from .seqinst import SeqInst
 
 class BioSeq(Serial):

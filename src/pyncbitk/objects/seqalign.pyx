@@ -377,6 +377,9 @@ cdef class DiscontinuousSeqAlign(SeqAlign):
     pass
 
 cdef class SeqAlignSet(Serial):
+    """A set of sequence alignments.
+    """
+
     @staticmethod
     cdef SeqAlignSet _wrap(CRef[CSeq_align_set] ref):
         cdef SeqAlignSet obj = SeqAlignSet.__new__(SeqAlignSet)
