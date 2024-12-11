@@ -11,6 +11,7 @@ sqlite3/3.42.0
 libuv/1.46.0
 [options]
 ncbi-cxx-toolkit-public/*:with_components=algo;algo-structure;bamread;blast;core;dbapi;eutils;grpc;image;loader-bam;loader-blastdb;loader-cdd;loader-genbank;loader-lds2;loader-snp;loader-sra;loader-wgs;loaders;objects;psg-client;seqext;sqlitewrapp;sraread;xmlwrapp;web
+ncbi-cxx-toolkit-public/*:without_req=BerkeleyDB
 ncbi-cxx-toolkit-public/*:shared=True
 [layout]
 cmake_layout
