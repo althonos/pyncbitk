@@ -3,6 +3,7 @@ ncbi-cxx-toolkit-public/28.0.11
 pcre/8.45
 lzo/2.10
 zstd/1.5.5
+zlib/1.2.13
 lmdb/0.9.29
 libnghttp2/1.54.0
 libunwind/1.6.2
@@ -10,8 +11,8 @@ backward-cpp/1.6
 sqlite3/3.42.0
 libuv/1.46.0
 [options]
-ncbi-cxx-toolkit-public/*:with_components=algo;algo-structure;bamread;blast;core;dbapi;eutils;grpc;image;loader-bam;loader-blastdb;loader-cdd;loader-genbank;loader-lds2;loader-snp;loader-sra;loader-wgs;loaders;objects;psg-client;seqext;sqlitewrapp;sraread;xmlwrapp;web
-ncbi-cxx-toolkit-public/*:without_req=BerkeleyDB
+ncbi-cxx-toolkit-public/*:with_components=algo;core;objects;seqext;loaders
+ncbi-cxx-toolkit-public/*:without_req=BerkeleyDB;GRPC
 ncbi-cxx-toolkit-public/*:shared=True
 [layout]
 cmake_layout
