@@ -1,8 +1,8 @@
 FROM quay.io/pypa/manylinux_2_28_x86_64:latest
 ENV CONAN_HOME=/var/cache/conan2
 
-ADD conanfile.txt /src/conanfile.txt
-RUN git clone https://github.com/ncbi/ncbi-cxx-toolkit-conan /src/ncbi-cxx-toolkit-conan
+ADD conanfile.txt                 /src/conanfile.txt
+ADD vendor/ncbi-cxx-toolkit-conan /src/ncbi-cxx-toolkit-conan
 
 RUN  yum install perl perl-IPC-Cmd -y \
  &&  /opt/python/cp313-cp313/bin/pip install conan \
