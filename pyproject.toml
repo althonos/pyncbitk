@@ -11,6 +11,12 @@ requires-python = ">=3.7"
 path = "."
 build = "missing"
 output_folder = "build/Conan"
+config = ["tools.cmake.cmaketoolchain:generator=Ninja"]
+
+[[tool.scikit-build-core-conan.local-recipes]]
+path = "vendor/ncbi-cxx-toolkit-conan"
+name = "ncbi-cxx-toolkit-public"
+version = "28.0.11"
 
 [tool.scikit-build]
 build-dir = "build/{build_type}"
