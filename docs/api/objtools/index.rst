@@ -37,3 +37,19 @@ BLAST Database
    :hidden:
 
    blastdb
+
+
+Alignment Map
+-------------
+
+.. autosummary::
+
+    AlignMap
+    AlignMapRow
+
+.. toctree::
+   :caption: Alignment Map
+   :maxdepth: 1
+   :hidden:
+
+   alignmap
