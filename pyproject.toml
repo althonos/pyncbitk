@@ -4,7 +4,7 @@ build-backend = "scikit_build_core_conan.build"
 
 [project]
 name = "pyncbitk"
-version = "0.0.1"
+version = "0.1.0-alpha.1"
 description = "Cython bindings and Python interface to the NCBI C++ Toolkit."
 readme = "README.md"
 requires-python = ">=3.7"

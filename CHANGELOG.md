@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 
 ## [Unreleased]
-[Unreleased]: https://github.com/althonos/pyncbitk/compare/6fc81aa8...HEAD
+[Unreleased]: https://github.com/althonos/pyncbitk/compare/v0.1.0-alpha.1...HEAD
+
+## [v0.1.0-alpha.1] - 2024-12-12
+[v0.1.0-alpha.1]: https://github.com/althonos/pyncbitk/compare/6fc81aa8...v0.1.0-alpha.1
 
 Initial release.
