@@ -187,7 +187,7 @@ cdef class DenseSegmentsData(Serial):
         cdef CDense_seg* obj     = self._ref.GetNonNullPointer()
         cdef list        strands = []
 
-        for strand in obj.GetStrandsMut():
+        for strand in obj.GetStrandsMut():  # FIXME: const iteration
             strands.append(_NA_STRAND_STR[strand])
         return strands
 

@@ -132,8 +132,9 @@ cdef class SeqIntervalLoc(SeqLoc):
 
     @property
     def stop(self):
-        """`int`: The beginining of the sequence interval.
+        """`int`: The end of the sequence interval (inclusive).
         """
+        # FIXME: use exclusive indexing like in Python?
         data = &self._loc.GetNonNullPointer().GetIntMut()
         return data.GetTo()
 

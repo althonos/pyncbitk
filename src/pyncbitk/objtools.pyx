@@ -2,6 +2,7 @@
 
 from cython.operator cimport preincrement
 
+from libc.limits cimport UINT_MAX
 from libcpp cimport bool
 from libcpp.list cimport list as cpplist
 from libcpp.vector cimport vector
@@ -11,6 +12,7 @@ from libcpp.utility cimport move
 from iostream cimport istream
 
 from .toolkit.corelib.ncbiobj cimport CRef
+from .toolkit.corelib.ncbimisc cimport TSeqPos
 from .toolkit.corelib.ncbistre cimport CNcbiIstream
 from .toolkit.objects.seq.bioseq cimport CBioseq
 from .toolkit.objects.seqset.seq_entry cimport CSeq_entry
@@ -18,12 +20,14 @@ from .toolkit.objtools.readers.fasta cimport CFastaReader, EFlags as CFastaReade
 from .toolkit.objtools.blast.seqdb_reader.seqdb cimport CSeqDB, CSeqDBIter, ESeqType
 from .toolkit.objtools.blast.seqdb_reader.seqdbcommon cimport EBlastDbVersion, EOidMaskType
 from .toolkit.objtools.blast.seqdb_writer.writedb cimport CWriteDB, EIndexType
+from .toolkit.objtools.alnmgr.alnmap cimport CAlnMap, TNumrow
 
 from pystreambuf cimport pyreadbuf, pyreadintobuf
 
 from .objects.seqset cimport Entry
 from .objects.seqid cimport SeqId
 from .objects.seq cimport BioSeq
+from .objects.seqalign cimport DenseSegments
 
 import os
 import sys
@@ -426,3 +430,57 @@ cdef class DatabaseWriter:
             self._ref.GetNonNullPointer().Close()
             self.closed = True
 
+
+# --- AlignMap -----------------------------------------------------------------
+
+cdef class AlignMap:
+    """A helper class to handle coordinates of `DenseSegments` of an alignment.
+    """
+    
+    def __init__(self, DenseSegments segments):
+        self.segments = segments
+        self._ref.Reset(new CAlnMap(segments._ref.GetObject().GetDenseg()))
+
+    def __len__(self):
+        return self._ref.GetObject().GetNumRows()
+
+    def __getitem__(self, ssize_t index):
+        cdef AlignMapRow row
+        cdef ssize_t     index_
+        cdef ssize_t     length = self._ref.GetObject().GetNumRows()
+
+        if index_ < 0:
+            index_ += length
+        if index_ < 0 or index_ >= length:
+            raise IndexError(index_)
+
+        row = AlignMapRow.__new__(AlignMapRow)
+        row._ref = self._ref
+        row.map = self
+        row.index = <size_t> index_
+        return row
+
+
+cdef class AlignMapRow:
+    """A row and its coordinates in an `AlignMap`.
+    """
+
+    @property
+    def align_start(self):
+        return self._ref.GetObject().GetSeqAlnStart(self._index)
+
+    @property
+    def align_stop(self):
+        return self._ref.GetObject().GetSeqAlnStop(self._index)
+
+    @property
+    def sequence_start(self):
+        return self._ref.GetObject().GetSeqStart(self._index)
+
+    @property
+    def sequence_stop(self):
+        return self._ref.GetObject().GetSeqStop(self._index)
+
+    @property
+    def strand(self):
+        return self._ref.GetObject().StrandSign(self._index)
