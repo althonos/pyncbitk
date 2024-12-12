@@ -18,7 +18,7 @@
 [![Changelog](https://img.shields.io/badge/keep%20a-changelog-8A0707.svg?maxAge=2678400&style=flat-square)](https://github.com/althonos/pyncbitk/blob/main/CHANGELOG.md)
 [![Downloads](https://img.shields.io/pypi/dm/pyncbitk?style=flat-square&color=303f9f&maxAge=86400&label=downloads)](https://pepy.tech/project/pyncbitk)
 
-***⚠️ This package is a work-in-progress and in a very experimental state. Expect segmentation faults, compilation issues, missing features, poor documentation.***
+***⚠️ This package is a work-in-progress and in a very experimental state. Expect segmentation faults, compilation issues, missing features, incomplete documentation.***
 
 ## 🗺️ Overview
 
