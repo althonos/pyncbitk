@@ -69,7 +69,7 @@ cdef class DatabaseWriter:
 
 cdef class AlignMapRow:
     cdef          CRef[CAlnMap] _ref
-    cdef          size_t        index
+    cdef          size_t        _index
     cdef readonly AlignMap      map
 
 cdef class AlignMap:

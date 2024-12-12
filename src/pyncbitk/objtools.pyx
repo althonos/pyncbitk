@@ -455,9 +455,9 @@ cdef class AlignMap:
             raise IndexError(index_)
 
         row = AlignMapRow.__new__(AlignMapRow)
-        row._ref = self._ref
         row.map = self
-        row.index = <size_t> index_
+        row._ref = self._ref
+        row._index = <size_t> index_
         return row
 
 
