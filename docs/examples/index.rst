@@ -17,6 +17,6 @@ External resources
 ------------------
 
 The complete reference for the NCBI C++ Toolkit can be found in the 
-`NCBI C++ Toolkit bool <https://ncbi.github.io/cxx-toolkit/>`_. It describes the 
+`NCBI C++ Toolkit book <https://ncbi.github.io/cxx-toolkit/>`_. It describes the 
 concepts behind the Toolkit data model, even though some implementation details
 may differ between the C++ and Python interfaces.

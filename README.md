@@ -74,20 +74,22 @@ from pyncbitk.objects.seqset import BioSeqSet
 from pyncbitk.objtools import DatabaseReader, FastaReader
 from pyncbitk.algo import BlastN
 
-# read the queries from a FASTA file
-queries = BioSeqSet(FastaReader("queries.fna"))
-
-# open a database of subject sequences
-db = DatabaseReader("database.fna")
+# read the sequences from FASTA-formatted files
+queries = BioSeqSet(FastaReader("queries.fna", split=False))
+subjects = BioSeqSet(FastaReader("subjects.fna", split=False))
 
 # run `blastn` with default parameters
 blastn = BlastN()
-results = blastn.run(queries, db)
+results = blastn.run(queries, subjects)
 ```
 
 The result is a `SearchResultsSet` which contains one `SearchResults` object
 per query/subject pair. The `SearchResults` object summarizes the result
 and contains the hit alignments in a `SeqAlignSet`.
+
+See the [Examples section](https://pyncbitk.readthedocs.io/en/latest/examples/index.html) 
+in the [online documentation](https://pyncbitk.readthedocs.io/en/latest/examples/index.html)
+for more information.
 
 ## 💭 Feedback
 
