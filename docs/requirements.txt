@@ -13,3 +13,7 @@ nbsphinx ~=0.8
 sphinxcontrib-jquery ~=4.1
 sphinx-design
 pydata-sphinx-theme
+ipykernel
+
+# pre-build wheels
+pyncbitk==0.1.0-alpha.1
