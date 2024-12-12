@@ -36,16 +36,19 @@ cdef dict _NA_STRAND_ENUM = {
     v:k for k,v in _NA_STRAND_STR.items()
 }
 
-# --- SeqAlign -----------------------------------------------------------------
 
-cdef class SeqAlignScore:
-    # TODO: inherit
+# --- Accessory classes --------------------------------------------------------
+
+cdef class SeqAlignScore(Serial):
 
     @staticmethod
     cdef SeqAlignScore _wrap(CRef[CScore] ref):
         cdef SeqAlignScore score = SeqAlignScore.__new__(SeqAlignScore)
         score._ref = ref
         return score
+
+    cdef CSerialObject* _serial(self):
+        return <CSerialObject*> self._ref.GetNonNullPointer()
 
     def __iter__(self):
         yield self.id
@@ -93,6 +96,8 @@ cdef class AlignRow:
         return SeqId._wrap(CRef[CSeq_id](<CSeq_id*> id_))
 
 
+# --- AlignSegments ------------------------------------------------------------
+
 cdef class AlignSegments(Serial):
 
     @staticmethod
@@ -121,6 +126,7 @@ cdef class DenseSegments(AlignSegments):
         cdef CRef[CDense_seg] ref
         cdef CDense_seg* seg = &self._ref.GetNonNullPointer().GetDensegMut()
         return DenseSegmentsData._wrap(CRef[CDense_seg](seg))
+
 
 cdef class DenseSegmentsData(Serial):
 
@@ -184,6 +190,8 @@ cdef class DenseSegmentsData(Serial):
         for strand in obj.GetStrandsMut():
             strands.append(_NA_STRAND_STR[strand])
         return strands
+
+# --- SeqAlign -----------------------------------------------------------------
 
 cdef class SeqAlign(Serial):
     """A sequence alignment, mapping the coordinates of a `BioSeq` to others.

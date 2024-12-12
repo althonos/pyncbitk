@@ -9,7 +9,7 @@ from ..toolkit.objects.seqalign.seq_align_set cimport CSeq_align_set
 from ..serial cimport Serial
 
 
-cdef class SeqAlignScore:
+cdef class SeqAlignScore(Serial):
     cdef CRef[CScore] _ref
 
     @staticmethod
