@@ -18,6 +18,8 @@
 [![Changelog](https://img.shields.io/badge/keep%20a-changelog-8A0707.svg?maxAge=2678400&style=flat-square)](https://github.com/althonos/pyncbitk/blob/main/CHANGELOG.md)
 [![Downloads](https://img.shields.io/pypi/dm/pyncbitk?style=flat-square&color=303f9f&maxAge=86400&label=downloads)](https://pepy.tech/project/pyncbitk)
 
+***⚠️ This package is a work-in-progress and in a very experimental state. Expect segmentation faults, compilation issues, missing features, poor documentation.***
+
 ## 🗺️ Overview
 
 The [NCBI C++ Toolkit](https://ncbi.github.io/cxx-toolkit/) is a framework of
@@ -98,11 +100,11 @@ please include as much information as you can about the issue, and try to
 recreate the same bug in a simple, easily reproducible situation.
 
 
-<!-- ### 🏗️ Contributing
+### 🏗️ Contributing
 
 Contributions are more than welcome! See
 [`CONTRIBUTING.md`](https://github.com/althonos/pyncbitk/blob/main/CONTRIBUTING.md)
-for more details. -->
+for more details.
 
 
 ## 📋 Changelog
