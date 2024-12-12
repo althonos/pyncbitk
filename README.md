@@ -1,6 +1,6 @@
 # 🧬🧰 PyNCBItk [![Stars](https://img.shields.io/github/stars/althonos/pyncbitk.svg?style=social&maxAge=3600&label=Star)](https://github.com/althonos/pyncbitk/stargazers)
 
-*[Cython](https://cython.org/) bindings and Python interface to the [NCBI C++ Toolkit](https://www.ncbi.nlm.nih.gov/toolkit).*
+*(Unofficial) [Cython](https://cython.org/) bindings and Python interface to the [NCBI C++ Toolkit](https://www.ncbi.nlm.nih.gov/toolkit).*
 
 [![Actions](https://img.shields.io/github/actions/workflow/status/althonos/pyncbitk/test.yml?branch=main&logo=github&style=flat-square&maxAge=300)](https://github.com/althonos/pyncbitk/actions)
 [![Coverage](https://img.shields.io/codecov/c/gh/althonos/pyncbitk?style=flat-square&maxAge=3600&logo=codecov)](https://codecov.io/gh/althonos/pyncbitk/)
@@ -20,13 +20,13 @@
 
 ## 🗺️ Overview
 
-The NCBI C++ Toolkit is a framework of C++ libraries to work with biological
-sequence data developed at the
+The [NCBI C++ Toolkit](https://ncbi.github.io/cxx-toolkit/) is a framework of
+C++ libraries to work with biological sequence data developed at the
 [National Center for Biotechnology Information](https://www.ncbi.nlm.nih.gov/).
 It features a flexible object model for representing sequences of various
 origin, including composite or virtual sequences; a resource manager
 to easily manipulate heterogeneous data sources; and a comprehensive API to the
-various BLAST algorithms developed at the NBCI.
+various BLAST algorithms[\[1\]](#ref1) developed at the NBCI.
 
 PyNCBItk is a Python library that provides bindings to the NCBI C++ Toolkit
 data model and BLAST+ interface using [Cython](https://cython.org). It exposes
@@ -116,10 +116,16 @@ in the [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) format.
 
 This library is provided under the [MIT License](https://choosealicense.com/licenses/mit/).
 The NCBI C++ Toolkit is a "United States Government Work" and therefore lies in
-the public domain. Some restrictions apply, see `vendor/ncbi-cxx-toolkit-public/doc/public/LICENSE`.
+the public domain, but may be subject to copyright by the U.S. in foreign
+countries. Some restrictions apply, see the
+[NCBI C++ Toolkit license](https://www.ncbi.nlm.nih.gov/IEB/ToolBox/CPP_DOC/lxr/source/doc/public/LICENSE).
 
 *This project is in no way not affiliated, sponsored, or otherwise endorsed
 by the NCBI or any associated entity. It was developed
 by [Martin Larralde](https://github.com/althonos/) during his PhD
 at the [Leiden University Medical Center](https://www.lumc.nl/en/) in
 the [Zeller team](https://github.com/zellerlab).*
+
+## 📚 References
+
+- <a id="ref1">\[1\]</a> Altschul, S. F., Gish, W., Miller, W., Myers, E. W., & Lipman, D. J. (1990). Basic local alignment search tool. *Journal of molecular biology*, 215(3), 403–410. [doi:10.1016/S0022-2836(05)80360-2](https://doi.org/10.1016/S0022-2836(05)80360-2)
