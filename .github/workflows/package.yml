@@ -9,18 +9,13 @@ jobs:
 
   # wheel-linux-aarch64:
   #   name: Build Linux wheels (Aarch64)
-  #   runs-on: ubuntu-20.04
+  #   runs-on: ubuntu-22.04-arm
   #   steps:
   #   - uses: actions/checkout@v3
   #     with:
   #       submodules: true
-  #   - name: Set up QEMU
-  #     id: qemu
-  #     uses: docker/setup-qemu-action@v3
-  #     with:
-  #       platforms: arm64
   #   - name: Build manylinux wheels
-  #     uses: pypa/cibuildwheel@v2.21.3
+  #     uses: pypa/cibuildwheel@v2.22.0
   #     env:
   #       CIBW_ARCHS: aarch64
   #       CIBW_BUILD: 'cp*-manylinux_aarch64'
@@ -36,13 +31,13 @@ jobs:
 
   wheel-linux-x86_64:
     name: Build Linux wheels (x86-64)
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
     - uses: actions/checkout@v4
       with:
         submodules: true
     - name: Build manylinux wheels
-      uses: pypa/cibuildwheel@v2.21.3
+      uses: pypa/cibuildwheel@v2.22.0
       env:
         CIBW_ARCHS: x86_64
         CIBW_BUILD: 'cp*-manylinux_x86_64'
@@ -62,7 +57,7 @@ jobs:
   #     with:
   #       submodules: true
   #   - name: Build manylinux wheels
-  #     uses: pypa/cibuildwheel@v2.21.3
+  #     uses: pypa/cibuildwheel@v2.22.0
   #     env:
   #       CIBW_ARCHS: x86_64
   #       CIBW_BUILD: 'cp*-macosx_x86_64'
@@ -84,7 +79,7 @@ jobs:
   #     with:
   #       submodules: true
   #   - name: Build manylinux wheels
-  #     uses: pypa/cibuildwheel@v2.21.3
+  #     uses: pypa/cibuildwheel@v2.22.0
   #     env:
   #       CIBW_ARCHS: arm64
   #       CIBW_BUILD: 'cp*-macosx_arm64'
