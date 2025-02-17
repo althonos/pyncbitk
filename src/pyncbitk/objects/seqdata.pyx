@@ -113,8 +113,8 @@ cdef class SeqData(Serial):
 
         Arguments
             pack (`bool`): Whether to perform additional packing of the
-                data stored in the copy, allowing a more compact 
-                representation but potentially changing the `SeqData` 
+                data stored in the copy, allowing a more compact
+                representation but potentially changing the `SeqData`
                 subtype.
 
         """
@@ -350,7 +350,10 @@ cdef class IupacAaData(SeqAaData):
 
     @property
     def data(self):
-        return self.decode()
+        """`bytes`: The sequence data as ASCII bytes.
+        """
+        cdef const string* data = &self._ref.GetNonNullPointer().GetIupacna().Get()
+        return PyBytes_FromStringAndSize(data.data(), data.length())
 
     cpdef str decode(self):
         return self._ref.GetNonNullPointer().GetIupacaa().Get().decode()
@@ -412,6 +415,8 @@ cdef class Ncbi2NaData(SeqNaData):
 
     @property
     def data(self):
+        """`bytes`: The sequence data in 2-bit encoded format.
+        """
         cdef const vector[char]* data = &self._ref.GetObject().GetNcbi2na().Get()
         return PyBytes_FromStringAndSize(data.data(), data.size())
 
@@ -466,6 +471,8 @@ cdef class Ncbi4NaData(SeqNaData):
 
     @property
     def data(self):
+        """`bytes`: The sequence data in 4-bit encoded format.
+        """
         cdef const vector[char]* data = &self._ref.GetNonNullPointer().GetNcbi4na().Get()
         return PyBytes_FromStringAndSize(data.data(), data.size())
 
@@ -517,6 +524,8 @@ cdef class Ncbi8NaData(SeqNaData):
 
     @property
     def data(self):
+        """`bytes`: The sequence data in 8-bit encoded format.
+        """
         cdef const vector[char]* data = &self._ref.GetNonNullPointer().GetNcbi8na().Get()
         return PyBytes_FromStringAndSize(data.data(), data.size())
 
@@ -563,6 +572,34 @@ cdef class NcbiEAaData(SeqAaData):
 
         self._validate()
 
+    def __reduce_ex__(self, protocol):
+        if protocol >= 5:
+            return type(self), (pickle.PickleBuffer(self),), None
+        return type(self), (memoryview(self).tobytes(),), None
+
+    def __repr__(self):
+        cdef str ty = self.__class__.__name__
+        return f"{ty}({self.data!r})"
+
+    def __getbuffer__(self, Py_buffer* buffer, int flags):
+        cdef const string* data = &self._ref.GetNonNullPointer().GetNcbieaa().Get()
+
+        if flags & PyBUF_FORMAT:
+            buffer.format = b"B"
+        else:
+            buffer.format = NULL
+
+        buffer.buf = <void*> data.data()
+        buffer.internal = NULL
+        buffer.itemsize = sizeof(char)
+        buffer.len = data.size() * sizeof(char)
+        buffer.ndim = 1
+        buffer.obj = self
+        buffer.readonly = True
+        buffer.shape = NULL
+        buffer.suboffsets = NULL
+        buffer.strides = NULL
+
     @property
     def length(self):
         """`int`: The length of the sequence data.
@@ -571,7 +608,10 @@ cdef class NcbiEAaData(SeqAaData):
 
     @property
     def data(self):
-        return self.decode()
+        """`bytes`: The sequence data as ASCII bytes.
+        """
+        cdef const string* data = &self._ref.GetNonNullPointer().GetNcbieaa().Get()
+        return PyBytes_FromStringAndSize(data.data(), data.length())
 
     cpdef str decode(self):
         return self._ref.GetNonNullPointer().GetNcbieaa().Get().decode()
