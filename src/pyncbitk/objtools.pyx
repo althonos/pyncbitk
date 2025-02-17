@@ -231,7 +231,7 @@ cdef class DatabaseReader:
     """A reader over the contents of a BLAST database.
 
     This class implements access to the BLAST database as a
-    `~collections.abc.Mapping` of `~pyncbitk.objects.seqloc.SeqId` objects
+    `~collections.abc.Mapping` of `~pyncbitk.objects.seqid.SeqId` objects
     to `~pyncbitk.objects.seq.BioSeq` objects.
 
     """
@@ -296,7 +296,7 @@ cdef class DatabaseReader:
 
         Returns:
             `~pyncbitk.objtools.DatabaseKeys`: The keys of the database,
-            i.e. the `~pyncbitk.objects.seqloc.SeqId` of the sequences
+            i.e. the `~pyncbitk.objects.seqid.SeqId` of the sequences
             stored in the database.
 
         """
@@ -406,7 +406,7 @@ cdef class DatabaseWriter:
 
     @property
     def files(self):
-        """`list` or `str`: The list of files written by the writer.
+        """`list` of `str`: The list of files written by the writer.
         """
         cdef vector[string] files
         self._ref.GetNonNullPointer().ListFiles(files)
