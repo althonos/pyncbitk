@@ -51,7 +51,11 @@ class TestIupacNaData(TestSeqData, unittest.TestCase):
 
     def test_data(self):
         data = IupacNaData("ATGC")
-        self.assertEqual(data.data, "ATGC")
+        self.assertEqual(data.data, b"ATGC")
+
+    def test_decode(self):
+        data = IupacNaData("ATGC")
+        self.assertEqual(data.decode(), "ATGC")
 
     def test_cmp(self):
         d1 = IupacNaData("ATGC")

@@ -178,6 +178,14 @@ cdef class SeqNaData(SeqData):
 
 cdef class IupacNaData(SeqNaData):
     """Nucleotide sequence data stored as a IUPAC nucleotide string.
+
+    Example:
+        >>> seqdata = IupacNaData("ATTAGCCATGCATA")
+        >>> seqdata.length
+        14
+        >>> seqdata.data
+        b'ATTAGCCATGCATA'
+
     """
 
     @staticmethod
@@ -269,7 +277,8 @@ cdef class IupacNaData(SeqNaData):
 
     @property
     def data(self):
-        return self.decode()
+        cdef const string* data = &self._ref.GetNonNullPointer().GetIupacna().Get()
+        return PyBytes_FromStringAndSize(data.data(), data.length())
 
     cpdef str decode(self):
         return self._ref.GetNonNullPointer().GetIupacna().Get().decode()
@@ -367,18 +376,38 @@ cdef class Ncbi2NaData(SeqNaData):
     ``A``, ``C``, ``G`` or ``T``. This encoding is the most compact for
     unambiguous sequences.
 
+    Example:
+        >>> seqdata = Ncbi2NaData.encode("ATTAGCCATGCATA")
+        >>> seqdata.data
+        b'<\\x94\\xe4\\xc0'
+
     """
 
+    @classmethod
+    def encode(cls, str data):
+        cdef Ncbi2NaData              obj = cls(bytearray())
+        cdef IupacNaData              in_ = IupacNaData(data)
+
+        with nogil:
+            CSeqportUtil.Convert(
+                in_._ref.GetObject(),
+                obj._ref.GetNonNullPointer(),
+                CSeq_data_choice.e_Ncbi2na
+            )
+
+        return obj
+
     def __init__(self, object data not None):
-        cdef CNCBI2na        raw
-        cdef const char[::1] view = data
-        cdef size_t          l    = view.shape[0]
-        cdef vector[char]    vec  = vector[char]()
+        cdef CNCBI2na                 raw
+        cdef const unsigned char[::1] view = data
+        cdef size_t                   l    = view.shape[0]
+        cdef vector[char]             vec  = vector[char]()
 
         super().__init__()
 
         with nogil:
-            vec.insert(vec.end(), &view[0], &view[l-1])
+            if l > 0:
+                vec.insert(vec.end(), &view[0], &view[l-1])
             raw = CNCBI2na(vec)
             self._ref.GetNonNullPointer().Select(CSeq_data_choice.e_Ncbi2na)
             swap[CNCBI2na](self._ref.GetNonNullPointer().GetNcbi2naMut(), raw)
