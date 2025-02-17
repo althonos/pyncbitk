@@ -85,6 +85,10 @@ cdef class SeqData(Serial):
             raise ValueError("Invalid elements in sequence data")
         return True
 
+    @classmethod
+    def _variant(cls):
+        raise NotImplementedError("SeqData._variant")
+
     def __init__(self):
         self._ref.Reset(new CSeq_data())
         self._ref.GetNonNullPointer().Select(CSeq_data_choice.e_not_set)
@@ -130,6 +134,30 @@ cdef class SeqAaData(SeqData):
     """An abstract base storage of amino-acid sequence data.
     """
 
+    @classmethod
+    def encode(cls, object data):
+        """Encode the textual sequence to a compressed representation.
+
+        Arguments:
+            data (`str`, `bytes`, or buffer-like object): The ASCII 
+                nucleotide sequence to be encoded. Python strings, and
+                any other object supporting the buffer protocol is 
+                supported.
+
+        """
+        cdef CSeq_data_choice   variant = cls._variant()
+        cdef SeqAaData          obj     = cls(bytearray())
+        cdef NcbiEAaData        in_     = NcbiEAaData(data)
+
+        with nogil:
+            CSeqportUtil.Convert(
+                in_._ref.GetObject(),
+                obj._ref.GetNonNullPointer(),
+                variant
+            )
+
+        return obj
+
     cpdef str decode(self):
         """Decode the contents of the sequence data.
 
@@ -154,6 +182,34 @@ cdef class SeqAaData(SeqData):
 cdef class SeqNaData(SeqData):
     """An abstract base storage of nucleotide sequence data.
     """
+
+    @classmethod
+    def encode(cls, object data):
+        """Encode the textual sequence to a compressed representation.
+
+        Arguments:
+            data (`str`, `bytes`, or buffer-like object): The ASCII 
+                nucleotide sequence to be encoded. Python strings, and
+                any other object supporting the buffer protocol is 
+                supported.
+
+        Raises:
+            ValueError: When the sequence data contains invalid characters
+                that do
+
+        """
+        cdef CSeq_data_choice   variant = cls._variant()
+        cdef SeqNaData          obj     = cls(bytearray())
+        cdef IupacNaData        in_     = IupacNaData(data)
+
+        with nogil:
+            CSeqportUtil.Convert(
+                in_._ref.GetObject(),
+                obj._ref.GetNonNullPointer(),
+                variant
+            )
+
+        return obj
 
     cpdef str decode(self):
         """Decode the contents of the sequence data.
@@ -188,8 +244,12 @@ cdef class IupacNaData(SeqNaData):
 
     """
 
-    @staticmethod
-    def encode(str data):
+    @classmethod
+    def _variant(cls):
+        return CSeq_data_choice.e_Iupacna
+
+    @classmethod
+    def encode(cls, object data):
         return IupacNaData(data)
 
     def __init__(self, object data not None):
@@ -277,6 +337,8 @@ cdef class IupacNaData(SeqNaData):
 
     @property
     def data(self):
+        """`bytes`: The sequence data as ASCII bytes.
+        """
         cdef const string* data = &self._ref.GetNonNullPointer().GetIupacna().Get()
         return PyBytes_FromStringAndSize(data.data(), data.length())
 
@@ -299,8 +361,12 @@ cdef class IupacAaData(SeqAaData):
 
     """
 
-    @staticmethod
-    def encode(str data):
+    @classmethod
+    def _variant(cls):
+        return CSeq_data_choice.e_Iupacaa
+
+    @classmethod
+    def encode(cls, object data):
         return IupacAaData(data)
 
     def __init__(self, object data):
@@ -384,18 +450,8 @@ cdef class Ncbi2NaData(SeqNaData):
     """
 
     @classmethod
-    def encode(cls, str data):
-        cdef Ncbi2NaData              obj = cls(bytearray())
-        cdef IupacNaData              in_ = IupacNaData(data)
-
-        with nogil:
-            CSeqportUtil.Convert(
-                in_._ref.GetObject(),
-                obj._ref.GetNonNullPointer(),
-                CSeq_data_choice.e_Ncbi2na
-            )
-
-        return obj
+    def _variant(cls):
+        return CSeq_data_choice.e_Ncbi2na
 
     def __init__(self, object data not None):
         cdef CNCBI2na                 raw
@@ -454,6 +510,10 @@ cdef class Ncbi4NaData(SeqNaData):
     """Nucleotide sequence data stored with 4-bit encoding.
     """
 
+    @classmethod
+    def _variant(cls):
+        return CSeq_data_choice.e_Ncbi4na
+
     def __init__(self, object data not None):
         cdef CNCBI4na        raw
         cdef const char[::1] view = data
@@ -463,7 +523,8 @@ cdef class Ncbi4NaData(SeqNaData):
         super().__init__()
 
         with nogil:
-            vec.insert(vec.end(), &view[0], &view[l-1])
+            if l > 0:
+                vec.insert(vec.end(), &view[0], &view[l-1])
             raw = CNCBI4na(vec)
             self._ref.GetNonNullPointer().Select(CSeq_data_choice.e_Ncbi4na)
             swap[CNCBI4na](self._ref.GetNonNullPointer().GetNcbi4naMut(), raw)
@@ -507,6 +568,11 @@ cdef class Ncbi4NaData(SeqNaData):
 
 
 cdef class Ncbi8NaData(SeqNaData):
+
+    @classmethod
+    def _variant(cls):
+        return CSeq_data_choice.e_Ncbi8na
+
     def __init__(self, object data not None):
         cdef CNCBI8na        raw
         cdef const char[::1] view = data
@@ -516,7 +582,8 @@ cdef class Ncbi8NaData(SeqNaData):
         super().__init__()
 
         with nogil:
-            vec.insert(vec.end(), &view[0], &view[l-1])
+            if l > 0:
+                vec.insert(vec.end(), &view[0], &view[l-1])
             raw = CNCBI8na(vec)
             self._ref.GetNonNullPointer().Select(CSeq_data_choice.e_Ncbi8na)
             swap[CNCBI8na](self._ref.GetNonNullPointer().GetNcbi8naMut(), raw)
@@ -577,8 +644,12 @@ cdef class NcbiEAaData(SeqAaData):
 
     """
 
-    @staticmethod
-    def encode(str data):
+    @classmethod
+    def _variant(cls):
+        return CSeq_data_choice.e_Ncbieaa
+
+    @classmethod
+    def encode(cls, object data):
         return NcbiEAaData(data)
 
     def __init__(self, object data not None):

@@ -3,7 +3,7 @@
 from libcpp cimport bool
 
 from ..toolkit.corelib.ncbiobj cimport CRef
-from ..toolkit.objects.seq.seq_data cimport CSeq_data
+from ..toolkit.objects.seq.seq_data cimport CSeq_data, E_Choice as CSeq_data_choice
 
 from ..serial cimport Serial
 
