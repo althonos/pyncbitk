@@ -126,6 +126,8 @@ cdef class GenBankId(SeqId):
 
     @property
     def id(self):
+        """`~pyncbitk.objects.seqid.TextSeqId`: The text identifier.
+        """
         cdef CTextseq_id* id = &self._ref.GetNonNullPointer().GetGenbankMut()
         return TextSeqId._wrap(CRef[CTextseq_id](id))
 
@@ -148,12 +150,20 @@ cdef class OtherId(SeqId):
 
     @property
     def id(self):
+        """`~pyncbitk.objects.seqid.TextSeqId`: The text identifier.
+        """
         cdef CTextseq_id* id = &self._ref.GetNonNullPointer().GetOtherMut()
         return TextSeqId._wrap(CRef[CTextseq_id](id))
 
 # --- TextSeqId ----------------------------------------------------------------
 
 cdef class TextSeqId(Serial):
+    """A text identifier.
+
+    This format is a standardized identifier for different databases (such 
+    as GenBank), where the general format is ``<accession>.<version>``.
+
+    """
     # FIXME: Consider removing this data class and using instead an abstract
     #        subclass for `SeqId` that exposes the text seq ID attributes for 
     #        the relevant IDs (GenBank ID, etc)?
@@ -205,18 +215,24 @@ cdef class TextSeqId(Serial):
 
     @property
     def accession(self):
+        """`str` or `None`: The identifier accession, if any.
+        """
         if not self._ref.GetNonNullPointer().IsSetAccession():
             return None
         return self._ref.GetNonNullPointer().GetAccession().decode()
 
     @property
     def name(self):
+        """`str` or `None`: The identifier name, if any.
+        """
         if not self._ref.GetNonNullPointer().IsSetName():
             return None
         return self._ref.GetNonNullPointer().GetName().decode()
 
     @property
     def version(self):
+        """`str` or `None`: The identifier version, if any.
+        """
         if not self._ref.GetNonNullPointer().IsSetVersion():
             return None
         return self._ref.GetNonNullPointer().GetVersion()
@@ -227,6 +243,8 @@ cdef class TextSeqId(Serial):
 
     @property
     def release(self):
+        """`str` or `None`: The identifier release, if any.
+        """
         if not self._ref.GetNonNullPointer().IsSetRelease():
             return None
         return self._ref.GetNonNullPointer().GetRelease().decode()

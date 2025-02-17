@@ -31,6 +31,11 @@ import functools
 
 cdef class BioSeq(Serial):
     """A biological sequence.
+
+    In the NCBI C++ Toolkit, a *Bioseq* binds a sequence instance to one or
+    more sequence identifiers. The instance stores the sequence data or a 
+    reference to the sequence location.
+
     """
 
     @staticmethod

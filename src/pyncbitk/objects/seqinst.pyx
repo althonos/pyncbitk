@@ -583,7 +583,7 @@ cdef class LocDelta(Delta):
 
     @property
     def seqloc(self):
-        """`SeqLoc`: The sequence location for this delta.
+        """`~pyncbitk.objects.seqloc.SeqLoc`: The location for this delta.
         """
         cdef CRef[CSeq_loc] loc = CRef[CSeq_loc](&self._ref.GetObject().GetLocMut())
         return SeqLoc._wrap(loc)

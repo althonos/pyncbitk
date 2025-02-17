@@ -14,7 +14,12 @@ from .seq cimport BioSeq
 # --- BioSeqSet ----------------------------------------------------------------
 
 cdef class BioSeqSet:
-    """A set of sequence entries.
+    """A set of biological sequence.
+
+    A `BioSeqSet` is a set that stores either other sequences (as `BioSeq`
+    objects), or recursively other sequence sets (as `BioSeqSet`),
+    allowing to create tree of sequences.
+
     """
 
     # TODO: subclasses
