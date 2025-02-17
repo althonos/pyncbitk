@@ -10,6 +10,7 @@ from .toolkit.algo.blast.api.bl2seq cimport CBl2Seq
 from .toolkit.algo.blast.api.blast_types cimport EProgram, ProgramNameToEnum, TSeqAlignVector, EProgramToTaskName, TSearchMessages
 from .toolkit.algo.blast.api.sseqloc cimport SSeqLoc, TSeqLocVector, CBlastSearchQuery, CBlastQueryVector
 from .toolkit.algo.blast.api.local_blast cimport CLocalBlast
+from .toolkit.algo.blast.api.blast_options cimport CBlastOptions, EAPILocality
 from .toolkit.algo.blast.api.blast_options_handle cimport CBlastOptionsHandle, CBlastOptionsFactory
 from .toolkit.algo.blast.api.blast_nucl_options cimport CBlastNucleotideOptionsHandle
 from .toolkit.algo.blast.api.blast_prot_options cimport CBlastProteinOptionsHandle
@@ -308,6 +309,17 @@ cdef class Blast:
             raise ValueError(f"`max_target_sequences` must be greater than zero, got {max_target_sequences!r}")
         self._opt.GetNonNullPointer().SetHitlistSize(max_target_sequences)
 
+    # --- Private Methods ------------------------------------------------------
+
+    cdef CBlastOptionsHandle* _options(self) except NULL:
+        # TODO: check if this works with anything (as only the CBlastOptions is
+        #       accessed) or whether this requires a dedicated implementation
+        #       for each CBlastOptionsHandle subclass.
+        cdef CBlastNucleotideOptionsHandle* opt = new CBlastNucleotideOptionsHandle(
+            self._opt.GetObject().GetOptions().Clone()
+        )
+        return <CBlastOptionsHandle*> opt
+
     # --- Public Methods -------------------------------------------------------
 
     cpdef SearchResultsSet run(
@@ -319,14 +331,14 @@ cdef class Blast:
         """Run a BLAST query with the given sequences.
 
         Arguments:
-            queries (`BioSeq`, `BioSeqSet`, `SearchQuery`, `SearchQueryVector`): 
+            queries (`BioSeq`, `BioSeqSet`, `SearchQuery`, `SearchQueryVector`):
                 The queries to use on the subject sequences.
             subjects (`BioSeq`, `BioSeqSet`, `SearchQuery`, `SearchQueryVector`,
-                `DatabaseReader`): The subjects sequences to search. A BLAST 
-                database can be given by passing a 
+                `DatabaseReader`): The subjects sequences to search. A BLAST
+                database can be given by passing a
                 `~pyncbitk.objtools.DatabaseReader` object directly.
             pairwise (`bool`): Set to `True` to run the database search in
-                pairwise mode, forcing BLAST to produce one `SearchResults` 
+                pairwise mode, forcing BLAST to produce one `SearchResults`
                 per query, even when no hits were found. *Ignored when*
                 ``subjects`` *is a* `DatabaseReader`.
 
@@ -342,6 +354,9 @@ cdef class Blast:
         cdef CRef[IQueryFactory]   subject_factory
         cdef CRef[CLocalDbAdapter] db
         cdef CRef[CLocalBlast]     blast
+
+        cdef CRef[CBlastOptionsHandle] opt
+        opt.Reset(self._options())
 
         # prepare queries: a list of `SearchQuery` objects
         if BlastQueries is BioSeq:
@@ -378,27 +393,27 @@ cdef class Blast:
                 ty = subjects.instance.__class__.__name__
                 raise ValueError(f"Unsupported instance type: {ty}")
             subject_factory.Reset(<IQueryFactory*> new CObjMgrFree_QueryFactory(CConstRef[CBioseq](subjects._ref)))
-            db.Reset(new CLocalDbAdapter(subject_factory, self._opt, not pairwise))
+            db.Reset(new CLocalDbAdapter(subject_factory, opt, not pairwise))
         elif BlastSubjects is BioSeqSet:
             subject_factory.Reset(<IQueryFactory*> new CObjMgrFree_QueryFactory(CConstRef[CBioseq_set](subjects._ref)))
-            db.Reset(new CLocalDbAdapter(subject_factory, self._opt, not pairwise))
+            db.Reset(new CLocalDbAdapter(subject_factory, opt, not pairwise))
         elif BlastSubjects is SearchQuery:
             return self.run(queries, SearchQueryVector((subjects,)))
         elif BlastSubjects is SearchQueryVector:
             subject_factory.Reset(<IQueryFactory*> new CObjMgr_QueryFactory(subjects._qv.GetObject()))
-            db.Reset(new CLocalDbAdapter(subject_factory, self._opt, not pairwise))
+            db.Reset(new CLocalDbAdapter(subject_factory, opt, not pairwise))
         else:
             if not is_iterable(subjects):
                 subjects = (subjects, )
             for query in subjects:
                 _subjects_loc.AddQuery(query._query)
             subject_factory.Reset(<IQueryFactory*> new CObjMgr_QueryFactory(_subjects_loc))
-            db.Reset(new CLocalDbAdapter(subject_factory, self._opt, not pairwise))
+            db.Reset(new CLocalDbAdapter(subject_factory, opt, not pairwise))
 
         # prepare the BLAST program
         try:
             with nogil:
-                blast.Reset(new CLocalBlast(query_factory, self._opt, db))
+                blast.Reset(new CLocalBlast(query_factory, opt, db))
         except RuntimeError as err:
             raise ValueError("Failed initializing BLAST") from err
         # if (m_InterruptFnx != NULL) {
