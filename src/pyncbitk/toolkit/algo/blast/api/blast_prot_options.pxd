@@ -8,6 +8,11 @@ cdef extern from "algo/blast/api/blast_prot_options.hpp" namespace "ncbi::blast"
         CBlastProteinOptionsHandle(EAPILocality locality)
         # CBlastNucleotideOptionsHandle(CRef[CBlastOptions] opt)
 
+        double GetWordThreshold() noexcept
+        void SetWordThreshold(double wt)
+        int GetWordSize() noexcept
+        void SetWordSize(int ws)
+
         void SetDefaults()
         void SetTraditionalBlastnDefaults()
         void SetTraditionalMegablastDefaults()

@@ -461,11 +461,45 @@ cdef class BlastP(ProteinBlast):
     def __init__(
         self,
         *,
+        object word_threshold = None,
+        object word_size = None,
         **kwargs,
     ):
         cdef CBlastAdvancedProteinOptionsHandle* handle = new CBlastAdvancedProteinOptionsHandle()
         self._opt.Reset(<CBlastOptionsHandle*> handle)
         super().__init__(**kwargs)
+        if word_threshold is not None:
+            self.word_threshold = word_threshold
+        if word_size is not None:
+            self.word_size = word_size
+
+    @property
+    def word_threshold(self):
+        """`float`: The minimum score to record a word in the BLAST lookup table.
+        """
+        cdef CBlastOptionsHandle* opt = self._opt.GetNonNullPointer()
+        cdef CBlastProteinOptionsHandle* popt = <CBlastProteinOptionsHandle*> opt
+        return popt.GetWordThreshold()
+
+    @word_threshold.setter
+    def word_threshold(self, double word_threshold):
+        cdef CBlastOptionsHandle* opt = self._opt.GetNonNullPointer()
+        cdef CBlastProteinOptionsHandle* popt = <CBlastProteinOptionsHandle*> opt
+        popt.SetWordThreshold(word_threshold)
+
+    @property
+    def word_size(self):
+        """`int`: The word size for the wordfinder algorithm.
+        """
+        cdef CBlastOptionsHandle* opt = self._opt.GetNonNullPointer()
+        cdef CBlastProteinOptionsHandle* popt = <CBlastProteinOptionsHandle*> opt
+        return popt.GetWordThreshold()
+
+    @word_size.setter
+    def word_size(self, int word_size):
+        cdef CBlastOptionsHandle* opt = self._opt.GetNonNullPointer()
+        cdef CBlastProteinOptionsHandle* popt = <CBlastProteinOptionsHandle*> opt
+        popt.SetWordSize(word_size)
 
 
 cdef class BlastN(NucleotideBlast):
