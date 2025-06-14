@@ -2,6 +2,7 @@
 # cython: language_level=3
 
 from libcpp cimport bool
+from libcpp.cast cimport static_cast
 from libcpp.string cimport string
 from iostream cimport istream, ostream, filebuf
 
@@ -369,21 +370,23 @@ cdef class Blast:
         elif BlastQueries is SearchQuery:
             return self.run(SearchQueryVector((queries,)), subjects)
         elif BlastQueries is SearchQueryVector:
+            if subjects._qv.GetObject().Empty():
+                raise ValueError("Empty query vector")
             query_factory.Reset(<IQueryFactory*> new CObjMgr_QueryFactory(queries._qv.GetObject()))
         else:
             if not is_iterable(queries):
                 queries = (queries, )
             for query in queries:
-                _subjects_loc.AddQuery(query._query)
+                _queries_loc.AddQuery(query._query)
             query_factory.Reset(<IQueryFactory*> new CObjMgr_QueryFactory(_queries_loc))
 
         # prepare subjects: either a list of `SearchQuery` objects, or a `DatabaseReader`
         if BlastSubjects is DatabaseReader:
             _ty = subjects._ref.GetNonNullPointer().GetSequenceType()
             if _ty == ESeqType.eProtein:
-                search_database = new CSearchDatabase(string(b"FUCK YOU"), EMoleculeType.eBlastDbIsProtein)
+                search_database = new CSearchDatabase(string(b"protein_db"), EMoleculeType.eBlastDbIsProtein)
             elif _ty == ESeqType.eNucleotide:
-                search_database = new CSearchDatabase(string(b"FUCK YOU"), EMoleculeType.eBlastDbIsNucleotide)
+                search_database = new CSearchDatabase(string(b"nucleotide_db"), EMoleculeType.eBlastDbIsNucleotide)
             else:
                 raise ValueError(f"invalid sequence type: {_ty!r}")
             search_database.SetSeqDb(subjects._ref)
@@ -400,6 +403,8 @@ cdef class Blast:
         elif BlastSubjects is SearchQuery:
             return self.run(queries, SearchQueryVector((subjects,)))
         elif BlastSubjects is SearchQueryVector:
+            if subjects._qv.GetObject().Empty():
+                raise ValueError("Empty subjects vector")
             subject_factory.Reset(<IQueryFactory*> new CObjMgr_QueryFactory(subjects._qv.GetObject()))
             db.Reset(new CLocalDbAdapter(subject_factory, opt, not pairwise))
         else:
@@ -415,7 +420,7 @@ cdef class Blast:
             with nogil:
                 blast.Reset(new CLocalBlast(query_factory, opt, db))
         except RuntimeError as err:
-            raise ValueError("Failed initializing BLAST") from err
+            raise RuntimeError("Failed initializing BLAST") from err
         # if (m_InterruptFnx != NULL) {
         #     m_Blast->SetInterruptCallback(m_InterruptFnx, m_InterruptUserData);
         # }
