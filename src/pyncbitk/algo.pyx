@@ -370,7 +370,7 @@ cdef class Blast:
         elif BlastQueries is SearchQuery:
             return self.run(SearchQueryVector((queries,)), subjects)
         elif BlastQueries is SearchQueryVector:
-            if subjects._qv.GetObject().Empty():
+            if queries._qv.GetObject().Empty():
                 raise ValueError("Empty query vector")
             query_factory.Reset(<IQueryFactory*> new CObjMgr_QueryFactory(queries._qv.GetObject()))
         else:
