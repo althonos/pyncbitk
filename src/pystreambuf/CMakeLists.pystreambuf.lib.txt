@@ -1,5 +1,4 @@
 NCBI_begin_lib(pystreambuf)
     NCBI_sources(pyreadbuf.cpp pyreadintobuf.cpp pywritebuf.cpp)
-    NCBI_headers(pyreadbuf.h pyreadintobuf.h pywritebuf.h)
-    NCBI_add_include_directories(${Python_INCLUDE_DIRS} ${NCBI_CURRENT_SOURCE_DIR})
+    NCBI_add_include_directories("${Python_INCLUDE_DIRS}" "${CMAKE_CURRENT_LIST_DIR}")
 NCBI_end_lib()

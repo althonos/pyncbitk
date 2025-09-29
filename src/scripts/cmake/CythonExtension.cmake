@@ -1,4 +1,4 @@
-find_package(Python COMPONENTS Interpreter Development.Module REQUIRED)
+find_package(Python COMPONENTS Interpreter Development.Module ${SKBUILD_SABI_COMPONENT} REQUIRED)
 set(PYTHON_EXTENSIONS_SOURCE_DIR ${PROJECT_SOURCE_DIR}/src)
 
 # --- Detect PyInterpreterState_GetID ------------------------------------------
@@ -131,10 +131,8 @@ macro(cython_extension _name)
   endfunction()
   NCBI_begin_custom_target(${_target})
     NCBI_project_tags(python)
-    foreach(_dep IN LISTS CYTHON_EXTENSION_DEPENDS)
-      NCBI_custom_target_dependencies(${_dep})
-    endforeach()
     NCBI_custom_target_definition(${_name}_definition)
+    NCBI_uses_toolkit_libraries(${CYTHON_EXTENSION_DEPENDS})
   NCBI_end_custom_target()
 
   # Add the targets to the list of Cython extensions
