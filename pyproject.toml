@@ -57,8 +57,8 @@ version = "28.0.11"
 [tool.scikit-build]
 build-dir = "build/{build_type}"
 cmake.build-type = "Release"
-editable.rebuild = false
-editable.verbose = false
+editable.rebuild = true
+editable.verbose = true
 
 [tool.scikit-build.cmake.define]
 PYNCBITK_INSTALL_LIBS = { env = "PYNCBITK_INSTALL_LIBS", default = false }
