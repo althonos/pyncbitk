@@ -46,7 +46,7 @@ classifiers = [
 [tool.scikit-build-core-conan]
 path = "."
 build = "missing"
-output_folder = "build/Conan"
+output-folder = "."
 config = ["tools.cmake.cmaketoolchain:generator=Ninja"]
 
 [[tool.scikit-build-core-conan.local-recipes]]
