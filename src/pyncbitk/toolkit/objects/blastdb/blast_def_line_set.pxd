@@ -1,5 +1,5 @@
 from libcpp cimport bool
-from libcpp.list cimport list
+from libcpp.list cimport list as cpplist
 
 from ...corelib.ncbiobj cimport CRef
 from ...serial.serialbase cimport CSerialObject
@@ -9,13 +9,19 @@ from .blast_def_line cimport CBlast_def_line
 
 cdef extern from "objects/blastdb/Blast_def_line_set_.hpp" namespace "ncbi::objects::CBlast_def_line_set_Base" nogil:
 
-    ctypedef list[CRef[CBlast_def_line]] TData
+    ctypedef cpplist[CRef[CBlast_def_line]] Tdata
 
 
 cdef extern from "objects/blastdb/Blast_def_line_set_.hpp" namespace "ncbi::objects" nogil:
 
     cppclass CBlast_def_line_set_Base(CSerialObject):
         CBlast_def_line_set_Base()
+
+        bool IsSet() const
+        bool CanGet() const
+        void Reset()
+        const Tdata& Get() const
+        Tdata& GetMut "Set"()
 
 
 cdef extern from "objects/blastdb/Blast_def_line_set.hpp" namespace "ncbi::objects" nogil:

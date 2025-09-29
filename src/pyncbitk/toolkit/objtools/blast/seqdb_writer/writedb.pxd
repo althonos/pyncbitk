@@ -5,6 +5,7 @@ from libcpp.vector cimport vector
 from ....corelib.ncbiobj cimport CObject
 from ....corelib.ncbitype cimport Uint8
 from ....objects.seq.bioseq cimport CBioseq
+from ....objects.blastdb.blast_def_line_set cimport CBlast_def_line_set
 from ....objmgr.seq_vector cimport CSeqVector
 from ..seqdb_reader.seqdbcommon cimport EBlastDbVersion, EOidMaskType
 
@@ -55,7 +56,7 @@ cdef extern from "objtools/blast/seqdb_writer/writedb.hpp" namespace "ncbi" nogi
         # void AddSequence(const CBioseq_Handle & bsh)
         # void AddSequence(const CTempString & sequence, const CTempString & ambiguities = "")
         void SetPig(int pig)
-        # void SetDeflines(const CBlast_def_line_set & deflines)
+        void SetDeflines(const CBlast_def_line_set & deflines) except +
 
         # int RegisterMaskAlgorithm(EBlast_filter_program program,
         #                       const string & options = string(),
