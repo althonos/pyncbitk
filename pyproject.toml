@@ -48,11 +48,12 @@ path = "."
 build = "missing"
 output-folder = "."
 config = ["tools.cmake.cmaketoolchain:generator=Ninja"]
+settings = ["compiler.cppstd=20"]
 
 [[tool.scikit-build-core-conan.local-recipes]]
 path = "vendor/ncbi-cxx-toolkit-conan"
 name = "ncbi-cxx-toolkit-public"
-version = "28.0.11"
+version = "29.6.0"
 
 [tool.scikit-build]
 build-dir = "build/{build_type}"
