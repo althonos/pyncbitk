@@ -6,11 +6,12 @@ from ...corelib.ncbiobj cimport CRef
 from ...serial.serialbase cimport CSerialObject
 from ..seqloc.seq_id cimport CSeq_id
 from .seq_inst cimport CSeq_inst
+from .seq_descr cimport CSeq_descr
 
 cdef extern from "objects/seq/Bioseq_.hpp" namespace "ncbi::objects::CBioseq_Base" nogil:
 
     ctypedef cpplist[CRef[CSeq_id]] TId
-    # ctypedef CSeq_descr TDescr
+    ctypedef CSeq_descr TDescr
     ctypedef CSeq_inst TInst
     # ctypedef cpplist[CRef[CSeq_annot]] TAnnot
 
@@ -28,20 +29,20 @@ cdef extern from "objects/seq/Bioseq_.hpp" namespace "ncbi::objects" nogil:
         TId& SetId()
 
         # mandatory
-        # bool IsSetDescr() const
-        # bool CanGetDescr() const
-        # void ResetDescr()
-        # const TDescr& GetDescr() const
-        # void SetDescr(TDescr& value)
-        # TDescr& SetDescr()
+        bool IsSetDescr() const
+        bool CanGetDescr() const
+        void ResetDescr()
+        const TDescr& GetDescr() except +
+        void SetDescr(TDescr& value) except +
+        TDescr& GetDescrMut "SetDescr" () except +
 
         # mandatory
         bool IsSetInst() const
         bool CanGetInst() const
         void ResetInst()
-        const TInst& GetInst() const
-        void SetInst(TInst& value)
-        TInst& GetInstMut "SetInst" ()
+        const TInst& GetInst() except +
+        void SetInst(TInst& value) except +
+        TInst& GetInstMut "SetInst" () except +
 
         # optional
         # bool IsSetAnnot() const

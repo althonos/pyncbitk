@@ -14,6 +14,7 @@ General (``pyncbitk.objects.general``)
 .. autosummary::
 
     ObjectId
+    DBTag
 
 .. toctree::
    :caption: General

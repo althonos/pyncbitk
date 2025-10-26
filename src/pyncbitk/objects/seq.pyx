@@ -2,7 +2,7 @@
 """Biological sequences.
 
 The NCBI C++ Toolkit defines a data model which allows to define biological
-sequences as a combination of identifiers that apply to an instance. 
+sequences as a combination of identifiers that apply to an instance.
 Identifiers are used to identify each sequence uniquely, while the sequence
 instance describes the knowledge about that sequence: its molecule type,
 length, or actual contents.
@@ -18,12 +18,15 @@ from libcpp.list cimport list as cpplist
 from ..toolkit.corelib.ncbiobj cimport CRef
 from ..toolkit.objects.seq.bioseq cimport CBioseq
 from ..toolkit.objects.seq.seq_inst cimport CSeq_inst
+from ..toolkit.objects.seq.seq_descr cimport CSeq_descr
+from ..toolkit.objects.seq.seqdesc cimport CSeqdesc
 from ..toolkit.objects.seqloc.seq_id cimport CSeq_id
 from ..toolkit.serial.serialbase cimport CSerialObject
 
 from ..serial cimport Serial
 from .seqinst cimport SeqInst
 from .seqid cimport SeqId, LocalId
+from .seqdesc cimport SeqDesc, SeqDescList
 
 import functools
 
@@ -33,7 +36,7 @@ cdef class BioSeq(Serial):
     """A biological sequence.
 
     In the NCBI C++ Toolkit, a *Bioseq* binds a sequence instance to one or
-    more sequence identifiers. The instance stores the sequence data or a 
+    more sequence identifiers. The instance stores the sequence data or a
     reference to the sequence location.
 
     """
@@ -52,20 +55,31 @@ cdef class BioSeq(Serial):
         SeqInst instance not None,
         SeqId id,
         *ids,
+        object descriptions = (),
     ):
-        """__init__(self, instance, id, *ids)\n--\n
+        """__init__(self, instance, id, *ids, descriptions=())\n--\n
 
         Create a new sequence with the given instance and identifiers.
 
         """
-        cdef SeqId    id_
-        cdef CBioseq* obj = new CBioseq()
+        cdef SeqId       id_
+        cdef SeqDescList dl
+        cdef CBioseq*    obj = new CBioseq()
 
+        # set instance and identifiers
         obj.SetInst(instance._ref.GetObject())
         obj.SetId().push_back(id._ref)
         for id_ in ids:
             obj.SetId().push_back(id_._ref)
 
+        # set descriptions
+        if isinstance(descriptions, SeqDescList):
+            dl = descriptions
+        else:
+            dl = SeqDescList(descriptions)
+        obj.SetDescr(dl._ref.GetObject())
+
+        # store object
         self._ref.Reset(obj)
 
     def __reduce__(self):
@@ -105,3 +119,10 @@ cdef class BioSeq(Serial):
         """
         assert self._ref.GetNonNullPointer().IsSetInst()  # mandatory
         return SeqInst._wrap(CRef[CSeq_inst](&self._ref.GetNonNullPointer().GetInstMut()))
+
+    @property
+    def descriptions(self):
+        """`~pyncbitk.objects.seqdesc.SeqDescList`: The list of descriptions.
+        """
+        assert self._ref.GetNonNullPointer().IsSetDescr()
+        return SeqDescList._wrap(CRef[CSeq_descr](&self._ref.GetNonNullPointer().GetDescrMut()))
