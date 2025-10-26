@@ -1,9 +1,14 @@
 # cython: language_level=3
 """General objects for the NCBI C++ object model.
 """
+cimport cpython.object
+
+from libcpp.string cimport string
 
 from ..toolkit.corelib.ncbiobj cimport CRef
+from ..toolkit.corelib.ncbimisc cimport TTaxId
 from ..toolkit.objects.general.object_id cimport CObject_id, E_Choice as CObject_id_choice
+from ..toolkit.objects.general.dbtag cimport CDbtag
 from ..toolkit.serial.serialbase cimport CSerialObject
 
 from ..serial cimport Serial
@@ -63,3 +68,105 @@ cdef class ObjectId(Serial):
             return obj.GetId()
         else:
             return obj.GetStr().decode()
+
+# --- DBTag --------------------------------------------------------------------
+
+cdef class DBTag(Serial):
+    """A database cross-reference.
+    """
+
+    cdef CSerialObject* _serial(self):
+        return <CSerialObject*> self._ref.GetNonNullPointer()
+
+    def __init__(self, str db not None, object tag not None):
+        """Create a new `DBTag` object.
+
+        Arguments:
+            db (`str`): The name of the database or system.
+            tag (`~pyncbitk.objects.general.ObjectId`, `str` or `int`): The 
+                identifier of the resource in the database.
+
+            
+        """
+        cdef ObjectId oid
+        cdef CDbtag*  dbtag
+        cdef bytes    b
+
+        if isinstance(tag, (int, str)):
+            oid = ObjectId(tag)
+        elif isinstance(tag, ObjectId):
+            oid = tag
+        else:
+            ty = type(tag).__name__
+            raise TypeError(f"expected str, int or ObjectId, found {ty}")
+
+        b = db.encode()
+
+        self._ref.Reset(new CDbtag())
+        dbtag = self._ref.GetNonNullPointer()
+        dbtag.SetDb(b)
+        dbtag.SetTag(oid._ref.GetObject())
+
+    def __repr__(self):
+        cdef str ty = self.__class__.__name__
+        return f"{ty}({self.db!r}, {self.tag!r})"
+
+    def __richcmp__(self, object other, int op):
+        cdef DBTag other_
+        cdef int res
+        if isinstance(other, DBTag):
+            other_ = other
+            res = self._ref.GetObject().Compare(other_._ref.GetObject())
+            if op == cpython.object.Py_LT:
+                return res < 0
+            elif op == cpython.object.Py_LE:
+                return res <= 0
+            elif op == cpython.object.Py_EQ:
+                return res == 0
+            elif op == cpython.object.Py_GT:
+                return res > 0
+            elif op == cpython.object.Py_GE:
+                return res >= 0
+            elif op == cpython.object.Py_NE:
+                return res != 0
+            else:
+                raise ValueError(op)
+        return NotImplemented
+
+    @property
+    def db(self):
+        """`str`: The name of database or system.
+        """
+        cdef string db = self._ref.GetNonNullPointer().GetDb()
+        return db.decode()
+
+    @property
+    def tag(self):
+        """`~pyncbitk.objects.general.ObjectId`: The database tag.
+        """
+        return ObjectId._wrap(CRef[CObject_id](&self._ref.GetNonNullPointer().GetTagMut()))
+
+
+    cpdef str url(self, object taxonomy = None):
+        """Get a URL to the resource, if available.
+
+        Arguments:
+            taxonomy (`int` or `None`): An optional taxonomy ID to use
+                for URL generation.
+
+        Returns:
+            `str` or `None`: A URL to the resource pointed by this
+            database tag, if available.
+
+        """
+        cdef string url
+        if taxonomy is None:
+            url = self._ref.GetObject().GetUrl()
+        elif isinstance(taxonomy, str):
+            raise NotImplementedError("DBTag.url")
+        elif isinstance(taxonomy, int):
+            url = self._ref.GetObject().GetUrl(<TTaxId> taxonomy)
+        else:
+            ty = type(taxonomy).__name__
+            raise TypeError(f"expected int, str or None, found {ty!r}")
+        return None if url.empty() else url.decode()

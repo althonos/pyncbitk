@@ -1,6 +1,7 @@
 # cython: language_level=3, linetrace=True, binding=True
 
 from ..toolkit.corelib.ncbiobj cimport CRef
+from ..toolkit.objects.general.dbtag cimport CDbtag
 from ..toolkit.objects.general.object_id cimport CObject_id
 
 from ..serial cimport Serial
@@ -12,4 +13,10 @@ cdef class ObjectId(Serial):
 
     @staticmethod
     cdef ObjectId _wrap(CRef[CObject_id] ref)
-     
+
+# --- DBTag --------------------------------------------------------------------
+
+cdef class DBTag(Serial):
+    cdef CRef[CDbtag] _ref
+
+    cpdef str url(self, object taxonomy = ?)
