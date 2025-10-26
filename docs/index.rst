@@ -49,7 +49,7 @@ PyNCBItk |Stars|
    :target: https://github.com/althonos/pyncbitk/
    :class: dark-light
 
-.. |Mirror| image:: https://img.shields.io/badge/mirror-LUMC-003EAA.svg?maxAge=3600&style=flat-square
+.. |Mirror| image:: https://img.shields.io/badge/mirror-LUMC-003EAA.svg?style=flat-square&maxAge=3600
    :target:https://git.lumc.nl/mflarralde/pyncbitk/
    :class: dark-light
 

@@ -131,7 +131,7 @@ Sequence Description (``pyncbitk.objects.seqdesc``)
     NameDesc
     TitleDesc
     RegionDesc
-    SeqDescList
+    SeqDescSet
 
 .. toctree::
    :caption: Sequence Description

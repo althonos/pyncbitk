@@ -307,7 +307,7 @@ cdef class DatabaseReader:
         """Get a set-like view over the values of the database.
 
         Returns:
-            `~pyncbitk.objtools.DatabaseValues`: The keys of the database,
+            `~pyncbitk.objtools.DatabaseValues`: The values of the database,
             i.e. the `~pyncbitk.objects.seq.BioSeq` storing the sequences
             in the database.
 
