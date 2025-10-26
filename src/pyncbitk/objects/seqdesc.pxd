@@ -30,10 +30,10 @@ cdef class RegionDesc(SeqDesc):
     pass
 
 
-# --- SeqDescList --------------------------------------------------------------
+# --- SeqDescSet ---------------------------------------------------------------
 
-cdef class SeqDescList(Serial):
+cdef class SeqDescSet(Serial):
     cdef CRef[CSeq_descr] _ref
 
     @staticmethod
-    cdef SeqDescList _wrap(CRef[CSeq_descr] ref)
+    cdef SeqDescSet _wrap(CRef[CSeq_descr] ref)

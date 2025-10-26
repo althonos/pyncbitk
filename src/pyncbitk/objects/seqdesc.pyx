@@ -138,15 +138,15 @@ cdef class RegionDesc(SeqDesc):
     def __str__(self):
         return self._ref.GetNonNullPointer().GetRegion().decode()
 
-# --- SeqDescList --------------------------------------------------------------
+# --- SeqDescSet ---------------------------------------------------------------
 
-cdef class SeqDescList(Serial):
-    """A linked list of sequence descriptions.
+cdef class SeqDescSet(Serial):
+    """A set of sequence descriptions.
     """
     
     @staticmethod
-    cdef SeqDescList _wrap(CRef[CSeq_descr] ref):
-        cdef SeqDescList obj = SeqDescList.__new__(SeqDescList)
+    cdef SeqDescSet _wrap(CRef[CSeq_descr] ref):
+        cdef SeqDescSet obj = SeqDescSet.__new__(SeqDescSet)
         obj._ref = ref
         return obj
 
@@ -154,6 +154,15 @@ cdef class SeqDescList(Serial):
         return <CSerialObject*> self._ref.GetNonNullPointer()
 
     def __init__(self, items=()):
+        """__init__(self, items=())\n--\n
+
+        Create a new set of sequence descriptions.
+
+        Arguments:
+            items (iterable of `~pyncbitk.objects.seq.SeqDesc`): An iterable
+                of sequence descriptions to add to the set.
+
+        """
         cdef SeqDesc item
         cdef cpplist[CRef[CSeqdesc]]* data
 

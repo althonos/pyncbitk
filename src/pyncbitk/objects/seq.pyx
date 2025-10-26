@@ -26,7 +26,7 @@ from ..toolkit.serial.serialbase cimport CSerialObject
 from ..serial cimport Serial
 from .seqinst cimport SeqInst
 from .seqid cimport SeqId, LocalId
-from .seqdesc cimport SeqDesc, SeqDescList
+from .seqdesc cimport SeqDesc, SeqDescSet
 
 import functools
 
@@ -62,9 +62,9 @@ cdef class BioSeq(Serial):
         Create a new sequence with the given instance and identifiers.
 
         """
-        cdef SeqId       id_
-        cdef SeqDescList dl
-        cdef CBioseq*    obj = new CBioseq()
+        cdef SeqId      id_
+        cdef SeqDescSet dl
+        cdef CBioseq*   obj = new CBioseq()
 
         # set instance and identifiers
         obj.SetInst(instance._ref.GetObject())
@@ -73,10 +73,10 @@ cdef class BioSeq(Serial):
             obj.SetId().push_back(id_._ref)
 
         # set descriptions
-        if isinstance(descriptions, SeqDescList):
+        if isinstance(descriptions, SeqDescSet):
             dl = descriptions
         else:
-            dl = SeqDescList(descriptions)
+            dl = SeqDescSet(descriptions)
         obj.SetDescr(dl._ref.GetObject())
 
         # store object
@@ -122,7 +122,7 @@ cdef class BioSeq(Serial):
 
     @property
     def descriptions(self):
-        """`~pyncbitk.objects.seqdesc.SeqDescList`: The list of descriptions.
+        """`~pyncbitk.objects.seqdesc.SeqDescSet`: The sequence descriptions.
         """
         assert self._ref.GetNonNullPointer().IsSetDescr()
-        return SeqDescList._wrap(CRef[CSeq_descr](&self._ref.GetNonNullPointer().GetDescrMut()))
+        return SeqDescSet._wrap(CRef[CSeq_descr](&self._ref.GetNonNullPointer().GetDescrMut()))

@@ -120,6 +120,27 @@ Sequence Identifier (``pyncbitk.objects.seqid``)
    seqid
 
 
+Sequence Description (``pyncbitk.objects.seqdesc``)
+---------------------------------------------------
+
+.. currentmodule:: pyncbitk.objects.seqdesc
+
+.. autosummary::
+
+    SeqDesc
+    NameDesc
+    TitleDesc
+    RegionDesc
+    SeqDescList
+
+.. toctree::
+   :caption: Sequence Description
+   :maxdepth: 1
+   :hidden:
+
+   seqdesc
+
+
 Sequence Location (``pyncbitk.objects.seqloc``)
 -----------------------------------------------
 
