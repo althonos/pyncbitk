@@ -157,6 +157,7 @@ cdef class DatabaseKeysIter(_DatabaseIter):
 
         oid = self.it.GetOID()
         ids = self._ref.GetNonNullPointer().GetSeqIDs(oid)
+        preincrement(self.it[0])
         self.length -= 1
         return SeqId._wrap(ids.front())
 
