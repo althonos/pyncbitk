@@ -14,7 +14,7 @@ jobs:
       with:
         submodules: true
     - name: Build manylinux wheels
-      uses: pypa/cibuildwheel@v2.21.3
+      uses: pypa/cibuildwheel@v3.2.1
       env:
         CIBW_ARCHS: x86_64
         # CIBW_BUILD: '*-manylinux_x86_64'
