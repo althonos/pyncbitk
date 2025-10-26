@@ -22,9 +22,14 @@ set(PYSTATE_PATCH_H ${CMAKE_CURRENT_LIST_DIR}/pystate_patch.h)
 set(CYTHON_DIRECTIVES
     -X cdivision=True
     -X nonecheck=False
+    -E SYS_IMPLEMENTATION_NAME=$<LOWER_CASE:${Python_INTERPRETER_ID}>
+    -E SYS_VERSION_INFO_MAJOR=${Python_VERSION_MAJOR}
+    -E SYS_VERSION_INFO_MINOR=${Python_VERSION_MINOR}
+    -E TARGET_CPU=$<LOWER_CASE:${CMAKE_SYSTEM_PROCESSOR}>
+    -E PROJECT_VERSION=${CMAKE_PROJECT_VERSION}
 )
 
-if(${CMAKE_BUILD_TYPE} STREQUAL Debug)
+if(CMAKE_BUILD_TYPE STREQUAL Debug)
   set(CYTHON_DIRECTIVES
     ${CYTHON_DIRECTIVES}
     -X cdivision_warnings=True
@@ -48,6 +53,12 @@ else()
     -X boundscheck=False
     -X wraparound=False
   )
+endif()
+
+if((NOT "${SKBUILD_SABI_VERSION}" STREQUAL "") AND (NOT CMAKE_BUILD_TYPE STREQUAL Debug))
+  message(STATUS "Building in Limited API mode for Python: ${SKBUILD_SABI_VERSION}")
+else()
+  message(STATUS "Building in latest API mode for Python: ${Python_VERSION_MAJOR}.${Python_VERSION_MINOR}")
 endif()
 
 macro(cython_extension _name)
@@ -85,7 +96,11 @@ macro(cython_extension _name)
   # Build the Python extension as an NCBIptb custom target
   function(${_name}_definition)
     # Add Python library target
-    python_add_library(${_target} MODULE WITH_SOABI ${_name}.pyx ${_name}.cpp)
+    if((NOT "${SKBUILD_SABI_VERSION}" STREQUAL "") AND (NOT CMAKE_BUILD_TYPE STREQUAL Debug))
+      python_add_library(${_target} MODULE WITH_SOABI USE_SABI "${SKBUILD_SABI_VERSION}" ${_name}.pyx ${_name}.cpp)
+    else()
+      python_add_library(${_target} MODULE WITH_SOABI ${_name}.pyx ${_name}.cpp)
+    endif()
     set_target_properties(${_target} PROPERTIES OUTPUT_NAME ${_name} )
 
     # Add debug flags
