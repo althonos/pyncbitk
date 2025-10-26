@@ -55,7 +55,7 @@ else()
   )
 endif()
 
-if((NOT "${SKBUILD_SABI_VERSION}" STREQUAL "") AND (NOT CMAKE_BUILD_TYPE STREQUAL Debug))
+if((NOT "${SKBUILD_SABI_VERSION}" STREQUAL "") AND (NOT CMAKE_BUILD_TYPE STREQUAL Debug) AND (NOT SKBUILD_STATE STREQUAL editable))
   message(STATUS "Building in Limited API mode for Python: ${SKBUILD_SABI_VERSION}")
 else()
   message(STATUS "Building in latest API mode for Python: ${Python_VERSION_MAJOR}.${Python_VERSION_MINOR}")
@@ -96,7 +96,7 @@ macro(cython_extension _name)
   # Build the Python extension as an NCBIptb custom target
   function(${_name}_definition)
     # Add Python library target
-    if((NOT "${SKBUILD_SABI_VERSION}" STREQUAL "") AND (NOT CMAKE_BUILD_TYPE STREQUAL Debug))
+    if((NOT "${SKBUILD_SABI_VERSION}" STREQUAL "") AND (NOT CMAKE_BUILD_TYPE STREQUAL Debug) AND (NOT SKBUILD_STATE STREQUAL editable))
       python_add_library(${_target} MODULE WITH_SOABI USE_SABI "${SKBUILD_SABI_VERSION}" ${_name}.pyx ${_name}.cpp)
     else()
       python_add_library(${_target} MODULE WITH_SOABI ${_name}.pyx ${_name}.cpp)
