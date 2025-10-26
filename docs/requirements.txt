@@ -16,4 +16,4 @@ pydata-sphinx-theme
 ipykernel
 
 # pre-build wheels
-pyncbitk==0.1.0-alpha.1
+pyncbitk==0.1.0-alpha.2
