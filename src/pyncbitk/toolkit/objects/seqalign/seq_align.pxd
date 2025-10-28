@@ -197,15 +197,15 @@ cdef extern from "objects/seqalign/Seq_align.hpp" namespace "ncbi::objects" nogi
         ENa_strand      GetSeqStrand(TDim row) except +
         const CSeq_id&  GetSeq_id(TDim row) except +
 
-        TSeqPos         GetTotalGapCount(TDim row = -1) except +
+        TSeqPos         GetTotalGapCount(TDim row) except +
         # TSeqPos         GetTotalGapCountWithinRange(const TSeqRange &range, TDim row = -1) const
         # TSeqPos         GetTotalGapCountWithinRanges(const CRangeCollection<TSeqPos> &ranges, TDim row = -1) const
 
-        TSeqPos         GetNumGapOpenings(TDim row = -1) except +
+        TSeqPos         GetNumGapOpenings(TDim row) except +
         # TSeqPos         GetNumGapOpeningsWithinRange(const TSeqRange &range, TDim row = -1) const
         # TSeqPos         GetNumGapOpeningsWithinRanges(const CRangeCollection<TSeqPos> &ranges, TDim row = -1) const
 
-        TSeqPos         GetNumFrameshifts(TDim row = -1) except +
+        TSeqPos         GetNumFrameshifts(TDim row) except +
         # TSeqPos         GetNumFrameshiftsWithinRange(const TSeqRange &range, TDim row = -1) const
         # TSeqPos         GetNumFrameshiftsWithinRanges(const CRangeCollection<TSeqPos> &ranges, TDim row = -1) const
 

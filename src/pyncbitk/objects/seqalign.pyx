@@ -95,6 +95,16 @@ cdef class AlignRow:
         cdef const CSeq_id* id_ = &obj.GetSeq_id(self._row)
         return SeqId._wrap(CRef[CSeq_id](<CSeq_id*> id_))
 
+    @property
+    def num_gap_openings(self):
+        cdef CSeq_align* obj = self._ref.GetNonNullPointer()
+        return obj.GetNumGapOpenings(self._row)
+
+    @property
+    def total_gap_count(self):
+        cdef CSeq_align* obj = self._ref.GetNonNullPointer()
+        return obj.GetTotalGapCount(self._row)
+
 
 # --- AlignSegments ------------------------------------------------------------
 
@@ -370,6 +380,17 @@ cdef class SeqAlign(Serial):
         if not self._ref.GetObject().GetNamedScore(EScoreType.eScore_MismatchCount, mm):
             return None
         return mm
+
+    @property
+    def num_gap_openings(self):
+        cdef CSeq_align* obj = self._ref.GetNonNullPointer()
+        return obj.GetNumGapOpenings(-1)
+
+    @property
+    def total_gap_count(self):
+        cdef CSeq_align* obj = self._ref.GetNonNullPointer()
+        return obj.GetTotalGapCount(-1)
+
 
 cdef class GlobalSeqAlign(SeqAlign):
     """A global alignment over the complete lengths of several `BioSeq`.
