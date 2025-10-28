@@ -178,8 +178,10 @@ cdef class Blast:
         object window_size = None,
         object max_target_sequences = None,
         object xdrop_gap = None,
+        object culling_limit = None,
+        object percent_identity = None,
     ):
-        """__init__(self, *, gapped=None, window_size=None, evalue=None, max_target_sequences=None)\n--\n
+        """__init__(self, *, gapped=None, window_size=None, evalue=None, max_target_sequences=None, culling_limit=None, percent_identity=None)\n--\n
         """
         if self._opt.Empty():
             raise TypeError("Cannot instantiate abstract class Blast")
@@ -194,6 +196,10 @@ cdef class Blast:
             self.gapped = gapped
         if xdrop_gap is not None:
             self.xdrop_gap = xdrop_gap
+        if culling_limit is not None:
+            self.culling_limit = culling_limit
+        if percent_identity is not None:
+            self.percent_identity = percent_identity
 
     def __repr__(self):
         cdef str ty = self.__class__.__name__
@@ -260,6 +266,12 @@ cdef class Blast:
         """
         return self._opt.GetNonNullPointer().GetPercentIdentity()
 
+    @percent_identity.setter
+    def percent_identity(self, float percent_identity):
+        if percent_identity < 0.0 or percent_identity > 100.0:
+            raise ValueError("invalid `percent_identity`: {percent_identity!r}")
+        self._opt.GetNonNullPointer().SetPercentIdentity(percent_identity)
+
     @property
     def coverage_hsp(self):
         """`float`: Query coverage percentage per HSP.
@@ -285,6 +297,12 @@ cdef class Blast:
 
         """
         return self._opt.GetNonNullPointer().GetCullingLimit()
+
+    @culling_limit.setter
+    def culling_limit(self, int culling_limit):
+        if culling_limit < 0:
+            raise ValueError(f"invalid `culling_limit`: {culling_limit!r}")
+        self._opt.GetNonNullPointer().SetCullingLimit(culling_limit)
 
     @property
     def database_size(self):
