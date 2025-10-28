@@ -19,4 +19,7 @@ cdef class ObjectId(Serial):
 cdef class DBTag(Serial):
     cdef CRef[CDbtag] _ref
 
+    @staticmethod
+    cdef DBTag _wrap(CRef[CDbtag] ref)
+
     cpdef str url(self, object taxonomy = ?)

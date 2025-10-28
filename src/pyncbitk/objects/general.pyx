@@ -23,7 +23,6 @@ cdef class ObjectId(Serial):
     cdef ObjectId _wrap(CRef[CObject_id] ref):
         cdef ObjectId obj = ObjectId.__new__(ObjectId)
         obj._ref = ref
-        obj._ref = ref
         return obj
 
     cdef CSerialObject* _serial(self):
@@ -74,6 +73,12 @@ cdef class ObjectId(Serial):
 cdef class DBTag(Serial):
     """A database cross-reference.
     """
+
+    @staticmethod
+    cdef DBTag _wrap(CRef[CDbtag] ref):
+        cdef DBTag obj = DBTag.__new__(DBTag)
+        obj._ref = ref
+        return obj
 
     cdef CSerialObject* _serial(self):
         return <CSerialObject*> self._ref.GetNonNullPointer()
