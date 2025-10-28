@@ -6,7 +6,19 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 
 ## [Unreleased]
-[Unreleased]: https://github.com/althonos/pyncbitk/compare/v0.1.0-alpha.2...HEAD
+[Unreleased]: https://github.com/althonos/pyncbitk/compare/v0.1.0-alpha.3...HEAD
+
+
+## [v0.1.0-alpha.3] - 2025-10-28
+[v0.1.0-alpha.3]: https://github.com/althonos/pyncbitk/compare/v0.1.0-alpha.2...v0.1.0-alpha.3
+
+### Added
+- Setters for `percent_identity` and `culling_limit` to `Blast`.
+- Getters for gaps in `SeqAlign` and individual `AlignRow`.
+- `GeneralId.db_tag` property to access the `DBTag` of a `GeneralId`.
+
+### Changed
+- Update `cibuildwheel` configuration to strip wheels before uploading to PyPI.
 
 
 ## [v0.1.0-alpha.2] - 2025-10-26
