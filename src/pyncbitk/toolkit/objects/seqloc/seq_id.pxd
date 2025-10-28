@@ -4,6 +4,7 @@ from ...corelib.tempstr cimport CTempString
 from ...serial.serialbase cimport CSerialObject
 from ...serial.serializable cimport CSerializable
 from ..general.object_id cimport CObject_id
+from ..general.dbtag cimport CDbtag
 from .textseq_id cimport CTextseq_id
 
 cdef extern from "objects/seqloc/Seq_id_.hpp" namespace "ncbi::objects::CSeq_id_Base" nogil:
@@ -41,7 +42,7 @@ cdef extern from "objects/seqloc/Seq_id_.hpp" namespace "ncbi::objects::CSeq_id_
     ctypedef CTextseq_id TSwissprot
     # typedef CPatent_seq_id TPatent;
     ctypedef CTextseq_id TOther
-    # typedef CDbtag TGeneral;
+    ctypedef CDbtag TGeneral
     # typedef NCBI_NS_NCBI::TGi TGi;
     ctypedef CTextseq_id TDdbj
     ctypedef CTextseq_id TPrf
@@ -68,9 +69,9 @@ cdef extern from "objects/seqloc/Seq_id_.hpp" namespace "ncbi::objects" nogil:
         # void Select(E_Choice index, EResetVariant reset, CObjectMemoryPool* pool)
 
         bool IsLocal() const
-        const TLocal& GetLocal() const
-        TLocal& GetLocalMut "SetLocal"()
-        void SetLocal(TLocal& value)
+        const TLocal& GetLocal() except +
+        TLocal& GetLocalMut "SetLocal"() except +
+        void SetLocal(TLocal& value) except +
 
         # bool IsGibbsq(void) const;
         # TGibbsq GetGibbsq(void) const;
@@ -113,14 +114,14 @@ cdef extern from "objects/seqloc/Seq_id_.hpp" namespace "ncbi::objects" nogil:
         # void SetPatent(TPatent& value);
 
         bool IsOther() const
-        const TOther& GetOther() const
-        TOther& GetOtherMut "SetOther"()
-        void SetOther(TOther& value)
+        const TOther& GetOther() except +
+        TOther& GetOtherMut "SetOther"() except +
+        void SetOther(TOther& value) except +
 
-        # bool IsGeneral(void) const;
-        # const TGeneral& GetGeneral(void) const;
-        # TGeneral& SetGeneral(void);
-        # void SetGeneral(TGeneral& value);
+        bool IsGeneral() const
+        const TGeneral& GetGeneral() except +
+        TGeneral& GetGeneralMut "SetGeneral" () except +
+        void SetGeneral(TGeneral& value) except +
 
         # bool IsGi(void) const;
         # TGi GetGi(void) const;

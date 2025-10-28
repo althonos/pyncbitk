@@ -1,6 +1,7 @@
 # cython: language_level=3
 
 from ..toolkit.serial.serialbase cimport CSerialObject
+from ..toolkit.objects.general.dbtag cimport CDbtag
 from ..toolkit.objects.general.object_id cimport CObject_id
 from ..toolkit.objects.seqloc.textseq_id cimport CTextseq_id
 from ..toolkit.objects.seqloc.seq_loc cimport CSeq_loc, E_Choice as CSeq_loc_choice
@@ -11,7 +12,7 @@ from ..toolkit.corelib.ncbimisc cimport TSeqPos
 from ..toolkit.corelib.tempstr cimport CTempString
 
 from ..serial cimport Serial
-from .general cimport ObjectId
+from .general cimport ObjectId, DBTag
 
 # --- SeqId --------------------------------------------------------------------
 
@@ -137,8 +138,20 @@ cdef class ProteinDataBankId(SeqId):
     """
 
 cdef class GeneralId(SeqId):
-    """A sequence identifier from a local database.
+    """A sequence identifier from a database.
     """
+
+    def __repr__(self):
+        cdef str ty = type(self).__name__
+        return f"{ty}({self.id!r})"
+
+    @property
+    def db_tag(self):
+        """`~pyncbitk.objects.general.DBTag`: A database tag.
+        """
+        cdef CDbtag* id = &self._ref.GetNonNullPointer().GetGeneralMut()
+        return DBTag._wrap(CRef[CDbtag](id))
+
 
 cdef class OtherId(SeqId):
     """A sequence identifier for other databases.
