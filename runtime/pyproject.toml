@@ -73,6 +73,7 @@ archs = ["x86_64", "arm64"]
 [tool.cibuildwheel.macos.environment]
 CC = "/usr/bin/clang"
 CXX = "/usr/bin/clang++"
+MACOSX_DEPLOYMENT_TARGET = "13.3"
 
 [tool.cibuildwheel.linux]
 repair-wheel-command = "auditwheel repair -w {dest_dir} {wheel} --strip --zip-compression-level 9"
