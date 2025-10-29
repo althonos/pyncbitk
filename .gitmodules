@@ -1,3 +1,6 @@
 [submodule "vendor/ncbi-cxx-toolkit-conan"]
 	path = vendor/ncbi-cxx-toolkit-conan
 	url = https://github.com/ncbi/ncbi-cxx-toolkit-conan
+[submodule "runtime/vendor/ncbi-cxx-toolkit-conan"]
+	path = runtime/vendor/ncbi-cxx-toolkit-conan
+	url = https://github.com/ncbi/ncbi-cxx-toolkit-conan

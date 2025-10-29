@@ -1,13 +1,15 @@
 [build-system]
-build-backend = "scikit_build_core.build"
+build-backend = "scikit_build_core_conan.build"
 requires = [
-    "scikit-build-core>=0.10.0", "cython >=3.0", "pyncbitk-runtime~=29.6.0.0a1",
+    "scikit-build-core-conan==0.7.1 ; python_version <= '3.8'", 
+    "scikit-build-core-conan>=0.8.0 ; python_version > '3.8'", 
+    "cython >=3.0"
 ]
 
 [project]
-name = "pyncbitk"
-version = "0.1.0-alpha.3"
-description = "Cython bindings and Python interface to the NCBI C++ Toolkit."
+name = "pyncbitk-runtime"
+version = "29.6.0.0-alpha.1"
+description = "Runtime component of the NCBI C++ Toolkit to use in PyNCBItk."
 readme = "README.md"
 requires-python = ">=3.7"
 license = { file = "COPYING" }
@@ -22,23 +24,8 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Programming Language :: C++",
-    "Programming Language :: Cython",
-    "Programming Language :: Python :: 3.7",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12",
-    "Programming Language :: Python :: 3.13",
-    "Programming Language :: Python :: 3.14",
-    "Programming Language :: Python :: Implementation :: CPython",
-    "Programming Language :: Python :: Implementation :: PyPy",
     "Topic :: Scientific/Engineering :: Bio-Informatics",
     "Topic :: Scientific/Engineering :: Medical Science Apps.",
-    "Typing :: Typed",
-]
-dependencies=[
-    "pyncbitk-runtime~=29.6.0.0a1"
 ]
 
 [project.urls]
@@ -49,16 +36,22 @@ dependencies=[
 "Builds" = "https://github.com/althonos/pyncbitk/actions"
 "PyPI" = "https://pypi.org/project/pyncbitk"
 
+[tool.scikit-build-core-conan]
+path = "."
+build = "missing"
+output-folder = "."
+config = ["tools.cmake.cmaketoolchain:generator=Ninja"]
+settings = ["compiler.cppstd=20"]
+
+[[tool.scikit-build-core-conan.local-recipes]]
+path = "vendor/ncbi-cxx-toolkit-conan"
+name = "ncbi-cxx-toolkit-public"
+version = "29.6.0"
+
 [tool.scikit-build]
 build-dir = "build/{build_type}"
-wheel.py-api = "cp311"
+wheel.py-api = "py3"
 cmake.build-type = "Release"
-editable.rebuild = true
-editable.verbose = false
-
-[[tool.scikit-build.overrides]]
-if.state = "editable"
-cmake.build-type = "Debug"
 
 [[tool.scikit-build-overrides]]
 if.env.SCCACHE = true
@@ -72,12 +65,12 @@ cmake.define.CMAKE_LINKER_TYPE = "mold"
 [tool.cibuildwheel]
 build-frontend = { name = "build", args = [] }
 build-verbosity = 1
-test-command = "cd {project} && python -m unittest tests -v"
+manylinux-x86_64-image = "althonos/pyncbitk-manylinux_2_34:release"
 
 [tool.cibuildwheel.macos]
-environment = { MACOSX_DEPLOYMENT_TARGET = "10.12" }
+environment = { MACOSX_DEPLOYMENT_TARGET = "11.0" }
 archs = ["x86_64", "arm64"]
 
 [tool.cibuildwheel.linux]
-repair-wheel-command = "auditwheel repair -w {dest_dir} {wheel} --zip-compression-level 9"
+repair-wheel-command = "auditwheel repair -w {dest_dir} {wheel} --strip --zip-compression-level 9"
 
