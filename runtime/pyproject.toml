@@ -68,8 +68,11 @@ build-verbosity = 1
 manylinux-x86_64-image = "althonos/pyncbitk-manylinux_2_34:release"
 
 [tool.cibuildwheel.macos]
-environment = { MACOSX_DEPLOYMENT_TARGET = "11.0" }
 archs = ["x86_64", "arm64"]
+
+[tool.cibuildwheel.macos.environment]
+CC = "/usr/bin/clang"
+CXX = "/usr/bin/clang++"
 
 [tool.cibuildwheel.linux]
 repair-wheel-command = "auditwheel repair -w {dest_dir} {wheel} --strip --zip-compression-level 9"
