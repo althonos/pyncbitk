@@ -1,0 +1,76 @@
+[build-system]
+build-backend = "scikit_build_core_conan.build"
+requires = [
+    "scikit-build-core-conan==0.7.1 ; python_version <= '3.8'", 
+    "scikit-build-core-conan>=0.8.0 ; python_version > '3.8'", 
+    "cython >=3.0"
+]
+
+[project]
+name = "pyncbitk-runtime"
+version = "29.6.0.0"
+description = "Runtime component of the NCBI C++ Toolkit to use in PyNCBItk."
+readme = "README.md"
+requires-python = ">=3.7"
+license = { file = "COPYING" }
+authors = [
+  { name = "Martin Larralde", email = "martin.larralde@embl.de" },
+]
+keywords = ["bioinformatics", "blast", "sequence", "alignment", "ncbi"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: C++",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
+    "Topic :: Scientific/Engineering :: Medical Science Apps.",
+]
+
+[project.urls]
+"Documentation" = "https://pyncbitk.readthedocs.io/en/stable/"
+"Bug Tracker" = "https://github.com/althonos/pyncbitk/issues"
+"Changelog" = "https://github.com/althonos/pyncbitk/blob/master/CHANGELOG.md"
+"Coverage" = "https://codecov.io/gh/althonos/pyncbitk/"
+"Builds" = "https://github.com/althonos/pyncbitk/actions"
+"PyPI" = "https://pypi.org/project/pyncbitk"
+
+[tool.scikit-build-core-conan]
+path = "."
+build = "missing"
+output-folder = "."
+config = ["tools.cmake.cmaketoolchain:generator=Ninja"]
+settings = ["compiler.cppstd=20"]
+
+[[tool.scikit-build-core-conan.local-recipes]]
+path = "vendor/ncbi-cxx-toolkit-conan"
+name = "ncbi-cxx-toolkit-public"
+version = "29.6.0"
+
+[tool.scikit-build]
+build-dir = "build/{build_type}"
+wheel.py-api = "py3"
+cmake.build-type = "Release"
+
+[[tool.scikit-build-overrides]]
+if.env.SCCACHE = true
+cmake.define.CMAKE_C_COMPILER_LAUNCHER = "sccache"
+cmake.define.CMAKE_CXX_COMPILER_LAUNCHER = "sccache"
+
+[[tool.scikit-build-overrides]]
+if.env.MOLD = true
+cmake.define.CMAKE_LINKER_TYPE = "mold"
+
+[tool.cibuildwheel]
+build-frontend = { name = "build", args = [] }
+build-verbosity = 1
+manylinux-x86_64-image = "althonos/pyncbitk-manylinux_2_34:release"
+
+[tool.cibuildwheel.macos]
+environment = { MACOSX_DEPLOYMENT_TARGET = "11.0" }
+archs = ["x86_64", "arm64"]
+
+[tool.cibuildwheel.linux]
+repair-wheel-command = "auditwheel repair -w {dest_dir} {wheel} --strip --zip-compression-level 9"
+
