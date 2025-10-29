@@ -8,7 +8,7 @@ requires = [
 
 [project]
 name = "pyncbitk-runtime"
-version = "29.6.0.0"
+version = "29.6.0.0-alpha.1"
 description = "Runtime component of the NCBI C++ Toolkit to use in PyNCBItk."
 readme = "README.md"
 requires-python = ">=3.7"
