@@ -25,6 +25,48 @@ jobs:
         name: wheels-manylinux_x86_64
         path: dist/*
 
+  wheel-macos-x86_64:
+    name: Build MacOS wheels (x86-64)
+    runs-on: macOS-14
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: true
+    - name: Build manylinux wheels
+      uses: pypa/cibuildwheel@v3.2.1
+      env:
+        CIBW_ARCHS: x86_64
+        CIBW_BUILD: 'cp312-macosx_x86_64'
+        CIBW_BUILD_VERBOSITY: 2
+      with:
+        output-dir: dist
+        package-dir: runtime
+    - uses: actions/upload-artifact@v4
+      with:
+        name: wheels-macosx_x86_64
+        path: dist/*
+
+  wheel-macos-aarch64:
+    name: Build MacOS wheels (Aarch64)
+    runs-on: macOS-14
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: true
+    - name: Build manylinux wheels
+      uses: pypa/cibuildwheel@v2.22.0
+      env:
+        CIBW_ARCHS: arm64
+        CIBW_BUILD: 'cp312-macosx_arm64'
+        CIBW_BUILD_VERBOSITY: 2
+      with:
+        output-dir: dist
+        package-dir: runtime
+    - uses: actions/upload-artifact@v4
+      with:
+        name: wheels-macosx_arm64
+        path: dist/*
+
   sdist:
     runs-on: ubuntu-latest
     name: Build source distribution
@@ -45,3 +87,31 @@ jobs:
       with:
         name: sdist
         path: dist/*
+
+  upload:
+    environment: PyPI
+    runs-on: ubuntu-latest
+    name: Upload
+    permissions:
+      id-token: write
+    needs:
+    - sdist
+    # - wheel-linux-aarch64
+    - wheel-linux-x86_64
+    - wheel-macos-x86_64
+    - wheel-macos-aarch64
+    steps:
+    - name: Download source distribution
+      uses: actions/download-artifact@v4
+      with:
+        name: sdist
+        path: dist/
+        merge-multiple: true
+    - name: Download wheel distributions
+      uses: actions/download-artifact@v4
+      with:
+        pattern: wheels-*
+        path: dist/
+        merge-multiple: true
+    #- name: Publish distributions to PyPI
+    #  uses: pypa/gh-action-pypi-publish@release/v1

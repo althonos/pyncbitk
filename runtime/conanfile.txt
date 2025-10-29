@@ -1,5 +1,6 @@
 [requires]
 ncbi-cxx-toolkit-public/29.6.0
+libiconv/1.17
 [options]
 ncbi-cxx-toolkit-public/*:with_components=algo;core;objects;seqext;loaders
 ncbi-cxx-toolkit-public/*:without_req=BerkeleyDB;GRPC
