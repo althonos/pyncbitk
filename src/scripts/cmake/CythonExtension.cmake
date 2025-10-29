@@ -90,11 +90,11 @@ macro(cython_extension _name)
     VERBATIM)
 
   # Build fully-qualified module name as the target name
-  string(REGEX REPLACE "^${PYTHON_EXTENSIONS_SOURCE_DIR}/?" "" _dest_folder ${NCBI_CURRENT_SOURCE_DIR})
+  string(REGEX REPLACE "^${PYTHON_EXTENSIONS_SOURCE_DIR}/?" "" _dest_folder ${CMAKE_CURRENT_LIST_DIR})
   string(REPLACE "/" "." _target ${_dest_folder}.${_name})
 
   # Build the Python extension as an NCBIptb custom target
-  function(${_name}_definition)
+  # function(${_name}_definition)
     # Add Python library target
     if((NOT "${SKBUILD_SABI_VERSION}" STREQUAL "") AND (NOT CMAKE_BUILD_TYPE STREQUAL Debug) AND (NOT SKBUILD_STATE STREQUAL editable))
       python_add_library(${_target} MODULE WITH_SOABI USE_SABI "${SKBUILD_SABI_VERSION}" ${_name}.pyx ${_name}.cpp)
@@ -116,11 +116,31 @@ macro(cython_extension _name)
     target_precompile_headers(${_target} PRIVATE ${PYSTATE_PATCH_H})
 
     # Link to NCBI libraries and add include directories if needed
-    target_link_libraries(${_target} PUBLIC ${NCBITMP_NCBILIB} ${NCBITMP_EXTLIB})
+    # message(STATUS "libs NCBI=(${NCBITMP_NCBILIB}) EXT=(${NCBITMP_EXTLIB})")
+    # message(STATUS "${ncbi-cxx-toolkit-public_INCLUDE_DIRS}")
+    # message(STATUS "${ncbi-cxx-toolkit-public_LIBRARIES}")
+
+    # target_link_libraries(${_target} PUBLIC ${NCBITMP_NCBILIB} ${NCBITMP_EXTLIB})
+    target_link_libraries(${_target} PUBLIC pystreambuf)
+
+    target_include_directories(${_target} PUBLIC ${ncbi-cxx-toolkit-public_INCLUDE_DIRS})
+    target_link_libraries(${_target} PUBLIC ${ncbi-cxx-toolkit-public_LIBRARIES})
+
+    # target_link_directories(${_target} PUBLIC "/home/althonos/.local/lib/python3.13/site-packages/pyncbitk_runtime/ncbi-cxx-toolkit-public/lib" )
     foreach(_dep IN LISTS CYTHON_EXTENSION_DEPENDS)
+      message(STATUS "dep: ${_dep}")
+
+      # NCBI_internal_identify_libs(_link _dep2)
+      # message(STATUS "link: ${_link} dep2: ${_dep2} dep: ${_dep}")
+
+      target_link_libraries(${_target} PUBLIC ${_dep})
+
       if(TARGET ${_dep})
+      #   message(STATUS "LINKING $<TARGET_PROPERTY:${_dep},LINK_LIBRARIES>")
         target_include_directories(${_target} PUBLIC $<TARGET_PROPERTY:${_dep},INCLUDE_DIRECTORIES>)
+      #   target_link_libraries(${_target} PUBLIC $<TARGET_PROPERTY:${_dep},LINK_LIBRARIES>)
       endif()
+
     endforeach()
 
     # Preserve the relative project structure in the install directory
@@ -128,27 +148,30 @@ macro(cython_extension _name)
     install(TARGETS ${_target} DESTINATION ${_dest_folder} )
     message(DEBUG "Install folder for extension ${_name}: ${_dest_folder}")
 
-    # Patch the RPATH to the installed libs (only if libs are installed locally)
-    if(PYNCBITK_INSTALL_LIBS AND DEFINED PYTHON_LIBS_INSTALL_DIR)
-      cmake_path(SET _path NORMALIZE ${_dest_folder})
-      string(REPLACE "/" ";" _components ${_path})
-      set(_rpath "\$ORIGIN/")
-      foreach(_x IN LISTS _components)
-        string(APPEND _rpath "../")
-      endforeach()
-      string(APPEND _rpath "${PYTHON_LIBS_INSTALL_DIR}")
-      set_target_properties(${_target} PROPERTIES INSTALL_RPATH ${_rpath})
-      message(DEBUG "RPATH for extension ${_name}: ${_rpath}")
-    else()
-      set_target_properties(${_target} PROPERTIES INSTALL_RPATH_USE_LINK_PATH TRUE)
-    endif()
+    # set_target_properties(${_target} PROPERTIES INSTALL_RPATH "/home/althonos/.local/lib/python3.13/site-packages/pyncbitk_runtime/ncbi-cxx-toolkit-public/lib")
 
-  endfunction()
-  NCBI_begin_custom_target(${_target})
-    NCBI_project_tags(python)
-    NCBI_custom_target_definition(${_name}_definition)
-    NCBI_uses_toolkit_libraries(${CYTHON_EXTENSION_DEPENDS})
-  NCBI_end_custom_target()
+
+    # Patch the RPATH to the installed libs (only if libs are installed locally)
+    # if(PYNCBITK_INSTALL_LIBS AND DEFINED PYTHON_LIBS_INSTALL_DIR)
+    #   cmake_path(SET _path NORMALIZE ${_dest_folder})
+    #   string(REPLACE "/" ";" _components ${_path})
+    #   set(_rpath "\$ORIGIN/")
+    #   foreach(_x IN LISTS _components)
+    #     string(APPEND _rpath "../")
+    #   endforeach()
+    #   string(APPEND _rpath "${PYTHON_LIBS_INSTALL_DIR}")
+    #   set_target_properties(${_target} PROPERTIES INSTALL_RPATH ${_rpath})
+    #   message(DEBUG "RPATH for extension ${_name}: ${_rpath}")
+    # else()
+      set_target_properties(${_target} PROPERTIES INSTALL_RPATH_USE_LINK_PATH TRUE)
+    # endif()
+
+  # endfunction()
+  # NCBI_begin_custom_target(${_target})
+  #   NCBI_project_tags(python)
+  #   NCBI_custom_target_definition(${_name}_definition)
+  #   NCBI_uses_toolkit_libraries(${CYTHON_EXTENSION_DEPENDS})
+  # NCBI_end_custom_target()
 
   # Add the targets to the list of Cython extensions
   get_property(_ext GLOBAL PROPERTY PYNCBITK_CYTHON_EXTENSIONS)

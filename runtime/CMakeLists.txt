@@ -21,9 +21,8 @@ find_package(ncbi-cxx-toolkit-public COMPONENTS algo core seqext REQUIRED)
 # Configure Toolkit build
 set(NCBI_WITHOUT_MT          ON)
 
-# Install shared library objects to `pyncbitk.libs` (like cibuildwheel)
+# Install all dependencies into `pyncbitk-runtime` wheel
 if("${SKBUILD_STATE}" STREQUAL "wheel")
-    message(STATUS "OK YES YES YES")
     execute_process(
         COMMAND conan install ${CMAKE_SOURCE_DIR} 
             -nr --deployer deployer 
