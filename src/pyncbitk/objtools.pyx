@@ -57,18 +57,26 @@ cdef class FastaReader:
         object file not None,
         *,
         bool split = True,
+        bool parse_ids = True,
     ):
-        """__init__(self, file, *, split=True)\n--\n
+        """__init__(self, file, *, split=True, parse_ids=True)\n--\n
 
         Create a new FASTA reader from a file or a file-like object.
 
         Arguments:
-            file (`str`, `os.PathLike` or file-like object): Either the path 
+            file (`str`, `os.PathLike` or file-like object): Either the path
                 to a file to be open, or a Python file-like object open in
                 binary mode.
             split (`bool`): Set to `False` to force the reader to produce
                 `~pyncbitk.objects.seq.BioSeq` objects where the instance
                 is a `~pyncbitk.objects.seqinst.ContinuousInst` object.
+            parse_ids (`bool`): If `True` (the default), the FASTA header
+                line will be parsed to build a sequence identifier. This
+                may cause errors on certain files where the IDs are too
+                long (>50 letters). Pass `False` to generate a `LocalId`
+                for each `BioSeq` using a counter. The whole FASTA header
+                line can be accessed as `~pyncbitk.objects.seqdesc.TitleDesc`
+                instances of the `BioSeq` in both cases.
 
         """
         cdef bytes      path
@@ -76,6 +84,8 @@ cdef class FastaReader:
 
         if not split:
             flags |= CFastaReader_Flags.fNoSplit
+        if not parse_ids:
+            flags |= CFastaReader_Flags.fNoParseID
 
         if hasattr(file, "readinto") and sys.implementation.name == "cpython":
             self._buffer = new pyreadintobuf(file)
@@ -97,6 +107,10 @@ cdef class FastaReader:
         if seq is None:
             raise StopIteration
         return seq
+
+    @property
+    def max_id_length(self):
+        return self._reader.GetMaxIDLength()
 
     cpdef BioSeq read(self):
         """Read a single sequence if available.
@@ -242,8 +256,8 @@ cdef class DatabaseReader:
         return CSeqDB.GenerateSearchPath().decode()
 
     def __init__(
-        self, 
-        object name not None, 
+        self,
+        object name not None,
         str type = None
     ):
         """__init__(self, name, type=None)\n--\n
@@ -251,7 +265,7 @@ cdef class DatabaseReader:
         Create a new reader for a database of the given name.
 
         Arguments:
-            name (`str` or `os.PathLike`): The name of the database, as given 
+            name (`str` or `os.PathLike`): The name of the database, as given
                 when the database was created.
             type (`str` or `None`): The type of sequences in the database,
                 either ``nucleotide`` or ``protein``. If `None` given,
@@ -437,7 +451,7 @@ cdef class DatabaseWriter:
 cdef class AlignMap:
     """A helper class to handle coordinates of `DenseSegments` of an alignment.
     """
-    
+
     def __init__(self, DenseSegments segments):
         self.segments = segments
         self._ref.Reset(new CAlnMap(segments._ref.GetObject().GetDenseg()))

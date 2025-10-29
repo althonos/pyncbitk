@@ -3,6 +3,7 @@ from libcpp.string cimport string
 
 from ...corelib.ncbiobj cimport CRef
 from ...corelib.ncbistre cimport CNcbiIstream
+from ...corelib.ncbitype cimport Uint4
 from ...objects.seqset.seq_entry cimport CSeq_entry
 from .reader_base cimport CReaderBase
 
@@ -62,3 +63,6 @@ cdef extern from "objtools/readers/fasta.hpp" namespace "ncbi::objects" nogil:
         CRef[CSeq_entry] ReadOneSeq() except +
         # virtual CRef<CSeq_entry> ReadOneSeq(ILineErrorListener* pMessageListener = nullptr);
 
+
+        void SetMaxIDLength(Uint4 max_len) except +
+        Uint4 GetMaxIDLength() const
