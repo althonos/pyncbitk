@@ -6,7 +6,21 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 
 ## [Unreleased]
-[Unreleased]: https://github.com/althonos/pyncbitk/compare/v0.1.0-alpha.3...HEAD
+[Unreleased]: https://github.com/althonos/pyncbitk/compare/v0.1.0-alpha.4...HEAD
+
+## [v0.1.0-alpha.4] - 2025-10-30
+
+### Added
+- Flag to skip parsing FASTA record IDs in `FASTAReader`.
+
+### Changed
+- Reorganized wheel distribution to redistribute `ncbi-cxx-toolkit-public` runtime libraries in a separate `pyncbitk-runtime` wheel.
+- Removed unused Conan configuration file from main `pyncbitk` package.
+- Update `readthedocs.yaml` configuration to build the package from source on new commits.
+
+### Fixed
+- Compilation issues on MacOS related to `$RPATH` management for Python extensions.
+- Uninitialized variable in `AlignMap.__getitem__` causing crashes in debug mode only.
 
 
 ## [v0.1.0-alpha.3] - 2025-10-28

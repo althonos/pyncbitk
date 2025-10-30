@@ -1,12 +1,14 @@
 [build-system]
 build-backend = "scikit_build_core.build"
 requires = [
-    "scikit-build-core>=0.10.0", "cython >=3.0", "pyncbitk-runtime~=29.6.0.0a1",
+    "scikit-build-core>=0.10.0", 
+    "pyncbitk-runtime~=29.6.0.0a1",
+    "cython >=3.0", 
 ]
 
 [project]
 name = "pyncbitk"
-version = "0.1.0-alpha.3"
+version = "0.1.0-alpha.4"
 description = "Cython bindings and Python interface to the NCBI C++ Toolkit."
 readme = "README.md"
 requires-python = ">=3.7"
@@ -79,9 +81,9 @@ build-verbosity = 1
 test-command = "cd {project} && python -m unittest tests -v"
 manylinux-x86_64-image = "quay.io/pypa/manylinux_2_34_x86_64"
 
-[tool.cibuildwheel.macos]
-environment = { MACOSX_DEPLOYMENT_TARGET = "10.12" }
+[wtool.cibuildwheel.macos]
 archs = ["x86_64", "arm64"]
+repair-wheel-command = "cp {wheel} {dest_dir}"
 
 [tool.cibuildwheel.linux]
 repair-wheel-command = "auditwheel repair -w {dest_dir} {wheel} --exclude \\*"
