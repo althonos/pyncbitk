@@ -3,7 +3,7 @@ from typing import Iterable, List
 from ..serial import Serial
 from .seqid import SeqId
 from .seqinst import SeqInst
-from .seqdesc import SeqDesc, SeqDescList
+from .seqdesc import SeqDesc, SeqDescSet
 
 class BioSeq(Serial):
     def __init__(
@@ -21,4 +21,4 @@ class BioSeq(Serial):
     @property
     def instance(self) -> SeqInst: ...
     @property
-    def descriptions(self) -> SeqDescList: ...
+    def descriptions(self) -> SeqDescSet: ...
