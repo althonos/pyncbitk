@@ -69,6 +69,7 @@ manylinux-x86_64-image = "althonos/pyncbitk-manylinux_2_34:release"
 
 [tool.cibuildwheel.macos]
 archs = ["x86_64", "arm64"]
+repair-wheel-command = "cp {wheel} {dest_dir}"
 
 [tool.cibuildwheel.macos.environment]
 CC = "/usr/bin/clang"
