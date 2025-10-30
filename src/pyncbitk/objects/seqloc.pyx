@@ -81,6 +81,9 @@ cdef class WholeSeqLoc(SeqLoc):
         cdef str ty = type(self).__name__
         return f"{ty}({self.sequence_id!r})"
 
+    def __rich_repr__(self):
+        yield self.sequence_id
+
     @property
     def sequence_id(self):
         """`~pyncbitk.objects.seqid.SeqId`: The identifier of the sequence.
@@ -96,7 +99,7 @@ cdef class SeqIntervalLoc(SeqLoc):
 
     """
     
-    # FIXME: Handle strand.
+    # TODO: Handle strand.
     def __init__(self, SeqId sequence_id, TSeqPos start, TSeqPos stop, object strand = None):
         if start > stop:
             raise ValueError(f"interval limits in invalid order: {start} > {stop}")
@@ -106,14 +109,20 @@ cdef class SeqIntervalLoc(SeqLoc):
         loc.SetInt(inter[0])
         self._loc.Reset(loc)
 
-    # FIXME: handle strand 
+    # TODO: handle strand 
     def __reduce__(self):
         return type(self), (self.sequence_id, self.start, self.stop)
 
-    # FIXME: handle strand 
+    # TODO: handle strand 
     def __repr__(self):
         cdef str ty = type(self).__name__
-        return f"{ty}({self.sequence_id!r}, {self.start!r}, {self.stop!r})"
+        return f"{ty}({self.sequence_id!r}, start={self.start!r}, stop={self.stop!r})"
+
+    # TODO: handle strand 
+    def __rich_repr__(self):
+        yield self.sequence_id
+        yield "start", self.start
+        yield "stop", self.stop
 
     @property
     def sequence_id(self):

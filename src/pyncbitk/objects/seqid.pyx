@@ -61,6 +61,9 @@ cdef class SeqId(Serial):
         else:
             return False
 
+    def __hash__(self):
+        return super().__hash__()
+
     @staticmethod
     def parse(str text not None):
         """Parse an identifier from an arbitrary string.

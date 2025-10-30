@@ -55,7 +55,7 @@ class TestSeqIntervalLoc(unittest.TestCase, TestSeqLoc):
     def test_repr(self):
         id_ = LocalId(ObjectId(1))
         loc = SeqIntervalLoc(id_, 0, 1)
-        self.assertEqual(repr(loc), f"SeqIntervalLoc({id_!r}, 0, 1)")
+        self.assertEqual(repr(loc), f"SeqIntervalLoc({id_!r}, start=0, stop=1)")
         self.assertEqual(loc.sequence_id, id_)
 
     

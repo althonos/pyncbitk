@@ -85,6 +85,16 @@ cdef class NameDesc(SeqDesc):
             self._ref.GetNonNullPointer().Select(CSeqdesc_choice.e_Name)
             self._ref.GetNonNullPointer().SetName(s)
 
+    def __reduce__(self):
+        return type(self), (str(self),)
+
+    def __repr__(self):
+        cdef str ty = type(self).__name__
+        return f"{ty}({str(self)!r})"
+
+    def __rich_repr__(self):
+        yield str(self)
+
     def __str__(self):
         return self._ref.GetNonNullPointer().GetName().decode()
 
@@ -111,6 +121,16 @@ cdef class TitleDesc(SeqDesc):
             self._ref.GetNonNullPointer().Select(CSeqdesc_choice.e_Title)
             self._ref.GetNonNullPointer().SetTitle(s)
 
+    def __reduce__(self):
+        return type(self), (str(self),)
+
+    def __repr__(self):
+        cdef str ty = type(self).__name__
+        return f"{ty}({str(self)!r})"
+
+    def __rich_repr__(self):
+        yield str(self)
+
     def __str__(self):
         return self._ref.GetNonNullPointer().GetTitle().decode()
 
@@ -134,6 +154,16 @@ cdef class RegionDesc(SeqDesc):
             s = string(<const char*> &_view[0], _view.shape[0])
             self._ref.GetNonNullPointer().Select(CSeqdesc_choice.e_Region)
             self._ref.GetNonNullPointer().SetRegion(s)
+
+    def __reduce__(self):
+        return type(self), (str(self),)
+
+    def __repr__(self):
+        cdef str ty = type(self).__name__
+        return f"{ty}({str(self)!r})"
+
+    def __rich_repr__(self):
+        yield str(self)
 
     def __str__(self):
         return self._ref.GetNonNullPointer().GetRegion().decode()
@@ -179,3 +209,6 @@ cdef class SeqDescSet(Serial):
         cdef cpplist[CRef[CSeqdesc]]* data = &self._ref.GetNonNullPointer().GetMut()
         for item in data[0]:
             yield SeqDesc._wrap(item)
+
+    def __rich_repr__(self):
+        yield iter(self)

@@ -139,9 +139,9 @@ cdef class SeqAaData(SeqData):
         """Encode the textual sequence to a compressed representation.
 
         Arguments:
-            data (`str`, `bytes`, or buffer-like object): The ASCII 
+            data (`str`, `bytes`, or buffer-like object): The ASCII
                 nucleotide sequence to be encoded. Python strings, and
-                any other object supporting the buffer protocol is 
+                any other object supporting the buffer protocol is
                 supported.
 
         """
@@ -188,14 +188,14 @@ cdef class SeqNaData(SeqData):
         """Encode the textual sequence to a compressed representation.
 
         Arguments:
-            data (`str`, `bytes`, or buffer-like object): The ASCII 
+            data (`str`, `bytes`, or buffer-like object): The ASCII
                 nucleotide sequence to be encoded. Python strings, and
-                any other object supporting the buffer protocol is 
+                any other object supporting the buffer protocol is
                 supported.
 
         Raises:
             ValueError: When the sequence data contains invalid characters
-                that do
+                that do not belong to the nucleotide alphabet.
 
         """
         cdef CSeq_data_choice   variant = cls._variant()
@@ -281,6 +281,9 @@ cdef class IupacNaData(SeqNaData):
     def __repr__(self):
         cdef str ty = self.__class__.__name__
         return f"{ty}({self.data!r})"
+
+    def __rich_repr__(self):
+        yield self.data
 
     def __richcmp__(self, other, int op):
         cdef IupacNaData   _other
@@ -398,6 +401,9 @@ cdef class IupacAaData(SeqAaData):
         cdef str ty = self.__class__.__name__
         return f"{ty}({self.data!r})"
 
+    def __rich_repr__(self):
+        yield self.data
+
     def __getbuffer__(self, Py_buffer* buffer, int flags):
         cdef const string* data = &self._ref.GetNonNullPointer().GetIupacna().Get()
 
@@ -479,6 +485,9 @@ cdef class Ncbi2NaData(SeqNaData):
         cdef str ty = self.__class__.__name__
         return f"{ty}({self.data!r})"
 
+    def __rich_repr__(self):
+        yield self.data
+
     def __getbuffer__(self, Py_buffer* buffer, int flags):
         cdef const vector[char]* data = &self._ref.GetObject().GetNcbi2na().Get()
 
@@ -540,6 +549,9 @@ cdef class Ncbi4NaData(SeqNaData):
         cdef str ty = self.__class__.__name__
         return f"{ty}({self.data!r})"
 
+    def __rich_repr__(self):
+        yield self.data
+
     def __getbuffer__(self, Py_buffer* buffer, int flags):
         cdef const vector[char]* data = &self._ref.GetNonNullPointer().GetNcbi4na().Get()
 
@@ -592,12 +604,15 @@ cdef class Ncbi8NaData(SeqNaData):
 
     def __reduce_ex__(self, protocol):
         if protocol >= 5:
-            return type(self), (pickle.PickleBuffer(self),), None
-        return type(self), (memoryview(self).tobytes(),), None
+            return type(self), (pickle.PickleBuffer(self),)
+        return type(self), (memoryview(self).tobytes(),)
 
     def __repr__(self):
         cdef str ty = self.__class__.__name__
         return f"{ty}({self.data!r})"
+
+    def __rich_repr__(self):
+        yield self.data
 
     def __getbuffer__(self, Py_buffer* buffer, int flags):
         cdef const vector[char]* data = &self._ref.GetNonNullPointer().GetNcbi8na().Get()
@@ -680,6 +695,9 @@ cdef class NcbiEAaData(SeqAaData):
     def __repr__(self):
         cdef str ty = self.__class__.__name__
         return f"{ty}({self.data!r})"
+
+    def __rich_repr__(self):
+        yield self.data
 
     def __getbuffer__(self, Py_buffer* buffer, int flags):
         cdef const string* data = &self._ref.GetNonNullPointer().GetNcbieaa().Get()
