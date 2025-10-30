@@ -6,8 +6,8 @@ Algorithms (``pyncbitk.algo``)
 .. automodule:: pyncbitk.algo
 
 
-BLAST
------
+BLAST (``pyncbitk.algo.blast``)
+-------------------------------
 
 .. autosummary::
 

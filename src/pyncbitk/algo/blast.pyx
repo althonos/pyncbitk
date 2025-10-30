@@ -6,61 +6,59 @@ from libcpp.cast cimport static_cast
 from libcpp.string cimport string
 from iostream cimport istream, ostream, filebuf
 
-from .toolkit.algo.blast.core.blast_options cimport BLAST_DEFAULT_MATRIX, BLAST_GENETIC_CODE
-from .toolkit.algo.blast.api.bl2seq cimport CBl2Seq
-from .toolkit.algo.blast.api.blast_types cimport EProgram, ProgramNameToEnum, TSeqAlignVector, EProgramToTaskName, TSearchMessages
-from .toolkit.algo.blast.api.sseqloc cimport SSeqLoc, TSeqLocVector, CBlastSearchQuery, CBlastQueryVector
-from .toolkit.algo.blast.api.local_blast cimport CLocalBlast
-from .toolkit.algo.blast.api.blast_options cimport CBlastOptions, EAPILocality
-from .toolkit.algo.blast.api.blast_options_handle cimport CBlastOptionsHandle, CBlastOptionsFactory
-from .toolkit.algo.blast.api.blast_nucl_options cimport CBlastNucleotideOptionsHandle
-from .toolkit.algo.blast.api.blast_prot_options cimport CBlastProteinOptionsHandle
-from .toolkit.algo.blast.api.blastx_options cimport CBlastxOptionsHandle
-from .toolkit.algo.blast.api.blast_advprot_options cimport CBlastAdvancedProteinOptionsHandle
-from .toolkit.algo.blast.api.tblastn_options cimport CTBlastnOptionsHandle
-from .toolkit.algo.blast.api.query_data cimport IQueryFactory
-from .toolkit.algo.blast.api.objmgr_query_data cimport CObjMgr_QueryFactory
-from .toolkit.algo.blast.api.objmgrfree_query_data cimport CObjMgrFree_QueryFactory
-from .toolkit.algo.blast.api.local_db_adapter cimport CLocalDbAdapter
-from .toolkit.algo.blast.api.blast_results cimport CSearchResultSet, CSearchResults, size_type as CSearchResults_size_type
-from .toolkit.algo.blast.format.blast_format cimport CBlastFormat
-from .toolkit.algo.blast.blastinput.blast_args cimport EOutputFormat
-from .toolkit.corelib.ncbiobj cimport CConstRef, CRef
-from .toolkit.corelib.ncbistre cimport CNcbiOstream
-from .toolkit.corelib.ncbistr cimport kEmptyStr
-from .toolkit.objects.seq.bioseq cimport CBioseq
-from .toolkit.objects.seqset.bioseq_set cimport CBioseq_set
-from .toolkit.objects.seq.seq_inst cimport ERepr as CSeq_inst_repr
-from .toolkit.objects.seqloc.seq_id cimport CSeq_id
-from .toolkit.objects.seqloc.seq_loc cimport CSeq_loc
-from .toolkit.objmgr.object_manager cimport CObjectManager
-from .toolkit.objmgr.scope cimport CScope
-from .toolkit.objtools.align_format.format_flags cimport kDfltArgNumAlignments, kDfltArgNumDescriptions
-from .toolkit.objtools.readers.fasta cimport CFastaReader
-from .toolkit.serial.serialbase cimport CSerialObject, MSerial_Format_AsnText
-from .toolkit.serial.serialdef cimport ESerialRecursionMode
-from .toolkit.algo.blast.api.uniform_search cimport CSearchDatabase, EMoleculeType
-from .toolkit.objtools.blast.seqdb_reader.seqdb cimport ESeqType
+from ..toolkit.algo.blast.core.blast_options cimport BLAST_DEFAULT_MATRIX, BLAST_GENETIC_CODE
+from ..toolkit.algo.blast.api.bl2seq cimport CBl2Seq
+from ..toolkit.algo.blast.api.blast_types cimport EProgram, ProgramNameToEnum, TSeqAlignVector, EProgramToTaskName, TSearchMessages
+from ..toolkit.algo.blast.api.sseqloc cimport SSeqLoc, TSeqLocVector, CBlastSearchQuery, CBlastQueryVector
+from ..toolkit.algo.blast.api.local_blast cimport CLocalBlast
+from ..toolkit.algo.blast.api.blast_options cimport CBlastOptions, EAPILocality
+from ..toolkit.algo.blast.api.blast_options_handle cimport CBlastOptionsHandle, CBlastOptionsFactory
+from ..toolkit.algo.blast.api.blast_nucl_options cimport CBlastNucleotideOptionsHandle
+from ..toolkit.algo.blast.api.blast_prot_options cimport CBlastProteinOptionsHandle
+from ..toolkit.algo.blast.api.blastx_options cimport CBlastxOptionsHandle
+from ..toolkit.algo.blast.api.blast_advprot_options cimport CBlastAdvancedProteinOptionsHandle
+from ..toolkit.algo.blast.api.tblastn_options cimport CTBlastnOptionsHandle
+from ..toolkit.algo.blast.api.query_data cimport IQueryFactory
+from ..toolkit.algo.blast.api.objmgr_query_data cimport CObjMgr_QueryFactory
+from ..toolkit.algo.blast.api.objmgrfree_query_data cimport CObjMgrFree_QueryFactory
+from ..toolkit.algo.blast.api.local_db_adapter cimport CLocalDbAdapter
+from ..toolkit.algo.blast.api.blast_results cimport CSearchResultSet, CSearchResults, size_type as CSearchResults_size_type
+from ..toolkit.algo.blast.format.blast_format cimport CBlastFormat
+from ..toolkit.algo.blast.blastinput.blast_args cimport EOutputFormat
+from ..toolkit.corelib.ncbiobj cimport CConstRef, CRef
+from ..toolkit.corelib.ncbistre cimport CNcbiOstream
+from ..toolkit.corelib.ncbistr cimport kEmptyStr
+from ..toolkit.objects.seq.bioseq cimport CBioseq
+from ..toolkit.objects.seqset.bioseq_set cimport CBioseq_set
+from ..toolkit.objects.seq.seq_inst cimport ERepr as CSeq_inst_repr
+from ..toolkit.objects.seqloc.seq_id cimport CSeq_id
+from ..toolkit.objects.seqloc.seq_loc cimport CSeq_loc
+from ..toolkit.objmgr.object_manager cimport CObjectManager
+from ..toolkit.objmgr.scope cimport CScope
+from ..toolkit.objtools.align_format.format_flags cimport kDfltArgNumAlignments, kDfltArgNumDescriptions
+from ..toolkit.objtools.readers.fasta cimport CFastaReader
+from ..toolkit.serial.serialbase cimport CSerialObject, MSerial_Format_AsnText
+from ..toolkit.serial.serialdef cimport ESerialRecursionMode
+from ..toolkit.algo.blast.api.uniform_search cimport CSearchDatabase, EMoleculeType
+from ..toolkit.objtools.blast.seqdb_reader.seqdb cimport ESeqType
 
-from .objects.general cimport ObjectId
-from .objects.seqloc cimport SeqLoc
-from .objects.seqid cimport SeqId
-from .objects.seqalign cimport SeqAlign, SeqAlignSet
-from .objects.seq cimport BioSeq
-from .objects.seqset cimport BioSeqSet
-from .objmgr cimport Scope
-from .objtools cimport DatabaseReader
+from ..objects.general cimport ObjectId
+from ..objects.seqloc cimport SeqLoc
+from ..objects.seqid cimport SeqId
+from ..objects.seqalign cimport SeqAlign, SeqAlignSet
+from ..objects.seq cimport BioSeq
+from ..objects.seqset cimport BioSeqSet
+from ..objmgr cimport Scope
+from ..objtools cimport DatabaseReader
 
 from pystreambuf cimport pywritebuf
 
-import os
-from ._utils import peekable, is_iterable
+from .._utils import peekable, is_iterable
 
 
 # --- BLAST input --------------------------------------------------------------
 
 cdef class SearchQuery:
-    cdef CRef[CBlastSearchQuery] _query
 
     def __init__(self, SeqLoc seqloc not None, Scope scope not None):
         cdef CBlastSearchQuery* _query = new CBlastSearchQuery(seqloc._loc.GetObject(), scope._scope.GetObject())
@@ -84,7 +82,6 @@ cdef class SearchQuery:
 
 
 cdef class SearchQueryVector:
-    cdef CRef[CBlastQueryVector] _qv
 
     def __init__(self, queries = ()):
         cdef SearchQuery         query
@@ -97,25 +94,9 @@ cdef class SearchQueryVector:
         return self._qv.GetObject().Size()
 
 
-ctypedef fused BlastQueries:
-    BioSeq
-    BioSeqSet
-    SearchQuery
-    SearchQueryVector
-    object
-
-ctypedef fused BlastSubjects:
-    BioSeq
-    BioSeqSet
-    DatabaseReader
-    SearchQuery
-    SearchQueryVector
-    object
-
 # --- BLAST results ------------------------------------------------------------
 
 cdef class SearchResultsSet:  # TODO: change name to SearchResultsList?
-    cdef CRef[CSearchResultSet] _ref
 
     @staticmethod
     cdef SearchResultsSet _wrap(CRef[CSearchResultSet] ref):
@@ -141,7 +122,6 @@ cdef class SearchResultsSet:  # TODO: change name to SearchResultsList?
 
 
 cdef class SearchResults:
-    cdef CRef[CSearchResults] _ref
 
     @staticmethod
     cdef SearchResults _wrap(CRef[CSearchResults] ref):
@@ -164,7 +144,6 @@ cdef class SearchResults:
 cdef class Blast:
     """A base command object for running a BLAST search.
     """
-    cdef CRef[CBlastOptionsHandle] _opt
 
     @staticmethod
     def tasks():
@@ -671,9 +650,6 @@ cdef class TBlastN(ProteinBlast):
 # --- Formatter ----------------------------------------------------------------
 
 cdef class _BlastFormatter:  # WIP
-    cdef CRef[CBlastFormat] _fmt
-    cdef object             _file
-    cdef CNcbiOstream*      _outfile
 
     def __init__(
         self,

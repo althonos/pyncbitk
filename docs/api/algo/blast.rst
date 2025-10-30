@@ -1,7 +1,7 @@
 BLAST (Basic Local Alignment Search Tool)
 =========================================
 
-.. currentmodule:: pyncbitk.algo
+.. currentmodule:: pyncbitk.algo.blast
 
 Runners
 -------

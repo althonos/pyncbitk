@@ -1,4 +1,5 @@
 add_subdirectory(objects)
+add_subdirectory(algo)
 
 # cython_extension(serial   DEPENDS general xser)
 # cython_extension(objmgr   DEPENDS seq xncbi xobjmgr)
@@ -8,5 +9,4 @@ add_subdirectory(objects)
 cython_extension(serial)
 cython_extension(objmgr)
 cython_extension(objtools DEPENDS pystreambuf)
-cython_extension(algo     DEPENDS pystreambuf)
 
