@@ -2,6 +2,8 @@ from typing import Optional, ContextManager
 
 from .objects.seq import BioSeq
 from .objects.seqid import SeqId
+from .objects.seqinst import SeqInst
+from .objects.seqdesc import SeqDescSet
 
 class BioSeqHandle:   
     def __call__(self) -> BioSeq: ...
@@ -9,6 +11,12 @@ class BioSeqHandle:
     def scope(self) -> Scope: ...
     @property
     def id(self) -> Optional[SeqId]: ...
+    @property
+    def instance(self) -> SeqInst: ...
+    @property
+    def length(self) -> int: ...
+    @property
+    def descriptions(self) -> SeqDescSet: ...
 
 
 class ObjectManager:

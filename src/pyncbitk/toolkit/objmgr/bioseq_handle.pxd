@@ -5,7 +5,8 @@ from libcpp.vector cimport vector
 from ..corelib.ncbiobj cimport CObject, CRef, CConstRef
 from ..objects.seqloc.seq_id cimport CSeq_id
 from ..objects.seq.bioseq cimport CBioseq
-from ..objects.seq.seq_inst cimport CSeq_inst
+from ..objects.seq.seq_inst cimport CSeq_inst, TLength as TInstLength
+from ..objects.seq.seq_descr cimport CSeq_descr
 # from .object_manager cimport CObjectManager
 from .scope cimport CScope
 
@@ -14,7 +15,8 @@ cdef extern from "objmgr/bioseq_handle.hpp" namespace "ncbi::objects::CBioseq_Ha
 
     ctypedef CBioseq TObject
     ctypedef CSeq_inst TInst
-
+    ctypedef TInstLength TInst_Length
+    ctypedef CSeq_descr TDescr
 
 
 cdef extern from "objmgr/bioseq_handle.hpp" namespace "ncbi::objects" nogil:
@@ -33,18 +35,16 @@ cdef extern from "objmgr/bioseq_handle.hpp" namespace "ncbi::objects" nogil:
         CConstRef[TObject] GetCompleteObject() except +
         CConstRef[TObject] GetObjectCore() except +
 
-        
         # inst
         # typedef vector<CSeq_id_Handle> TId;
         # bool IsSetId(void) const;
         # bool CanGetId(void) const;
         # const TId& GetId(void) const;
         
-        # // descr
-        # typedef CSeq_descr TDescr;
-        # bool IsSetDescr(void) const;
-        # bool CanGetDescr(void) const;
-        # const TDescr& GetDescr(void) const;
+        # descr
+        bool IsSetDescr() const
+        bool CanGetDescr() const
+        const TDescr& GetDescr() except +
         
         # inst
         bool IsSetInst() const
@@ -56,22 +56,25 @@ cdef extern from "objmgr/bioseq_handle.hpp" namespace "ncbi::objects" nogil:
         # bool IsSetInst_Repr(void) const;
         # bool CanGetInst_Repr(void) const;
         # TInst_Repr GetInst_Repr(void) const;
+
         # // inst.mol
         # typedef TInst::TMol TInst_Mol;
         # bool IsSetInst_Mol(void) const;
         # bool CanGetInst_Mol(void) const;
         # TInst_Mol GetInst_Mol(void) const;
+
         # // inst.length
-        # typedef TInst::TLength TInst_Length;
-        # bool IsSetInst_Length(void) const;
-        # bool CanGetInst_Length(void) const;
-        # TInst_Length GetInst_Length(void) const;
+        bool IsSetInst_Length() const
+        bool CanGetInst_Length() const
+        TInst_Length GetInst_Length() except +
+
         # TSeqPos GetBioseqLength(void) const; // try to calculate it if not set
         # // inst.fuzz
         # typedef TInst::TFuzz TInst_Fuzz;
         # bool IsSetInst_Fuzz(void) const;
         # bool CanGetInst_Fuzz(void) const;
         # const TInst_Fuzz& GetInst_Fuzz(void) const;
+
         # // inst.topology
         # typedef TInst::TTopology TInst_Topology;
         # bool IsSetInst_Topology(void) const;

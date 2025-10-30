@@ -10,11 +10,13 @@ from .toolkit.corelib.ncbiobj cimport CObject, CConstRef, CRef
 from .toolkit.objects.seqloc.seq_id cimport CSeq_id
 from .toolkit.objects.seq.seq_inst cimport CSeq_inst
 from .toolkit.objects.seq.bioseq cimport CBioseq
+from .toolkit.objects.seq.seq_descr cimport CSeq_descr
 
 from .objects.seq cimport BioSeq
 from .objects.seqinst cimport SeqInst
 from .objects.seqloc cimport SeqLoc
 from .objects.seqid cimport SeqId
+from .objects.seqdesc cimport SeqDescSet
 
 
 cdef class BioSeqHandle:
@@ -53,8 +55,24 @@ cdef class BioSeqHandle:
     def instance(self):
         """`~pyncbitk.objects.seqinst.SeqInst`: The sequence instance.
         """
+        assert self._handle.CanGetInst()
         cdef CSeq_inst* inst = <CSeq_inst*> &self._handle.GetInst()
         return SeqInst._wrap(CRef[CSeq_inst](inst))
+
+    @property
+    def length(self):
+        """`int`: The length of the sequence instance.
+        """
+        return self._handle.GetInst_Length()
+
+    @property
+    def descriptions(self):
+        """`~pyncbitk.objects.seqdesc.SeqDescSet`: The sequence descriptions.
+        """
+        assert self._handle.CanGetDescr()
+        cdef CSeq_descr* desc = <CSeq_descr*> &self._handle.GetDescr()
+        return SeqDescSet._wrap(CRef[CSeq_descr](desc))
+
 
 
 cdef class ObjectManager:
