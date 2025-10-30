@@ -103,6 +103,9 @@ cdef class LocalId(SeqId):
         cdef str ty = type(self).__name__
         return f"{ty}({self.object_id!r})"
 
+    def __rich_repr__(self):
+        yield self.object_id
+
     def __str__(self):
         return str(self.object_id)
 
@@ -128,6 +131,9 @@ cdef class GenBankId(SeqId):
         cdef str ty = type(self).__name__
         return f"{ty}({self.id!r})"
 
+    def __rich_repr__(self):
+        yield self.id
+
     @property
     def id(self):
         """`~pyncbitk.objects.seqid.TextSeqId`: The text identifier.
@@ -148,6 +154,9 @@ cdef class GeneralId(SeqId):
         cdef str ty = type(self).__name__
         return f"{ty}({self.id!r})"
 
+    def __rich_repr__(self):
+        yield self.db_tag
+
     @property
     def db_tag(self):
         """`~pyncbitk.objects.general.DBTag`: A database tag.
@@ -163,6 +172,9 @@ cdef class OtherId(SeqId):
     def __repr__(self):
         cdef str ty = type(self).__name__
         return f"{ty}({self.id!r})"
+
+    def __rich_repr__(self):
+        yield self.id
 
     @property
     def id(self):
@@ -228,6 +240,12 @@ cdef class TextSeqId(Serial):
             args.append(f"release={release!r}")
 
         return f"{ty}({', '.join(args)})"
+
+    def __rich_repr__(self):
+        yield self.accession
+        yield "name", self.name, None
+        yield "version", self.version, 0
+        yield "release", self.release, None
 
     @property
     def accession(self):

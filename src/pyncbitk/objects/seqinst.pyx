@@ -169,6 +169,12 @@ cdef class SeqInst(Serial):
 
         return f"{ty}({', '.join(args)})"
 
+    def __rich_repr__(self):
+        yield "topology", self.topology, "linear"
+        yield "strandedness", self.strandedness, None
+        yield "molecule", self.molecule, None
+        yield "length", self.length, None
+
     @property
     def length(self):
         """`int`: The length of the sequence.
@@ -291,6 +297,10 @@ cdef class ContinuousInst(SeqInst):
 
         return f"{ty}({', '.join(args)})"
 
+    def __rich_repr__(self):
+        yield self.data
+        yield from super().__rich_repr__()
+
     @property
     def data(self):
         """`SeqData` or `None`: The concrete sequence data.
@@ -378,6 +388,10 @@ cdef class RefInst(SeqInst):
             args.append(f"length={self.length!r}")
 
         return f"{ty}({', '.join(args)})"
+
+    def __rich_repr__(self):
+        yield self.seqloc
+        yield from super().__rich_repr__()
 
     def __reduce__(self):
         return functools.partial(
@@ -481,6 +495,10 @@ cdef class DeltaInst(SeqInst):
 
         return f"{ty}({', '.join(args)})"
 
+    def __rich_repr__(self):
+        yield iter(self)
+        yield from super().__rich_repr__()
+
     cpdef ContinuousInst to_continuous(self):
         """Transform this instance to a continuous sequence instance.
 
@@ -544,6 +562,10 @@ cdef class LiteralDelta(Delta):
             args.append(repr(data))
         return f"{type(self).__name__}({', '.join(args)})"
 
+    def __rich_repr__(self):
+        yield self.length
+        yield None, self.data, None
+
     def __reduce__(self):
         return type(self), (self.length, self.data)
 
@@ -580,6 +602,9 @@ cdef class LocDelta(Delta):
 
     def __repr__(self):
         return f"{type(self).__name__}({self.seqloc!r})"
+
+    def __rich_repr__(self):
+        yield self.seqloc
 
     @property
     def seqloc(self):

@@ -60,6 +60,9 @@ cdef class BioSeqSet:
         for item in items:
             yield Entry._wrap(item)
 
+    def __rich_repr__(self):
+        yield iter(self)
+
 # --- Entry --------------------------------------------------------------------
 
 cdef class Entry(Serial):
