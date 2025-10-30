@@ -56,7 +56,7 @@ build-dir = "build/{build_type}"
 wheel.py-api = "cp311"
 cmake.build-type = "Release"
 editable.rebuild = true
-editable.verbose = false
+editable.verbose = true
 
 [[tool.scikit-build.overrides]]
 if.state = "editable"

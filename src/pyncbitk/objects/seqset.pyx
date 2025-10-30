@@ -6,6 +6,7 @@ from ..toolkit.corelib.ncbiobj cimport CRef
 from ..toolkit.objects.seqset.seq_entry cimport CSeq_entry, E_Choice as CSeq_entry_choice
 from ..toolkit.serial.serialbase cimport CSerialObject, EResetVariant
 from ..toolkit.objects.seq.bioseq cimport CBioseq
+from ..toolkit.objects.seqset.bioseq_set cimport CBioseq_set
 
 from .general cimport ObjectId
 from .seqset cimport Entry
@@ -13,7 +14,7 @@ from .seq cimport BioSeq
 
 # --- BioSeqSet ----------------------------------------------------------------
 
-cdef class BioSeqSet:
+cdef class BioSeqSet(Serial):
     """A set of biological sequence.
 
     A `BioSeqSet` is a set that stores either other sequences (as `BioSeq`
@@ -21,6 +22,15 @@ cdef class BioSeqSet:
     allowing to create tree of sequences.
 
     """
+
+    @staticmethod
+    cdef BioSeqSet _wrap(CRef[CBioseq_set] ref):
+        cdef BioSeqSet seqset = BioSeqSet.__new__(BioSeqSet)
+        seqset._ref = ref
+        return seqset
+
+    cdef CSerialObject* _serial(self):
+        return <CSerialObject*> self._ref.GetNonNullPointer()
 
     # TODO: subclasses
 
@@ -96,7 +106,7 @@ cdef class SeqEntry(Entry):
         self._ref.Reset(entry)
 
     @property
-    def seq(self):
+    def sequence(self):
         cdef CBioseq* bioseq = &self._ref.GetNonNullPointer().GetSeqMut()
         return BioSeq._wrap(CRef[CBioseq](bioseq))
 
@@ -108,5 +118,10 @@ cdef class SetEntry(Entry):
         entry.Select(CSeq_entry_choice.e_Set, EResetVariant.eDoResetVariant)
         entry.SetSet(set._ref.GetObject())
         self._ref.Reset(entry)
+
+    @property
+    def set(self):
+        cdef CBioseq_set* bioseq_set = &self._ref.GetNonNullPointer().GetSetMut()
+        return BioSeqSet._wrap(CRef[CBioseq_set](bioseq_set))
 
 

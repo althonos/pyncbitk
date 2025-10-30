@@ -1,0 +1,26 @@
+from typing import Optional
+
+from ..serial import Serial
+from .general import ObjectId
+from .seqid import SeqId
+
+# --- SeqLoc -------------------------------------------------------------------
+
+class BioSeqSet(typing.Iterable[Entry], typing.Sized):
+    def __init__(self, items: Iterable[Entry], *, id: Optional[ObjectId]) -> None: ...
+    def __len__(self) -> int: ...
+    def __iter__(self) -> Iterator[Entry]: ...
+    def __repr__(self) -> str: ...
+
+class Entry(Serial):
+    pass
+
+class SeqEntry(Entry):
+    def __init__(self, sequence: BioSeq) -> None: ...
+    @property
+    def sequence(self) -> BioSeq: ...
+
+class SetEntry(Entry):
+    def __init__(self, set: BioSeqSet) -> None: ...
+    @property
+    def set(self) -> BioSeqSet: ...
