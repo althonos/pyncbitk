@@ -459,15 +459,15 @@ cdef class AlignMap:
     def __len__(self):
         return self._ref.GetObject().GetNumRows()
 
-    def __getitem__(self, ssize_t index):
+    def __getitem__(self, index):
         cdef AlignMapRow row
-        cdef ssize_t     index_
+        cdef ssize_t     index_ = index
         cdef ssize_t     length = self._ref.GetObject().GetNumRows()
 
         if index_ < 0:
             index_ += length
         if index_ < 0 or index_ >= length:
-            raise IndexError(index_)
+            raise IndexError(index)
 
         row = AlignMapRow.__new__(AlignMapRow)
         row.map = self
