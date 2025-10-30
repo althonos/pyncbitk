@@ -13,13 +13,13 @@ set(BUILD_SHARED_LIBS OFF)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 # Detect required NCBI C++ Toolkit libraries
-find_package(PCRE REQUIRED)
-find_package(lzo REQUIRED)
-find_package(libunwind REQUIRED)
-find_package(ncbi-cxx-toolkit-public COMPONENTS algo core seqext REQUIRED)
+#find_package(PCRE REQUIRED)
+#find_package(lzo REQUIRED)
+#find_package(libunwind REQUIRED)
+#find_package(ncbi-cxx-toolkit-public COMPONENTS algo core seqext REQUIRED)
 
 # Configure Toolkit build
-set(NCBI_WITHOUT_MT          ON)
+set(NCBI_WITHOUT_MT ON)
 
 # Install all dependencies into `pyncbitk-runtime` wheel
 if("${SKBUILD_STATE}" STREQUAL "wheel")
