@@ -1,5 +1,5 @@
 import typing
-from typing import Iterable, Sized, Optional
+from typing import Iterable, Sized, Optional, Union
 
 from .objects.general import ObjectId
 from .objects.seqloc import SeqLoc
@@ -33,19 +33,21 @@ class SearchResults:
     @property
     def alignments(self) -> SeqAlignSet: ...
 
+class _BlastOptions(typing.TypedDict):
+    evalue: Optional[float] = None,
+    gapped: Optional[bool] = None,
+    window_size: Optional[int] = None,
+    max_target_sequences: Optional[int] = None,
+    xdrop_gap: Optional[float] = None,
+    culling_limit: Optional[int] = None,
+    percent_identity: Optional[float] = None,
+
 class Blast:
     @staticmethod
     def tasks() -> List[str]: ...
     def __init__(
         self,
-        *,
-        evalue: Optional[float] = None,
-        gapped: Optional[bool] = None,
-        window_size: Optional[int] = None,
-        max_target_sequences: Optional[int] = None,
-        xdrop_gap: Optional[float] = None,
-        culling_limit: Optional[int] = None,
-        percent_identity: Optional[float] = None,
+        **kwargs: _BlastOptions,
     ) -> None: ...
     def __repr__(self) -> str: ...
     def program(self) -> str: ...
@@ -115,8 +117,8 @@ class BlastP(ProteinBlast):
         self,
         *,
         word_threshold: Optional[float] = None,
-        word_size: Optional[float] = None,
-        **kwargs,
+        word_size: Optional[int] = None,
+        **kwargs: _BlastOptions,
     ) -> None: ...
     @property
     def word_threshold(self) -> float: ...
@@ -134,7 +136,7 @@ class BlastN(NucleotideBlast):
         dust_filtering: Optional[bool] = None,
         penalty: Optional[int] = None,
         reward: Optional[int] = None,
-        **kwargs,
+        **kwargs: _BlastOptions,
     ) -> None: ...
     @property
     def dust_filtering(self) -> bool: ...
@@ -155,7 +157,7 @@ class BlastX(NucleotideBlast):
         *,
         query_genetic_code: int = 1,
         max_intron_length: int = 0,
-        **kwargs,
+        **kwargs: _BlastOptions,
     ) -> None: ...
     @property
     def max_intron_length(self) -> int: ...
@@ -172,7 +174,7 @@ class TBlastN(ProteinBlast):
         *,
         database_genetic_code: int = 1,
         max_intron_length: int = 0,
-        **kwargs,
+        **kwargs: _BlastOptions,
     ) -> None: ...
     @property
     def max_intron_length(self) -> int: ...
