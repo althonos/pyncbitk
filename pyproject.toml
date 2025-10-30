@@ -73,11 +73,11 @@ cmake.define.CMAKE_LINKER_TYPE = "mold"
 build-frontend = { name = "build", args = [] }
 build-verbosity = 1
 test-command = "cd {project} && python -m unittest tests -v"
+manylinux-x86_64-image = "quay.io/pypa/manylinux_2_34_x86_64"
 
 [tool.cibuildwheel.macos]
 environment = { MACOSX_DEPLOYMENT_TARGET = "10.12" }
 archs = ["x86_64", "arm64"]
 
 [tool.cibuildwheel.linux]
-repair-wheel-command = "auditwheel repair -w {dest_dir} {wheel} --zip-compression-level 9"
-
+repair-wheel-command = "auditwheel repair -w {dest_dir} {wheel} --exclude \\*"
