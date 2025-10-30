@@ -496,7 +496,7 @@ cdef class DeltaInst(SeqInst):
         return f"{ty}({', '.join(args)})"
 
     def __rich_repr__(self):
-        yield iter(self)
+        yield list(self)
         yield from super().__rich_repr__()
 
     cpdef ContinuousInst to_continuous(self):

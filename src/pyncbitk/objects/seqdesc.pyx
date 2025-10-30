@@ -211,4 +211,4 @@ cdef class SeqDescSet(Serial):
             yield SeqDesc._wrap(item)
 
     def __rich_repr__(self):
-        yield iter(self)
+        yield list(self)

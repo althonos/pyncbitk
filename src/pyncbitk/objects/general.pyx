@@ -51,6 +51,9 @@ cdef class ObjectId(Serial):
         cdef str ty = self.__class__.__name__
         return f"{ty}({self.value!r})"
 
+    def __rich_repr__(self):
+        yield self.value
+
     def __reduce__(self):
         return type(self), (self.value,)
 
@@ -115,6 +118,10 @@ cdef class DBTag(Serial):
     def __repr__(self):
         cdef str ty = self.__class__.__name__
         return f"{ty}({self.db!r}, {self.tag!r})"
+
+    def __rich_repr__(self):
+        yield self.db
+        yield self.tag
 
     def __richcmp__(self, object other, int op):
         cdef DBTag other_

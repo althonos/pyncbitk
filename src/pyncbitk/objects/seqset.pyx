@@ -61,7 +61,7 @@ cdef class BioSeqSet:
             yield Entry._wrap(item)
 
     def __rich_repr__(self):
-        yield iter(self)
+        yield list(self)
 
 # --- Entry --------------------------------------------------------------------
 

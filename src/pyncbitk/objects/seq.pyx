@@ -86,8 +86,18 @@ cdef class BioSeq(Serial):
         return functools.partial(type(self), self.instance, *self.ids), ()
 
     def __repr__(self):
-        cdef str ty = self.__class__.__name__
-        return f"{ty}({self.instance!r}, {', '.join(repr(id_) for id_ in self.ids)})"
+        cdef str        ty   = self.__class__.__name__
+        cdef SeqDescSet desc = self.descriptions
+        if not desc:
+            return f"{ty}({self.instance!r}, {', '.join(repr(id_) for id_ in self.ids)})"
+        return f"{ty}({self.instance!r}, {', '.join(repr(id_) for id_ in self.ids)}, descriptions={desc!r})"
+
+    def __rich_repr__(self):
+        yield self.instance
+        yield from self.ids
+        desc = self.descriptions
+        if desc:
+            yield "descriptions", desc
 
     @property
     def id(self):
