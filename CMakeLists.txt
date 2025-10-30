@@ -20,41 +20,33 @@ find_package(Python COMPONENTS Interpreter Development.Module ${SKBUILD_SABI_COM
 execute_process(
     COMMAND ${Python_EXECUTABLE} -c "import pyncbitk_runtime; print(pyncbitk_runtime.__path__[0], end='')"
     OUTPUT_VARIABLE PYNCBITK_RUNTIME_PATH
+    COMMAND_ERROR_IS_FATAL ANY
 )
+cmake_path(GET PYNCBITK_RUNTIME_PATH PARENT_PATH SITE_PACKAGES_PATH)
 
+# Detect required libraries only in the given folder
 set(CMAKE_FIND_PACKAGE_REDIRECTS_DIR ${PYNCBITK_RUNTIME_PATH})
-
-# Detect required NCBI C++ Toolkit libraries
 find_package(PCRE                    REQUIRED)# PATHS ${PYNCBITK_RUNTIME_PATH} NO_DEFAULT_PATH)
 find_package(lzo                     REQUIRED)# PATHS ${PYNCBITK_RUNTIME_PATH} NO_DEFAULT_PATH)
 find_package(libunwind               REQUIRED)# PATHS ${PYNCBITK_RUNTIME_PATH} NO_DEFAULT_PATH)
 find_package(ncbi-cxx-toolkit-public REQUIRED)# PATHS ${PYNCBITK_RUNTIME_PATH} NO_DEFAULT_PATH)
 # find_package(ncbi-cxx-toolkit-public COMPONENTS algo core seqext REQUIRED)
 
-# set(NCBI_PTB_HAS_ROOT ON)
-# set(NCBITK_TREE_ROOT ${PYNCBITK_RUNTIME_PATH}/ncbi-cxx-toolkit-public)
-# set(NCBITK_SRC_ROOT ${CMAKE_CURRENT_LIST_DIR}/src)
-# include(${NCBITK_TREE_ROOT}/res/build-system/cmake/CMake.NCBItoolkit.cmake)
+# Collect the runtime library folders (to use to set $RPATH)
+set(RUNTIME_LIBRARY_DIRS)
+foreach(_lib IN LISTS ncbi-cxx-toolkit-public_LIBRARIES)
+  string(REGEX REPLACE "^${SITE_PACKAGES_PATH}/?" "" _lib_path ${_lib})
+  cmake_path(GET _lib_path PARENT_PATH _lib_folder)
+  list(APPEND RUNTIME_LIBRARY_DIRS ${_lib_folder})
+endforeach()
+list(REMOVE_DUPLICATES RUNTIME_LIBRARY_DIRS)
 
-# Configure Toolkit build
-# set(NCBI_WITHOUT_MT          ON)
-# set(NCBI_PTBCFG_PROJECT_LIST pyncbitk)
-
-# Install shared library objects to `pyncbitk.libs` (like cibuildwheel)
-# if(PYNCBITK_INSTALL_LIBS)
-#     set(PYTHON_LIBS_INSTALL_DIR "${CMAKE_PROJECT_NAME}.libs")
-#     message(STATUS "SKBUILD_PLATLIB_DIR: ${SKBUILD_PLATLIB_DIR}")
-#     if("${SKBUILD_STATE}" STREQUAL "wheel")
-#         execute_process(COMMAND conan install ${CMAKE_SOURCE_DIR} -nr --deployer runtime_deploy --deployer-folder "${SKBUILD_PLATLIB_DIR}/${PYTHON_LIBS_INSTALL_DIR}")
-#     endif()
-# endif()
-
+# Set path to the Python extension directory
 set(PYTHON_EXTENSIONS_SOURCE_DIR ${CMAKE_CURRENT_LIST_DIR}/src)
 include(${CMAKE_CURRENT_LIST_DIR}/src/scripts/cmake/CythonExtension.cmake)
 
-# Set Cython header paths
+# Set path to the  Cython headers
 set(CYTHON_HEADERS_DIR ${CMAKE_CURRENT_LIST_DIR}/include/cython)
 
 # Build project targets
-# NCBI_add_subdirectory(src)
 add_subdirectory(src)
