@@ -26,11 +26,12 @@ cmake_path(GET PYNCBITK_RUNTIME_PATH PARENT_PATH SITE_PACKAGES_PATH)
 
 # Detect required libraries only in the given folder
 set(CMAKE_FIND_PACKAGE_REDIRECTS_DIR ${PYNCBITK_RUNTIME_PATH})
-find_package(PCRE                    REQUIRED)# PATHS ${PYNCBITK_RUNTIME_PATH} NO_DEFAULT_PATH)
-find_package(lzo                     REQUIRED)# PATHS ${PYNCBITK_RUNTIME_PATH} NO_DEFAULT_PATH)
-find_package(libunwind               REQUIRED)# PATHS ${PYNCBITK_RUNTIME_PATH} NO_DEFAULT_PATH)
-find_package(ncbi-cxx-toolkit-public REQUIRED)# PATHS ${PYNCBITK_RUNTIME_PATH} NO_DEFAULT_PATH)
-# find_package(ncbi-cxx-toolkit-public COMPONENTS algo core seqext REQUIRED)
+if(NOT APPLE)
+    find_package(libunwind REQUIRED)
+endif()
+find_package(PCRE REQUIRED)
+find_package(lzo REQUIRED)
+find_package(ncbi-cxx-toolkit-public REQUIRED)
 
 # Collect the runtime library folders (to use to set $RPATH)
 set(RUNTIME_LIBRARY_DIRS)
