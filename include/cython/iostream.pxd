@@ -38,3 +38,7 @@ cdef extern from "<sstream>" namespace "std" nogil:
 cdef extern from "<ostream>" namespace "std" nogil:
     cdef cppclass ostream:
         ostream(streambuf* sb)
+
+
+cdef extern from "<iostream>" namespace "std" nogil:
+    cdef ostream cout
