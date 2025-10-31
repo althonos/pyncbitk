@@ -9,6 +9,8 @@ Algorithms (``pyncbitk.algo``)
 BLAST (``pyncbitk.algo.blast``)
 -------------------------------
 
+.. currentmodule:: pyncbitk.algo.blast
+
 .. autosummary::
 
     Blast
