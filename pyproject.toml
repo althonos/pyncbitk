@@ -2,7 +2,7 @@
 build-backend = "scikit_build_core.build"
 requires = [
     "scikit-build-core>=0.10.0", 
-    "pyncbitk-runtime~=29.6.0.0a1",
+    "pyncbitk-runtime~=29.6",
     "cython >=3.0", 
 ]
 
@@ -39,9 +39,8 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Medical Science Apps.",
     "Typing :: Typed",
 ]
-dependencies=[
-    "pyncbitk-runtime~=29.6.0.0a1"
-]
+dependencies=["pyncbitk-runtime~=29.6"]
+
 
 [project.urls]
 "Documentation" = "https://pyncbitk.readthedocs.io/en/stable/"
