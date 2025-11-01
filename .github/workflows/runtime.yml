@@ -113,5 +113,5 @@ jobs:
         pattern: wheels-*
         path: dist/
         merge-multiple: true
-    #- name: Publish distributions to PyPI
-    #  uses: pypa/gh-action-pypi-publish@release/v1
+    - name: Publish distributions to PyPI
+      uses: pypa/gh-action-pypi-publish@release/v1
