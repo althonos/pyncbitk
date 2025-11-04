@@ -8,6 +8,24 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [Unreleased]
 [Unreleased]: https://github.com/althonos/pyncbitk/compare/v0.1.0-alpha.4...HEAD
 
+## [v0.1.0-alpha.5] - 2025-11-04
+
+### Added
+- Hash implementation for all `Serial` objects based on ASN serialization.
+- `__rich_repr__` implementations for several classes.
+- Type hints to `pyncbitk.object.seqset`.
+- `descriptions` and `length` properties to `BioSeqHandle` proxy class.
+- *WIP* extension `pyncbitk.objects.taxon` providing a client to the NCBI Taxonomy service.
+
+### Changed
+- Pin required `pyncbitk-runtime` to `29.6` and later.
+- Make `pyncbitk.algo` a package and move BLAST API to `pyncbitk.algo.blast`.
+
+### Fixed
+- Typo for MacOS `cibuildwheel` configuration in `pyproject.toml`
+- Type name changes in `pyncbitk.objects.seq`.
+
+
 ## [v0.1.0-alpha.4] - 2025-10-30
 
 ### Added

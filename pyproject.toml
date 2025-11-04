@@ -8,7 +8,7 @@ requires = [
 
 [project]
 name = "pyncbitk"
-version = "0.1.0-alpha.4"
+version = "0.1.0-alpha.5"
 description = "Cython bindings and Python interface to the NCBI C++ Toolkit."
 readme = "README.md"
 requires-python = ">=3.7"

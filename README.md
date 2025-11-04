@@ -55,24 +55,25 @@ supported at the moment:
 PyNCBItk is available for all modern Python (3.7+). Compilation is done
 through [CMake](https://cmake.org) using [Scikit-build-core](https://scikit-build-core.readthedocs.io).
 
-To install the project locally, clone the repository and its submodules,
-and install the repository with `pip`:
-```
-$ git clone --recursive https://github.com/althonos/pyncbitk
-$ pip install ./pyncbitk -v
+To install an alpha release, use `pip` with the `--pre` flag:
+```console
+$ pip install pyncbitk --pre
 ```
 
-The compilation uses the [Conan C/C++ package manager](https://docs.conan.io/2/)
-to handle compilation of the NCBI C++ Toolkit: the project will take ages to
+The `pyncbitk` package requires additional runtime libraries that are distributed
+in the `pyncbitk-runtime` package. These libraries should be available in a pre-compiled
+wheel for Linux and MacOS platforms. Otherwise, they can be compiled on setup 
+with the [Conan C/C++ package manager](https://docs.conan.io/2/)
+to handle compilation of the NCBI C++ Toolkit. *The project will take ages to
 compile the first time, but afterwards only the Cython code will have to be
-recompiled.
+recompiled.*
 
 ## 💡 Example
 
 ```python
 from pyncbitk.objects.seqset import BioSeqSet
 from pyncbitk.objtools import DatabaseReader, FastaReader
-from pyncbitk.algo import BlastN
+from pyncbitk.algo.blast import BlastN
 
 # read the sequences from FASTA-formatted files
 queries = BioSeqSet(FastaReader("queries.fna", split=False))
