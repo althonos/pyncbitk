@@ -1,5 +1,5 @@
 [requires]
-ncbi-cxx-toolkit-public/29.6.0
+ncbi-cxx-toolkit-public/29.8.0
 libiconv/1.17
 [options]
 ncbi-cxx-toolkit-public/*:with_components=algo;core;objects;seqext;loaders

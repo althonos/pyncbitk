@@ -39,7 +39,7 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Medical Science Apps.",
     "Typing :: Typed",
 ]
-dependencies=["pyncbitk-runtime~=29.6"]
+dependencies=["pyncbitk-runtime~=29.8.0"]
 
 
 [project.urls]
