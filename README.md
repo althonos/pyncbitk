@@ -123,7 +123,7 @@ This library is provided under the [MIT License](https://choosealicense.com/lice
 The NCBI C++ Toolkit is a "United States Government Work" and therefore lies in
 the public domain, but may be subject to copyright by the U.S. in foreign
 countries. Some restrictions apply, see the
-[NCBI C++ Toolkit license](https://www.ncbi.nlm.nih.gov/IEB/ToolBox/CPP_DOC/lxr/source/doc/public/LICENSE).
+[NCBI C++ Toolkit license](https://www.ncbi.nlm.nih.gov/IEB/ToolBox/CPP_DOC/lxr/source/LICENSE).
 
 *This project is in no way not affiliated, sponsored, or otherwise endorsed
 by the NCBI or any associated entity. It was developed

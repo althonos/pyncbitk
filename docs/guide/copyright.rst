@@ -40,4 +40,4 @@ Exceptions
 ^^^^^^^^^^
 
 Some of the NCBI C++ Toolkit components are licensed with restrictions,
-see the `complete license <https://www.ncbi.nlm.nih.gov/IEB/ToolBox/CPP_DOC/lxr/source/doc/public/LICENSE>`_.
+see the `complete license <https://www.ncbi.nlm.nih.gov/IEB/ToolBox/CPP_DOC/lxr/source/LICENSE>`_.
