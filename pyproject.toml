@@ -1,8 +1,8 @@
 [build-system]
 build-backend = "scikit_build_core.build"
 requires = [
-    "scikit-build-core>=0.10.0", 
-    "pyncbitk-runtime~=29.9.0",
+    "scikit-build-core >=0.11.0",
+    "pyncbitk-runtime ~=30.0.0",
     "cython >=3.0", 
 ]
 
@@ -12,7 +12,8 @@ version = "0.1.0-alpha.5"
 description = "Cython bindings and Python interface to the NCBI C++ Toolkit."
 readme = "README.md"
 requires-python = ">=3.7"
-license = { file = "COPYING" }
+license = "MIT AND NCBI-PD"
+license-files = ["COPYING"]
 authors = [
   { name = "Martin Larralde", email = "martin.larralde@embl.de" },
 ]
@@ -21,7 +22,6 @@ classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
     "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Programming Language :: C++",
     "Programming Language :: Cython",
@@ -40,7 +40,7 @@ classifiers = [
     "Typing :: Typed",
 ]
 dependencies = [
-    "pyncbitk-runtime~=29.9.0"
+    "pyncbitk-runtime ~=30.0.0"
 ]
 
 

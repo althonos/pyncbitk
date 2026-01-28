@@ -30,7 +30,6 @@ set(CMAKE_FIND_PACKAGE_REDIRECTS_DIR ${PYNCBITK_RUNTIME_PATH})
 if(NOT APPLE)
     find_package(libunwind REQUIRED)
 endif()
-find_package(PCRE REQUIRED)
 find_package(lzo REQUIRED)
 find_package(ncbi-cxx-toolkit-public REQUIRED)
 
