@@ -12,7 +12,8 @@ version = "30.0.0.0"
 description = "Runtime component of the NCBI C++ Toolkit to use in PyNCBItk."
 readme = "README.md"
 requires-python = ">=3.7"
-license = { file = "COPYING" }
+license = "MIT AND NCBI-PD"
+license-files = ["COPYING"]
 authors = [
   { name = "Martin Larralde", email = "martin.larralde@embl.de" },
 ]
@@ -21,7 +22,6 @@ classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
     "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Programming Language :: C++",
     "Topic :: Scientific/Engineering :: Bio-Informatics",
