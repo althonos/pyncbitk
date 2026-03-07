@@ -1,4 +1,4 @@
-# cython: language_level=3, linetrace=True, binding=True
+# cython: language_level=3, binding=True
 
 from libcpp cimport bool
 from libcpp.string cimport string
