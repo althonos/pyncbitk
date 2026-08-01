@@ -2,7 +2,7 @@
 build-backend = "scikit_build_core.build"
 requires = [
     "scikit-build-core >=0.11.0",
-    "pyncbitk-runtime ~=30.0.0",
+    "pyncbitk-runtime ~=30.6.0",
     "cython >=3.0", 
 ]
 
@@ -40,7 +40,7 @@ classifiers = [
     "Typing :: Typed",
 ]
 dependencies = [
-    "pyncbitk-runtime ~=30.0.0"
+    "pyncbitk-runtime ~=30.6.0"
 ]
 
 
