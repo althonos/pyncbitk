@@ -6,7 +6,21 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 
 ## [Unreleased]
-[Unreleased]: https://github.com/althonos/pyncbitk/compare/v0.1.0-alpha.4...HEAD
+[Unreleased]: https://github.com/althonos/pyncbitk/compare/v0.1.0-alpha.6...HEAD
+
+
+## [v0.1.0-alpha.6] - 2026-08-02
+
+### Changed
+- Update NCBI C++ Toolkit runtime to `v30.6`.
+- Pin `pyncbitk-runtime` to `v30.6.0`.
+
+### Fixed
+- Cython line tracing being enabled in release builds.
+
+### Removed
+- Unneeded library dependencies from `CMakeLists.txt`.
+
 
 ## [v0.1.0-alpha.5] - 2025-11-04
 
